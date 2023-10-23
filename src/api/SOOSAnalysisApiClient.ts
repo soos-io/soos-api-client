@@ -1,5 +1,5 @@
 import { SOOS_BASE_URL } from "../constants";
-import createHttpClient, { isAxiosError } from "./api-client";
+import { isAxiosError, SOOSApiClient } from "./SOOSApiClient";
 import FormData from "form-data";
 import { isNil } from "../utils/utilities";
 import {
@@ -42,7 +42,7 @@ export class SOOSAnalysisApiClient {
     integrationName,
     scanType,
   }: ICreateScanArguments): Promise<ICreateScanReturn> {
-    const client = createHttpClient({
+    const client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Create Scan",
@@ -79,7 +79,7 @@ export class SOOSAnalysisApiClient {
     analysisId,
     manifestFiles,
   }: IUploadManifestFilesArguments): Promise<IUploadManifestResponse> {
-    const client = createHttpClient({
+    const client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Upload  Container Files",
@@ -116,7 +116,7 @@ export class SOOSAnalysisApiClient {
     projectHash,
     analysisId,
   }: IStartAnalysisArguments): Promise<void> {
-    const client = createHttpClient({
+    const client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Start Analysis Scan",
@@ -133,7 +133,7 @@ export class SOOSAnalysisApiClient {
     status,
     message,
   }: IUpdateScanStatusArguments): Promise<void> {
-    const client = createHttpClient({
+    const client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Update Scan Status",
@@ -150,7 +150,7 @@ export class SOOSAnalysisApiClient {
   async checkAnalysisScanStatus({
     reportStatusUrl,
   }: ICheckAnalysisScanStatusArguments): Promise<IAnalysisScanStatus> {
-    const client = createHttpClient({
+    const client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Check Analysis Scan Status",

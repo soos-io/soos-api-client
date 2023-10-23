@@ -1,1 +1,1 @@
-export { SOOSAnalysisApiClient } from "./analysis-api";
+export { SOOSAnalysisApiClient } from "./SOOSAnalysisApiClient";
