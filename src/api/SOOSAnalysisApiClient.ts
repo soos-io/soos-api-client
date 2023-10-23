@@ -1,5 +1,5 @@
 import { SOOS_BASE_URL } from "../constants";
-import { isAxiosError, SOOSApiClient } from "./SOOSApiClient";
+import { SOOSApiClient } from "./SOOSApiClient";
 import FormData from "form-data";
 import { isNil } from "../utils/utilities";
 import {
@@ -15,7 +15,6 @@ import {
   IUpdateScanStatusArguments,
   IUploadManifestFilesArguments,
   IUploadManifestResponse,
-  IUploadResponseError,
 } from "../models/Analysis";
 import { ScanStatus } from "../enums";
 import { AxiosInstance } from "axios";
@@ -31,7 +30,7 @@ export class SOOSAnalysisApiClient {
     this.client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
-      clientName: "Analysis API Client",
+      apiClientName: "Analysis API Client",
     });
   }
 
@@ -80,19 +79,6 @@ export class SOOSAnalysisApiClient {
     analysisId,
     manifestFiles,
   }: IUploadManifestFilesArguments): Promise<IUploadManifestResponse> {
-    const client = SOOSApiClient.create({
-      baseUri: this.baseUri,
-      apiKey: this.apiKey,
-      clientName: "Upload  Container Files",
-      errorResponseHandler: (rejectedResponse) => {
-        if (isAxiosError<IUploadResponseError | undefined>(rejectedResponse)) {
-          if (rejectedResponse.response?.data?.code === "NoManifestsAccepted") {
-            throw new Error(rejectedResponse.response.data.message);
-          }
-        }
-      },
-    });
-
     const headers: FormData.Headers = await new Promise((resolve) =>
       manifestFiles.getLength((error, length) =>
         isNil(error) && !isNil(length)
@@ -101,7 +87,7 @@ export class SOOSAnalysisApiClient {
       )
     );
 
-    const response = await client.post<IUploadManifestResponse>(
+    const response = await this.client.post<IUploadManifestResponse>(
       `clients/${clientId}/projects/${projectHash}/analysis/${analysisId}/manifests`,
       manifestFiles,
       {

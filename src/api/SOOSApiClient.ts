@@ -12,15 +12,10 @@ export interface IHttpRequestParameters {
 }
 
 export interface IHttpClientParameters extends IHttpRequestParameters {
-  clientName: string;
-  errorResponseHandler?: (rejectedResponse: any) => void;
+  apiClientName: string;
 }
 export class SOOSApiClient {
-  private static createHttpClient({
-    baseUri,
-    apiKey,
-    errorResponseHandler,
-  }: IHttpClientParameters) {
+  private static createHttpClient({ baseUri, apiKey }: IHttpClientParameters) {
     const client = axios.create({
       baseURL: baseUri,
       headers: {
@@ -47,15 +42,10 @@ export class SOOSApiClient {
         return response;
       },
       (rejectedResponse) => {
-        if (rejectedResponse?.response) {
-          if (errorResponseHandler) {
-            errorResponseHandler(rejectedResponse);
-          } else {
-            throw new Error(rejectedResponse.response.data.message);
-          }
-        }
         if (isAxiosError<ICodedMessageModel | undefined>(rejectedResponse)) {
-          throw new Error(rejectedResponse.response?.data?.message);
+          throw new Error(
+            `${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: ${rejectedResponse.response?.data?.message}`
+          );
         }
         return Promise.reject(rejectedResponse);
       }
