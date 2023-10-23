@@ -18,19 +18,25 @@ import {
   IUploadResponseError,
 } from "../models/Analysis";
 import { ScanStatus } from "../enums";
+import { AxiosInstance } from "axios";
 
 export class SOOSAnalysisApiClient {
   private readonly baseUri: string;
   private readonly apiKey: string;
-  private readonly clientId: string;
+  private readonly client: AxiosInstance;
 
-  constructor(apiKey: string, clientId: string, baseUri: string = SOOS_BASE_URL) {
+  constructor(apiKey: string, baseUri: string = SOOS_BASE_URL) {
     this.apiKey = apiKey;
-    this.clientId = clientId;
     this.baseUri = baseUri;
+    this.client = SOOSApiClient.create({
+      baseUri: this.baseUri,
+      apiKey: this.apiKey,
+      clientName: "Analysis API Client",
+    });
   }
 
   async createScan({
+    clientId,
     projectName,
     commitHash,
     branch,
@@ -42,11 +48,6 @@ export class SOOSAnalysisApiClient {
     integrationName,
     scanType,
   }: ICreateScanArguments): Promise<ICreateScanReturn> {
-    const client = SOOSApiClient.create({
-      baseUri: this.baseUri,
-      apiKey: this.apiKey,
-      clientName: "Create Scan",
-    });
     const body: IApiCreateScanRequestBody = {
       projectName: projectName,
       commitHash: commitHash,
@@ -59,8 +60,8 @@ export class SOOSAnalysisApiClient {
       integrationName: integrationName,
     };
 
-    const response = await client.post<IApiCreateScanResponseBody>(
-      `clients/${this.clientId}/scan-types/${scanType}/scans`,
+    const response = await this.client.post<IApiCreateScanResponseBody>(
+      `clients/${clientId}/scan-types/${scanType}/scans`,
       body
     );
 
@@ -116,12 +117,7 @@ export class SOOSAnalysisApiClient {
     projectHash,
     analysisId,
   }: IStartAnalysisArguments): Promise<void> {
-    const client = SOOSApiClient.create({
-      baseUri: this.baseUri,
-      apiKey: this.apiKey,
-      clientName: "Start Analysis Scan",
-    });
-    await client.put(`clients/${clientId}/projects/${projectHash}/analysis/${analysisId}`);
+    await this.client.put(`clients/${clientId}/projects/${projectHash}/analysis/${analysisId}`);
   }
 
   async updateScanStatus({
@@ -133,12 +129,7 @@ export class SOOSAnalysisApiClient {
     status,
     message,
   }: IUpdateScanStatusArguments): Promise<void> {
-    const client = SOOSApiClient.create({
-      baseUri: this.baseUri,
-      apiKey: this.apiKey,
-      clientName: "Update Scan Status",
-    });
-    await client.patch(
+    await this.client.patch(
       `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}`,
       {
         status: status,
@@ -150,12 +141,7 @@ export class SOOSAnalysisApiClient {
   async checkAnalysisScanStatus({
     reportStatusUrl,
   }: ICheckAnalysisScanStatusArguments): Promise<IAnalysisScanStatus> {
-    const client = SOOSApiClient.create({
-      baseUri: this.baseUri,
-      apiKey: this.apiKey,
-      clientName: "Check Analysis Scan Status",
-    });
-    const response = await client.get<ICheckAnalysisScanStatusReturn>(reportStatusUrl);
+    const response = await this.client.get<ICheckAnalysisScanStatusReturn>(reportStatusUrl);
     const violationCount = response.data.violations?.count ?? 0;
     const vulnerabilityCount = response.data.vulnerabilities?.count ?? 0;
     return {
