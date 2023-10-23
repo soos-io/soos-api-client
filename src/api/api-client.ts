@@ -1,5 +1,6 @@
-import { JSON_CONTENT_TYPE, KILO_BYTE } from "../utils/Constants";
+import { JSON_CONTENT_TYPE, KILO_BYTE } from "../constants";
 import axios, { AxiosError } from "axios";
+import { ICodedMessageModel } from "../models/Common";
 
 export function isAxiosError<T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> {
   return (e as AxiosError<T, D>)?.isAxiosError === true;
@@ -13,13 +14,6 @@ export interface IHttpRequestParameters {
 export interface IHttpClientParameters extends IHttpRequestParameters {
   clientName: string;
   errorResponseHandler?: (rejectedResponse: any) => void;
-}
-
-export interface ICodedMessageModel {
-  code: string;
-  message: string;
-  data: Record<string, string>;
-  statusCode: number;
 }
 
 export default function createHttpClient({

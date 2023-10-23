@@ -1,3 +1,7 @@
+import { SOOS_BASE_URL } from "../constants";
+import createHttpClient, { isAxiosError } from "./api-client";
+import FormData from "form-data";
+import { isNil } from "../utils/utilities";
 import {
   CompletedScanStatuses,
   IAnalysisScanStatus,
@@ -12,14 +16,10 @@ import {
   IUploadManifestFilesArguments,
   IUploadManifestResponse,
   IUploadResponseError,
-  ScanStatus,
-} from "./api-types";
-import { SOOS_BASE_URL } from "../utils/Constants";
-import createHttpClient, { isAxiosError } from "./api-client";
-import FormData from "form-data";
-import { isNil } from "../utils/Utilities";
+} from "../models/Analysis";
+import { ScanStatus } from "../enums";
 
-export class SOOSApiClient {
+export class SOOSAnalysisApiClient {
   private readonly baseUri: string;
   private readonly apiKey: string;
   private readonly clientId: string;
@@ -170,4 +170,4 @@ export class SOOSApiClient {
   }
 }
 
-export default SOOSApiClient;
+export default SOOSAnalysisApiClient;
