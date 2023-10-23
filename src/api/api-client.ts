@@ -1,4 +1,4 @@
-import { JSON_CONTENT_TYPE, KILO_BYTE } from "./utils/Constants";
+import { JSON_CONTENT_TYPE, KILO_BYTE } from "../utils/Constants";
 import axios, { AxiosError } from "axios";
 
 export function isAxiosError<T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> {

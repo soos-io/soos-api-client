@@ -1,8 +1,8 @@
 {
   "name": "@soos-io/api-client",
-  "version": "0.0.1-pre.4",
+  "version": "0.0.1-pre.5",
   "description": "SOOS api public package",
-  "main": "dist/soosApiClient.js",
+  "main": "dist/index.js",
   "scripts": {
     "setup:install": "npm install",
     "setup:clean-install": "npm ci",

@@ -14,26 +14,20 @@ import {
   IUploadResponseError,
   ScanStatus,
 } from "./api-types";
-import { constructBaseApiUrl, isNil } from "./utils/Utilities";
-import { SOOS_ANALYSIS_API } from "./utils/Constants";
+import { SOOS_BASE_URL } from "../utils/Constants";
 import createHttpClient, { isAxiosError } from "./api-client";
 import FormData from "form-data";
-
-export enum EnvironmentEnum {
-  Dev = "dev-",
-  QA = "qa-",
-  Prod = "",
-}
+import { isNil } from "../utils/Utilities";
 
 export class SOOSApiClient {
-  private readonly environment: EnvironmentEnum;
+  private readonly baseUri: string;
   private readonly apiKey: string;
   private readonly clientId: string;
 
-  constructor(environment: EnvironmentEnum, apiKey: string, clientId: string) {
-    this.environment = environment;
+  constructor(apiKey: string, clientId: string, baseUri: string = SOOS_BASE_URL) {
     this.apiKey = apiKey;
     this.clientId = clientId;
+    this.baseUri = baseUri;
   }
 
   async createScan({
@@ -49,7 +43,7 @@ export class SOOSApiClient {
     scanType,
   }: ICreateScanArguments): Promise<ICreateScanReturn> {
     const client = createHttpClient({
-      baseUri: constructBaseApiUrl(this.environment, SOOS_ANALYSIS_API),
+      baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Create Scan",
     });
@@ -86,7 +80,7 @@ export class SOOSApiClient {
     manifestFiles,
   }: IUploadManifestFilesArguments): Promise<IUploadManifestResponse> {
     const client = createHttpClient({
-      baseUri: constructBaseApiUrl(this.environment, SOOS_ANALYSIS_API),
+      baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Upload  Container Files",
       errorResponseHandler: (rejectedResponse) => {
@@ -123,7 +117,7 @@ export class SOOSApiClient {
     analysisId,
   }: IStartAnalysisArguments): Promise<void> {
     const client = createHttpClient({
-      baseUri: constructBaseApiUrl(this.environment, SOOS_ANALYSIS_API),
+      baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Start Analysis Scan",
     });
@@ -140,7 +134,7 @@ export class SOOSApiClient {
     message,
   }: IUpdateScanStatusArguments): Promise<void> {
     const client = createHttpClient({
-      baseUri: constructBaseApiUrl(this.environment, SOOS_ANALYSIS_API),
+      baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Update Scan Status",
     });
@@ -157,7 +151,7 @@ export class SOOSApiClient {
     reportStatusUrl,
   }: ICheckAnalysisScanStatusArguments): Promise<IAnalysisScanStatus> {
     const client = createHttpClient({
-      baseUri: constructBaseApiUrl(this.environment, SOOS_ANALYSIS_API),
+      baseUri: this.baseUri,
       apiKey: this.apiKey,
       clientName: "Check Analysis Scan Status",
     });
