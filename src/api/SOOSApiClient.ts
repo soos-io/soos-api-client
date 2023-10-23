@@ -30,6 +30,9 @@ export class SOOSApiClient {
 
     client.interceptors.request.use(
       (request) => {
+        if (request.data) {
+          logger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
+        }
         return request;
       },
       (rejectedRequest) => {
@@ -39,6 +42,7 @@ export class SOOSApiClient {
 
     client.interceptors.response.use(
       (response) => {
+        logger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         return response;
       },
       (rejectedResponse) => {

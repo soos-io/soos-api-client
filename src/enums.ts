@@ -47,3 +47,13 @@ export enum ScanType {
   DAST = "Dast",
   CSA = "Csa",
 }
+
+export enum LogLevel {
+  PASS = 0,
+  IGNORE = 1,
+  INFO = 2,
+  WARN = 3,
+  FAIL = 4,
+  DEBUG = 5,
+  ERROR = 6,
+}
