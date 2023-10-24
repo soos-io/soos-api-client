@@ -1,6 +1,6 @@
 import { LogLevel } from "../enums";
 
-export class SOOSApiClientLogger {
+export class SOOSLogger {
   private verbose: boolean;
   private console: Console;
   private minLogLevel: LogLevel;
@@ -93,12 +93,12 @@ export class SOOSApiClientLogger {
   }
 }
 
-export const globalLogger = new SOOSApiClientLogger();
+export const globalLogger = new SOOSLogger();
 
-export function setSOOSApiClientLoggerVerbose(verbose: boolean) {
+export function setSOOSLoggerVerbose(verbose: boolean) {
   globalLogger.setVerbose(verbose);
 }
 
-export function setSOOSApiClientLoggerMinLogLevel(level: LogLevel) {
+export function setSOOSLoggerMinLogLevel(level: LogLevel) {
   globalLogger.setMinLogLevel(level);
 }

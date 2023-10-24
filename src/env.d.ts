@@ -1,7 +1,7 @@
-import { SOOSApiClientLogger } from "./utils/SOOSApiClientLogger";
+import { SOOSLogger } from "./utils/SOOSLogger";
 
 declare global {
-  var logger: SOOSApiClientLogger;
+  var logger: SOOSLogger;
 }
 
 export {};

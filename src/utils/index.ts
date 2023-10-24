@@ -1,6 +1,6 @@
 export { isNil } from "./utilities";
 export {
-  SOOSApiClientLogger,
-  setSOOSApiClientLoggerMinLogLevel,
-  setSOOSApiClientLoggerVerbose,
-} from "./SOOSApiClientLogger";
+  SOOSLogger as SOOSApiClientLogger,
+  setSOOSLoggerMinLogLevel as setSOOSApiClientLoggerMinLogLevel,
+  setSOOSLoggerVerbose as setSOOSApiClientLoggerVerbose,
+} from "./SOOSLogger";

@@ -5,7 +5,9 @@
     "prettier.configPath": "./.prettierrc",
     "cSpell.words": [
       "Dast",
-      "SOOS"
+      "SOOS",
+      "Csa",
+      "Sca"
     ],
     "sarif-viewer.connectToGithubCodeScanning": "off",
   }
