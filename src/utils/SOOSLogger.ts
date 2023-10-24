@@ -93,12 +93,4 @@ export class SOOSLogger {
   }
 }
 
-export const globalLogger = new SOOSLogger();
-
-export function setSOOSLoggerVerbose(verbose: boolean) {
-  globalLogger.setVerbose(verbose);
-}
-
-export function setSOOSLoggerMinLogLevel(level: LogLevel) {
-  globalLogger.setMinLogLevel(level);
-}
+export const soosLogger = new SOOSLogger();

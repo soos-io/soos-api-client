@@ -1,6 +1,7 @@
 import { JSON_CONTENT_TYPE, KILO_BYTE } from "../constants";
 import axios, { AxiosError } from "axios";
 import { ICodedMessageModel } from "../models/Common";
+import { soosLogger } from "../utils/SOOSLogger";
 
 export function isAxiosError<T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> {
   return (e as AxiosError<T, D>)?.isAxiosError === true;
