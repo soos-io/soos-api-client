@@ -1,0 +1,51 @@
+{
+  "name": "@soos-io/api-client",
+  "version": "0.1.0",
+  "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.",
+  "main": "dist/index.js",
+  "scripts": {
+    "setup:install": "npm install",
+    "setup:clean-install": "npm ci",
+    "setup:update": "npx npm-check -u",
+    "setup:clean": "npx rimraf node_modules && npx rimraf package-lock.json",
+    "build": "tsc",
+    "build:clean": "npx rimraf build",
+    "format": "prettier ./src --check",
+    "format:fix": "prettier ./src --write",
+    "typecheck": "tsc --noEmit",
+    "test:coverage": "npm run test -- --reporter xunit --reporter-option output=ResultsFile.xml",
+    "check": "npm run format && npm run typecheck && npm run test",
+    "outdated": "npm outdated"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "keywords": [
+    "@soos-io",
+    "sca",
+    "package",
+    "soos api",
+    "vulnerabilities",
+    "licenses",
+    "sbom",
+    "governance",
+    "dast",
+    "soos",
+    "open source",
+    "oss",
+    "csa"
+  ],
+  "author": "soos",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/node": "^20.8.8",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  }
+}
