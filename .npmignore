@@ -1,5 +1,5 @@
-./src
 tsconfig.json
 .prettierrc
 /.vscode
 /.github
+/src
