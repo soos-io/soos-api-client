@@ -31,8 +31,8 @@ export class SOOSApiClient {
     client.interceptors.request.use(
       (request) => {
         if (request.data) {
-          logger.verboseDebug(apiClientName, `Request URL: ${request.url}, request method: ${request.method}`);
-          logger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
+          soosLogger.verboseDebug(apiClientName, `Request URL: ${request.url}, request method: ${request.method}`);
+          soosLogger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
         }
         return request;
       },
@@ -43,7 +43,7 @@ export class SOOSApiClient {
 
     client.interceptors.response.use(
       (response) => {
-        logger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
+        soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         return response;
       },
       (rejectedResponse) => {
