@@ -94,11 +94,3 @@ export class SOOSLogger {
 }
 
 export const soosLogger = new SOOSLogger();
-
-export function setSOOSLoggerVerbose(verbose: boolean) {
-  soosLogger.setVerbose(verbose);
-}
-
-export function setSOOSLoggerMinLogLevel(level: LogLevel) {
-  soosLogger.setMinLogLevel(level);
-}
