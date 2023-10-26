@@ -1,4 +1,4 @@
-import { SOOS_BASE_URL } from "../constants";
+import { SOOS_URLS } from "../constants";
 import FormData from "form-data";
 import { ManifestStatus, PackageManagerType, ScanStatus, ScanType } from "../enums";
 import { AxiosInstance } from "axios";
@@ -114,7 +114,7 @@ class SOOSAnalysisApiClient {
   private readonly apiKey: string;
   private readonly client: AxiosInstance;
 
-  constructor(apiKey: string, baseUri: string = SOOS_BASE_URL) {
+  constructor(apiKey: string, baseUri: string = SOOS_URLS.API.Analysis) {
     this.apiKey = apiKey;
     this.baseUri = baseUri;
     this.client = SOOSApiClient.create({
