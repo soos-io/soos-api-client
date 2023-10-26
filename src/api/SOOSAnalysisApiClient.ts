@@ -63,7 +63,7 @@ type IGetSupportedManifestsResponse =
   Array<IGetSupportedManifestsResponsePackageManagerManifestPatterns>;
 
 interface IScanStatusRequest {
-  reportStatusUrl: string;
+  scanStatusUrl: string;
 }
 
 interface IScanStatusResponse extends Pick<ICheckAnalysisScanStatusReturn, "status"> {
@@ -232,8 +232,8 @@ class SOOSAnalysisApiClient {
     );
   }
 
-  async getScanStatus({ reportStatusUrl }: IScanStatusRequest): Promise<IScanStatusResponse> {
-    const response = await this.client.get<ICheckAnalysisScanStatusReturn>(reportStatusUrl);
+  async getScanStatus({ scanStatusUrl }: IScanStatusRequest): Promise<IScanStatusResponse> {
+    const response = await this.client.get<ICheckAnalysisScanStatusReturn>(scanStatusUrl);
     const violationCount = response.data.violations?.count ?? 0;
     const vulnerabilityCount = response.data.vulnerabilities?.count ?? 0;
     return {
