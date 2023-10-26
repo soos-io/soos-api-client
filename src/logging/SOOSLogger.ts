@@ -1,6 +1,6 @@
 import { LogLevel } from "../enums";
 
-export class SOOSLogger {
+class SOOSLogger {
   private verbose: boolean;
   private console: Console;
   private minLogLevel: LogLevel;
@@ -8,7 +8,7 @@ export class SOOSLogger {
   constructor(
     verbose: boolean = false,
     minLogLevel: LogLevel = LogLevel.INFO,
-    console: Console = global.console
+    console: Console = global.console,
   ) {
     this.verbose = verbose;
     this.console = console;
@@ -93,4 +93,7 @@ export class SOOSLogger {
   }
 }
 
+export default SOOSLogger;
+
+// global instance reference
 export const soosLogger = new SOOSLogger();

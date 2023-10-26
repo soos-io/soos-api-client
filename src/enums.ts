@@ -43,9 +43,10 @@ export enum ScanStatus {
 }
 
 export enum ScanType {
-  SCA = "Sca",
-  DAST = "Dast",
   CSA = "Csa",
+  DAST = "Dast",
+  SBOM = "Sbom",
+  SCA = "Sca",
 }
 
 export enum LogLevel {
