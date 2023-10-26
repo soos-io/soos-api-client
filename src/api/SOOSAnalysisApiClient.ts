@@ -47,6 +47,21 @@ interface ICreateScanResponse {
   errors: ICodedMessageModel[] | null;
 }
 
+interface IGetSupportedManifestsRequest {
+  clientId: string;
+}
+
+interface IGetSupportedManifestsResponsePackageManagerManifestPatterns {
+  packageManager: string;
+  manifests: Array<{
+    pattern: string;
+    isLockFile: boolean;
+  }>;
+}
+
+type IGetSupportedManifestsResponse =
+  Array<IGetSupportedManifestsResponsePackageManagerManifestPatterns>;
+
 interface IScanStatusRequest {
   reportStatusUrl: string;
 }
@@ -158,6 +173,15 @@ class SOOSAnalysisApiClient {
       },
     );
 
+    return response.data;
+  }
+
+  async getSupportedManifests({
+    clientId,
+  }: IGetSupportedManifestsRequest): Promise<IGetSupportedManifestsResponse> {
+    const response = await this.client.get<IGetSupportedManifestsResponse>(
+      `clients/${clientId}/manifests`,
+    );
     return response.data;
   }
 
