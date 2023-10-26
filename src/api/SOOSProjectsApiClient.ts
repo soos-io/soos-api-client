@@ -8,7 +8,7 @@ interface IGetProjectSettingsRequest {
 }
 
 // NOTE: many settings are returned, but we don't need them yet
-export interface IGetProjectSettingsResponse {
+interface IGetProjectSettingsResponse {
   useLockFile?: boolean;
 }
 
@@ -23,7 +23,7 @@ class SOOSProjectsApiClient {
     this.client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
-      apiClientName: "Projects API Client",
+      apiClientName: "Projects API",
     });
   }
 
@@ -38,5 +38,7 @@ class SOOSProjectsApiClient {
     return response.data;
   }
 }
+
+export { IGetProjectSettingsRequest, IGetProjectSettingsResponse };
 
 export default SOOSProjectsApiClient;

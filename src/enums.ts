@@ -58,3 +58,7 @@ export enum LogLevel {
   DEBUG = 5,
   ERROR = 6,
 }
+
+export enum OutputFormat {
+  SARIF = "SARIF",
+}

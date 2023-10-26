@@ -34,7 +34,7 @@ class SOOSApiClient {
         if (request.data) {
           soosLogger.verboseDebug(
             apiClientName,
-            `Request URL: ${request.url}, request method: ${request.method}`,
+            `Request URL: ${request.method?.toLocaleUpperCase()} ${request.url}`,
           );
           soosLogger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
         }
@@ -71,7 +71,9 @@ class SOOSApiClient {
           }
 
           throw new Error(
-            `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: ${rejectedResponse.response?.data?.message} (${rejectedResponse.response?.data?.code})`,
+            `${apiClientName} ${rejectedResponse.request?.method?.toLocaleUpperCase()} ${rejectedResponse
+              .config?.url}: ${rejectedResponse.response?.data?.message} (${rejectedResponse
+              .response?.data?.code})`,
           );
         }
         return Promise.reject(rejectedResponse);
