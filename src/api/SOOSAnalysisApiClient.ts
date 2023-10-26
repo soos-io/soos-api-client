@@ -40,7 +40,6 @@ interface ICreateScanResponse {
   clientHash: string;
   projectHash: string;
   branchHash: string;
-  scanId: string | null;
   analysisId: string;
   scanType: string;
   scanUrl: string;
