@@ -2,9 +2,9 @@ import { SOOS_BASE_URL } from "../constants";
 import FormData from "form-data";
 import { ManifestStatus, PackageManagerType, ScanStatus, ScanType } from "../enums";
 import { AxiosInstance } from "axios";
-import SOOSApiClient from "./SOOSApiClient";
 import { ICodedMessageModel } from "../models";
 import { isNil } from "../utilities";
+import SOOSApiClient from "./SOOSApiClient";
 
 const CompletedScanStatuses = [
   ScanStatus.Error,
