@@ -179,7 +179,7 @@ class SOOSAnalysisApiClient {
     return response.data;
   }
 
-  async startAnalysisScan({ clientId, projectHash, analysisId }: IStartScanRequest): Promise<void> {
+  async startScan({ clientId, projectHash, analysisId }: IStartScanRequest): Promise<void> {
     await this.client.put(`clients/${clientId}/projects/${projectHash}/analysis/${analysisId}`);
   }
 
@@ -201,9 +201,7 @@ class SOOSAnalysisApiClient {
     );
   }
 
-  async checkAnalysisScanStatus({
-    reportStatusUrl,
-  }: IScanStatusRequest): Promise<IScanStatusResponse> {
+  async getScanStatus({ reportStatusUrl }: IScanStatusRequest): Promise<IScanStatusResponse> {
     const response = await this.client.get<ICheckAnalysisScanStatusReturn>(reportStatusUrl);
     const violationCount = response.data.violations?.count ?? 0;
     const vulnerabilityCount = response.data.vulnerabilities?.count ?? 0;
