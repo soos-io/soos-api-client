@@ -31,6 +31,8 @@ interface ICreateScanRequest {
   integrationType: string;
   operatingEnvironment: string;
   integrationName: string | null;
+  scriptVersion: string | null;
+  appVersion: string | null;
   contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
 }
 
@@ -135,6 +137,9 @@ class SOOSAnalysisApiClient {
     operatingEnvironment,
     integrationName,
     scanType,
+    appVersion,
+    scriptVersion,
+    contributingDeveloperAudit,
   }: ICreateScanRequest): Promise<ICreateScanResponse> {
     const response = await this.client.post<ICreateScanResponse>(
       `clients/${clientId}/scan-types/${scanType}/scans`,
@@ -148,6 +153,9 @@ class SOOSAnalysisApiClient {
         integrationType: integrationType,
         operatingEnvironment: operatingEnvironment,
         integrationName: integrationName,
+        scriptVersion: scriptVersion,
+        appVersion: appVersion,
+        contributingDeveloperAudit: contributingDeveloperAudit,
       },
     );
 
