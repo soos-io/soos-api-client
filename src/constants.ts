@@ -1,6 +1,6 @@
 export const SOOS_CONSTANTS = {
   FileUploads: {
-    Encoding: "utf8",
+    Encoding: "utf8" as BufferEncoding,
     MaxManifests: 50,
   },
   Urls: {
