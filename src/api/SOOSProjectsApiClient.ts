@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { SOOS_URLS } from "../constants";
+import { SOOS_CONSTANTS } from "../constants";
 import SOOSApiClient from "./SOOSApiClient";
 
 interface IGetProjectSettingsRequest {
@@ -17,7 +17,7 @@ class SOOSProjectsApiClient {
   private readonly apiKey: string;
   private readonly client: AxiosInstance;
 
-  constructor(apiKey: string, baseUri: string = SOOS_URLS.API.Projects) {
+  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Projects) {
     this.apiKey = apiKey;
     this.baseUri = baseUri;
     this.client = SOOSApiClient.create({

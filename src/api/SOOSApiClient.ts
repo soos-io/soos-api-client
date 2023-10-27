@@ -1,4 +1,3 @@
-import { JSON_CONTENT_TYPE, KILO_BYTE } from "../constants";
 import axios, { AxiosError } from "axios";
 import { ICodedMessageModel } from "../models/CodedMessageModel";
 import { soosLogger } from "../logging/SOOSLogger";
@@ -21,12 +20,12 @@ class SOOSApiClient {
       baseURL: baseUri,
       headers: {
         "x-soos-apikey": apiKey,
-        "Content-Type": JSON_CONTENT_TYPE,
+        "Content-Type": "application/json",
       },
       // Same as limit on api for manifests
       // Reference: https://stackoverflow.com/a/56868296
-      maxBodyLength: KILO_BYTE * 5000 * 50,
-      maxContentLength: KILO_BYTE * 5000 * 50,
+      maxBodyLength: 1024 * 5000 * 50,
+      maxContentLength: 1024 * 5000 * 50,
     });
 
     client.interceptors.request.use(
