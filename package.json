@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "0.1.3-pre.12",
+  "version": "0.1.3",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.",
   "main": "dist/index.js",
   "scripts": {
