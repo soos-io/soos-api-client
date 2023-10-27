@@ -1,45 +1,47 @@
-import { JSON_CONTENT_TYPE, KILO_BYTE } from "../constants";
 import axios, { AxiosError } from "axios";
-import { ICodedMessageModel } from "../models/Common";
-import { soosLogger } from "../utils/SOOSLogger";
+import { ICodedMessageModel } from "../models/CodedMessageModel";
+import { soosLogger } from "../logging/SOOSLogger";
+import { isNil } from "../utilities";
 
-export function isAxiosError<T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> {
-  return (e as AxiosError<T, D>)?.isAxiosError === true;
-}
+const isAxiosError = <T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> =>
+  (e as AxiosError<T, D>)?.isAxiosError === true;
 
-export interface IHttpRequestParameters {
+interface IHttpRequestParameters {
   baseUri: string;
   apiKey: string;
 }
 
-export interface IHttpClientParameters extends IHttpRequestParameters {
+interface IHttpClientParameters extends IHttpRequestParameters {
   apiClientName: string;
 }
-export class SOOSApiClient {
+class SOOSApiClient {
   private static createHttpClient({ baseUri, apiKey, apiClientName }: IHttpClientParameters) {
     const client = axios.create({
       baseURL: baseUri,
       headers: {
         "x-soos-apikey": apiKey,
-        "Content-Type": JSON_CONTENT_TYPE,
+        "Content-Type": "application/json",
       },
       // Same as limit on api for manifests
       // Reference: https://stackoverflow.com/a/56868296
-      maxBodyLength: KILO_BYTE * 5000 * 50,
-      maxContentLength: KILO_BYTE * 5000 * 50,
+      maxBodyLength: 1024 * 5000 * 50,
+      maxContentLength: 1024 * 5000 * 50,
     });
 
     client.interceptors.request.use(
       (request) => {
         if (request.data) {
-          soosLogger.verboseDebug(apiClientName, `Request URL: ${request.url}, request method: ${request.method}`);
+          soosLogger.verboseDebug(
+            apiClientName,
+            `Request URL: ${request.method?.toLocaleUpperCase()} ${request.url}`,
+          );
           soosLogger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
         }
         return request;
       },
       (rejectedRequest) => {
         return Promise.reject(rejectedRequest);
-      }
+      },
     );
 
     client.interceptors.response.use(
@@ -49,12 +51,32 @@ export class SOOSApiClient {
       },
       (rejectedResponse) => {
         if (isAxiosError<ICodedMessageModel | undefined>(rejectedResponse)) {
+          const isCodedMessageModel = !isNil(rejectedResponse.response?.data?.code);
+          if (!isCodedMessageModel) {
+            switch (rejectedResponse.response?.status) {
+              case 403:
+                throw new Error(
+                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: Your request may have been blocked. (Forbidden)`,
+                );
+              case 503:
+                throw new Error(
+                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: We are down for maintenance. Please tyy again in a few minutes. (Service Unavailable)`,
+                );
+              default:
+                throw new Error(
+                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: Unexpected response ${rejectedResponse.response?.status}.`,
+                );
+            }
+          }
+
           throw new Error(
-            `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: ${rejectedResponse.response?.data?.message}`
+            `${apiClientName} ${rejectedResponse.request?.method?.toLocaleUpperCase()} ${rejectedResponse
+              .config?.url}: ${rejectedResponse.response?.data?.message} (${rejectedResponse
+              .response?.data?.code})`,
           );
         }
         return Promise.reject(rejectedResponse);
-      }
+      },
     );
 
     return client;
@@ -64,3 +86,6 @@ export class SOOSApiClient {
     return this.createHttpClient(params);
   }
 }
+
+export { isAxiosError };
+export default SOOSApiClient;

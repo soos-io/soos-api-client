@@ -1,36 +1,151 @@
-import { SOOS_BASE_URL } from "../constants";
-import { SOOSApiClient } from "./SOOSApiClient";
+import { SOOS_CONSTANTS } from "../constants";
 import FormData from "form-data";
-import { isNil } from "../utils/utilities";
-import {
-  CompletedScanStatuses,
-  IAnalysisScanStatus,
-  IApiCreateScanRequestBody,
-  IApiCreateScanResponseBody,
-  ICheckAnalysisScanStatusArguments,
-  ICheckAnalysisScanStatusReturn,
-  ICreateScanArguments,
-  ICreateScanReturn,
-  IStartAnalysisArguments,
-  IUpdateScanStatusArguments,
-  IUploadManifestFilesArguments,
-  IUploadManifestResponse,
-} from "../models/Analysis";
-import { ScanStatus } from "../enums";
+import { ManifestStatus, OutputFormat, PackageManagerType, ScanStatus, ScanType } from "../enums";
 import { AxiosInstance } from "axios";
+import { ICodedMessageModel } from "../models";
+import { isNil } from "../utilities";
+import SOOSApiClient from "./SOOSApiClient";
 
-export class SOOSAnalysisApiClient {
+const CompletedScanStatuses = [
+  ScanStatus.Error,
+  ScanStatus.Incomplete,
+  ScanStatus.FailedWithIssues,
+  ScanStatus.Finished,
+];
+
+interface ICreateScanRequestContributingDeveloperAudit {
+  source: string | null;
+  sourceName: string | null;
+  contributingDeveloperId: string | null;
+}
+
+interface ICreateScanRequest {
+  clientId: string;
+  projectName: string;
+  commitHash: string | null;
+  branch: string | null;
+  scanType: ScanType;
+  buildVersion: string | null;
+  buildUri: string | null;
+  branchUri: string | null;
+  integrationType: string;
+  operatingEnvironment: string;
+  integrationName: string | null;
+  scriptVersion: string | null;
+  appVersion: string | null;
+  contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
+}
+
+interface ICreateScanResponse {
+  clientHash: string;
+  projectHash: string;
+  branchHash: string;
+  analysisId: string;
+  scanType: string;
+  scanUrl: string;
+  scanStatusUrl: string;
+  scanSarifUrl: string;
+  errors: ICodedMessageModel[] | null;
+}
+
+interface IGetSupportedManifestsRequest {
+  clientId: string;
+}
+
+interface IGetSupportedManifestsResponsePackageManagerManifestPatterns {
+  packageManager: string;
+  manifests: Array<{
+    pattern: string;
+    isLockFile: boolean;
+  }>;
+}
+
+type IGetSupportedManifestsResponse =
+  Array<IGetSupportedManifestsResponsePackageManagerManifestPatterns>;
+
+interface IScanStatusRequest {
+  scanStatusUrl: string;
+}
+
+interface IScanStatusResponse extends Pick<IScanStatusApiResponse, "status"> {
+  isComplete: boolean;
+  isSuccess: boolean;
+  hasIssues: boolean;
+  violations: number;
+  vulnerabilities: number;
+  errors: ICodedMessageModel[];
+}
+
+interface IScanStatusApiResponse {
+  status: ScanStatus;
+  violations: { count: number } | null;
+  vulnerabilities: { count: number } | null;
+  clientHash: string;
+  projectHash: string;
+  branchHash: string;
+  scanId: string;
+  analysisId: string;
+  scanType: string;
+  scanUrl: string;
+  scanStatusUrl: string;
+  errors: ICodedMessageModel[] | null;
+}
+
+interface IStartScanRequest {
+  clientId: string;
+  projectHash: string;
+  analysisId: string;
+}
+
+interface IUpdateScanStatusRequest {
+  clientId: string;
+  projectHash: string;
+  branchHash: string;
+  scanType: ScanType;
+  scanId: string;
+  status: ScanStatus;
+  message: string;
+}
+interface IUploadManifestFilesRequest {
+  clientId: string;
+  projectHash: string;
+  branchHash: string;
+  analysisId: string;
+  manifestFiles: FormData;
+}
+interface IUploadManifestFilesResponseManifestStatus {
+  name: string;
+  filename: string;
+  packageManager: PackageManagerType;
+  status: ManifestStatus;
+  statusMessage: string;
+}
+interface IUploadManifestFilesResponse {
+  message: string;
+  manifests?: Array<IUploadManifestFilesResponseManifestStatus> | undefined;
+}
+
+interface IGetFormattedScanRequest {
+  clientId: string;
+  projectHash: string;
+  branchHash: string;
+  scanType: ScanType;
+  scanId: string;
+  outputFormat: OutputFormat;
+}
+
+class SOOSAnalysisApiClient {
   private readonly baseUri: string;
   private readonly apiKey: string;
   private readonly client: AxiosInstance;
 
-  constructor(apiKey: string, baseUri: string = SOOS_BASE_URL) {
+  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Analysis) {
     this.apiKey = apiKey;
     this.baseUri = baseUri;
     this.client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
-      apiClientName: "Analysis API Client",
+      apiClientName: "Analysis API",
     });
   }
 
@@ -46,31 +161,38 @@ export class SOOSAnalysisApiClient {
     operatingEnvironment,
     integrationName,
     scanType,
-  }: ICreateScanArguments): Promise<ICreateScanReturn> {
-    const body: IApiCreateScanRequestBody = {
-      projectName: projectName,
-      commitHash: commitHash,
-      branch: branch,
-      buildVersion: buildVersion,
-      buildUri: buildUri,
-      branchUri: branchUri,
-      integrationType: integrationType,
-      operatingEnvironment: operatingEnvironment,
-      integrationName: integrationName,
-    };
-
-    const response = await this.client.post<IApiCreateScanResponseBody>(
+    appVersion,
+    scriptVersion,
+    contributingDeveloperAudit,
+  }: ICreateScanRequest): Promise<ICreateScanResponse> {
+    const response = await this.client.post<ICreateScanResponse>(
       `clients/${clientId}/scan-types/${scanType}/scans`,
-      body
+      {
+        projectName: projectName,
+        commitHash: commitHash,
+        branch: branch,
+        buildVersion: buildVersion,
+        buildUri: buildUri,
+        branchUri: branchUri,
+        integrationType: integrationType,
+        operatingEnvironment: operatingEnvironment,
+        integrationName: integrationName,
+        scriptVersion: scriptVersion,
+        appVersion: appVersion,
+        contributingDeveloperAudit: contributingDeveloperAudit,
+      },
     );
 
-    return {
-      projectHash: response.data.projectHash,
-      branchHash: response.data.branchHash,
-      scanId: response.data.scanId ?? response.data.analysisId,
-      reportUrl: response.data.scanUrl,
-      scanStatusUrl: response.data.scanStatusUrl,
-    };
+    return response.data;
+  }
+
+  async getSupportedManifests({
+    clientId,
+  }: IGetSupportedManifestsRequest): Promise<IGetSupportedManifestsResponse> {
+    const response = await this.client.get<IGetSupportedManifestsResponse>(
+      `clients/${clientId}/manifests`,
+    );
+    return response.data;
   }
 
   async uploadManifestFiles({
@@ -78,31 +200,27 @@ export class SOOSAnalysisApiClient {
     projectHash,
     analysisId,
     manifestFiles,
-  }: IUploadManifestFilesArguments): Promise<IUploadManifestResponse> {
+  }: IUploadManifestFilesRequest): Promise<IUploadManifestFilesResponse> {
     const headers: FormData.Headers = await new Promise((resolve) =>
       manifestFiles.getLength((error, length) =>
         isNil(error) && !isNil(length)
           ? resolve(manifestFiles.getHeaders({ "Content-Length": length.toString() }))
-          : resolve(manifestFiles.getHeaders())
-      )
+          : resolve(manifestFiles.getHeaders()),
+      ),
     );
 
-    const response = await this.client.post<IUploadManifestResponse>(
+    const response = await this.client.post<IUploadManifestFilesResponse>(
       `clients/${clientId}/projects/${projectHash}/analysis/${analysisId}/manifests`,
       manifestFiles,
       {
         headers: headers,
-      }
+      },
     );
 
     return response.data;
   }
 
-  async startAnalysisScan({
-    clientId,
-    projectHash,
-    analysisId,
-  }: IStartAnalysisArguments): Promise<void> {
+  async startScan({ clientId, projectHash, analysisId }: IStartScanRequest): Promise<void> {
     await this.client.put(`clients/${clientId}/projects/${projectHash}/analysis/${analysisId}`);
   }
 
@@ -114,20 +232,18 @@ export class SOOSAnalysisApiClient {
     scanId,
     status,
     message,
-  }: IUpdateScanStatusArguments): Promise<void> {
+  }: IUpdateScanStatusRequest): Promise<void> {
     await this.client.patch(
       `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}`,
       {
         status: status,
         message: message,
-      }
+      },
     );
   }
 
-  async checkAnalysisScanStatus({
-    reportStatusUrl,
-  }: ICheckAnalysisScanStatusArguments): Promise<IAnalysisScanStatus> {
-    const response = await this.client.get<ICheckAnalysisScanStatusReturn>(reportStatusUrl);
+  async getScanStatus({ scanStatusUrl }: IScanStatusRequest): Promise<IScanStatusResponse> {
+    const response = await this.client.get<IScanStatusApiResponse>(scanStatusUrl);
     const violationCount = response.data.violations?.count ?? 0;
     const vulnerabilityCount = response.data.vulnerabilities?.count ?? 0;
     return {
@@ -140,6 +256,37 @@ export class SOOSAnalysisApiClient {
       errors: response.data.errors ?? [],
     };
   }
+
+  async getFormattedScanResult({
+    clientId,
+    projectHash,
+    branchHash,
+    scanType,
+    scanId,
+    outputFormat,
+  }: IGetFormattedScanRequest): Promise<Record<string, unknown>> {
+    const response = await this.client.get<Record<string, unknown>>(
+      `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}/formats/${outputFormat}`,
+    );
+    return response.data;
+  }
 }
+
+export {
+  ICreateScanRequestContributingDeveloperAudit,
+  ICreateScanRequest,
+  ICreateScanResponse,
+  IGetSupportedManifestsRequest,
+  IGetSupportedManifestsResponsePackageManagerManifestPatterns,
+  IGetSupportedManifestsResponse,
+  IScanStatusRequest,
+  IScanStatusResponse,
+  IStartScanRequest,
+  IUpdateScanStatusRequest,
+  IUploadManifestFilesRequest,
+  IUploadManifestFilesResponseManifestStatus,
+  IUploadManifestFilesResponse,
+  IGetFormattedScanRequest as IFormattedScanRequest,
+};
 
 export default SOOSAnalysisApiClient;

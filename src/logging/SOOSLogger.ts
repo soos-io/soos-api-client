@@ -1,6 +1,6 @@
 import { LogLevel } from "../enums";
 
-export class SOOSLogger {
+class SOOSLogger {
   private verbose: boolean;
   private console: Console;
   private minLogLevel: LogLevel;
@@ -8,7 +8,7 @@ export class SOOSLogger {
   constructor(
     verbose: boolean = false,
     minLogLevel: LogLevel = LogLevel.INFO,
-    console: Console = global.console
+    console: Console = global.console,
   ) {
     this.verbose = verbose;
     this.console = console;
@@ -32,9 +32,9 @@ export class SOOSLogger {
 
   private logWithTimestamp(level: LogLevel, message?: any, ...optionalParams: any[]): void {
     if (level >= this.minLogLevel) {
-      const logLevelkey = LogLevel[level];
+      const logLevelKey = LogLevel[level];
       const timestamp = this.getTimeStamp();
-      const logMessage = `${timestamp} UTC [${logLevelkey}] ${message}`;
+      const logMessage = `${timestamp} UTC [${logLevelKey}] ${message}`;
       this.console.log(logMessage, ...optionalParams);
     }
   }
@@ -47,12 +47,12 @@ export class SOOSLogger {
     this.minLogLevel = minLogLevel;
   }
 
-  info(message?: any, ...optionalParams: any[]): void {
-    this.logWithTimestamp(LogLevel.INFO, message, ...optionalParams);
-  }
-
   debug(message?: any, ...optionalParams: any[]): void {
     this.logWithTimestamp(LogLevel.DEBUG, message, ...optionalParams);
+  }
+
+  info(message?: any, ...optionalParams: any[]): void {
+    this.logWithTimestamp(LogLevel.INFO, message, ...optionalParams);
   }
 
   warn(message?: any, ...optionalParams: any[]): void {
@@ -63,15 +63,24 @@ export class SOOSLogger {
     this.logWithTimestamp(LogLevel.ERROR, message, ...optionalParams);
   }
 
-  verboseInfo(message?: any, ...optionalParams: any[]): void {
-    if (this.verbose) {
-      this.info(message, ...optionalParams);
-    }
+  group(...label: any[]): void {
+    this.console.group(...label);
+  }
+
+  groupEnd(): void {
+    this.console.groupEnd();
+    this.console.log("\n");
   }
 
   verboseDebug(message?: any, ...optionalParams: any[]): void {
     if (this.verbose) {
       this.debug(message, ...optionalParams);
+    }
+  }
+
+  verboseInfo(message?: any, ...optionalParams: any[]): void {
+    if (this.verbose) {
+      this.info(message, ...optionalParams);
     }
   }
 
@@ -87,10 +96,25 @@ export class SOOSLogger {
     }
   }
 
+  verboseGroup(...label: any[]): void {
+    if (this.verbose) {
+      this.group(...label);
+    }
+  }
+
+  verboseGroupEnd(): void {
+    if (this.verbose) {
+      this.groupEnd();
+    }
+  }
+
   logLineSeparator(): void {
     const separator = "-".repeat(80);
-    this.console.log(separator);
+    this.console.log(`${separator}\n`);
   }
 }
 
+export default SOOSLogger;
+
+// global instance reference
 export const soosLogger = new SOOSLogger();

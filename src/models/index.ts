@@ -1,2 +1,1 @@
-export * from "./Analysis";
-export * from "./Common";
+export { ICodedMessageModel } from "./CodedMessageModel";

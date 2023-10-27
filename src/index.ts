@@ -1,5 +1,5 @@
 export * from "./api";
+export * from "./logging";
 export * from "./models";
-export * from "./utils";
 export * from "./constants";
 export * from "./enums";
