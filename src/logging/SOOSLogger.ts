@@ -25,7 +25,7 @@ class SOOSLogger {
     const minutes = now.getMinutes().toString().padStart(2, "0");
     const seconds = now.getSeconds().toString().padStart(2, "0");
 
-    const timestamp = `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+    const timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${ampm}`;
 
     return `${timestamp}`;
   }
