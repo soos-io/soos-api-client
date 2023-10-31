@@ -216,9 +216,20 @@ class SOOSAnalysisApiClient {
     analysisId,
     manifestFiles,
   }: IUploadManifestFilesRequest): Promise<IUploadManifestFilesResponse> {
+    const headers: FormData.Headers = await new Promise((resolve) =>
+      manifestFiles.getLength((error, length) =>
+        isNil(error) && !isNil(length)
+          ? resolve(manifestFiles.getHeaders({ "Content-Length": length.toString() }))
+          : resolve(manifestFiles.getHeaders()),
+      ),
+    );
+
     const response = await this.client.post<IUploadManifestFilesResponse>(
       `clients/${clientId}/projects/${projectHash}/analysis/${analysisId}/manifests`,
       manifestFiles,
+      {
+        headers: headers,
+      },
     );
 
     return response.data;
