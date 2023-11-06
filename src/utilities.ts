@@ -73,11 +73,11 @@ const obfuscateProperties = <T extends Record<string, unknown> = Record<string, 
   }, {} as T);
 };
 
-function convertStringToB64(content: string): string {
+const convertStringToBase64 = (content: string): string => {
   const messageBytes = Buffer.from(content, "utf-8");
   const base64Message = messageBytes.toString("base64");
   return base64Message;
-}
+};
 
 const getEnvVariable = (name: string): string | null => {
   return process.env[name] || null;
@@ -91,6 +91,6 @@ export {
   sleep,
   isUrlAvailable,
   obfuscateProperties,
-  convertStringToB64,
+  convertStringToBase64,
   getEnvVariable,
 };
