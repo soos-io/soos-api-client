@@ -20,7 +20,7 @@ class SOOSLogger {
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, "0");
     const day = now.getDate().toString().padStart(2, "0");
-    const hours = now.getHours() % 12 || 12; // Convert to 12-hour format
+    const hours = (now.getHours() % 12 || 12).toString().padStart(2, "0");
     const ampm = now.getHours() >= 12 ? "PM" : "AM";
     const minutes = now.getMinutes().toString().padStart(2, "0");
     const seconds = now.getSeconds().toString().padStart(2, "0");
