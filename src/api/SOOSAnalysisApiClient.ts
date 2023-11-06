@@ -3,7 +3,6 @@ import FormData from "form-data";
 import { ManifestStatus, OutputFormat, PackageManagerType, ScanStatus, ScanType } from "../enums";
 import { AxiosInstance } from "axios";
 import { ICodedMessageModel } from "../models";
-import { isNil } from "../utilities";
 import SOOSApiClient from "./SOOSApiClient";
 
 const CompletedScanStatuses = [
@@ -34,6 +33,8 @@ interface ICreateScanRequest {
   scriptVersion: string | null;
   appVersion: string | null;
   contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
+  toolName: string | null;
+  toolVersion: string | null;
 }
 
 interface ICreateScanResponse {
@@ -134,6 +135,15 @@ interface IGetFormattedScanRequest {
   outputFormat: OutputFormat;
 }
 
+interface IUploadScanToolResultRequest {
+  clientId: string;
+  projectHash: string;
+  branchHash: string;
+  scanType: ScanType;
+  scanId: string;
+  resultFile: FormData;
+}
+
 class SOOSAnalysisApiClient {
   private readonly baseUri: string;
   private readonly apiKey: string;
@@ -164,6 +174,8 @@ class SOOSAnalysisApiClient {
     appVersion,
     scriptVersion,
     contributingDeveloperAudit,
+    toolName,
+    toolVersion,
   }: ICreateScanRequest): Promise<ICreateScanResponse> {
     const response = await this.client.post<ICreateScanResponse>(
       `clients/${clientId}/scan-types/${scanType}/scans`,
@@ -180,6 +192,8 @@ class SOOSAnalysisApiClient {
         scriptVersion: scriptVersion,
         appVersion: appVersion,
         contributingDeveloperAudit: contributingDeveloperAudit,
+        toolName: toolName,
+        toolVersion: toolVersion,
       },
     );
 
@@ -201,20 +215,9 @@ class SOOSAnalysisApiClient {
     analysisId,
     manifestFiles,
   }: IUploadManifestFilesRequest): Promise<IUploadManifestFilesResponse> {
-    const headers: FormData.Headers = await new Promise((resolve) =>
-      manifestFiles.getLength((error, length) =>
-        isNil(error) && !isNil(length)
-          ? resolve(manifestFiles.getHeaders({ "Content-Length": length.toString() }))
-          : resolve(manifestFiles.getHeaders()),
-      ),
-    );
-
     const response = await this.client.post<IUploadManifestFilesResponse>(
       `clients/${clientId}/projects/${projectHash}/analysis/${analysisId}/manifests`,
       manifestFiles,
-      {
-        headers: headers,
-      },
     );
 
     return response.data;
@@ -270,6 +273,20 @@ class SOOSAnalysisApiClient {
     );
     return response.data;
   }
+
+  async uploadScanToolResult({
+    clientId,
+    projectHash,
+    branchHash,
+    scanType,
+    scanId,
+    resultFile,
+  }: IUploadScanToolResultRequest): Promise<void> {
+    await this.client.put(
+      `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}`,
+      resultFile,
+    );
+  }
 }
 
 export {
@@ -287,6 +304,7 @@ export {
   IUploadManifestFilesResponseManifestStatus,
   IUploadManifestFilesResponse,
   IGetFormattedScanRequest as IFormattedScanRequest,
+  IUploadScanToolResultRequest,
 };
 
 export default SOOSAnalysisApiClient;
