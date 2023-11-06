@@ -35,8 +35,8 @@ const ensureEnumValue = <
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isUrlAvailable = async (url: string): Promise<boolean> => {
-  let delay = 5000;
-  let maxAttempts = 5;
+  const delay = 5000;
+  const maxAttempts = 5;
   let attempts = 0;
   while (attempts < maxAttempts) {
     try {
