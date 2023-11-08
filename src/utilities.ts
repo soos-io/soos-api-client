@@ -18,14 +18,16 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
   }
 
   const options = Object.entries(enumObject) as unknown as Array<[string, string | number]>;
-  const option = options.find(([, value]) => {
+  const optionsWithoutExcludedDefault =
+    excludeDefault === undefined ? options : options.filter((o) => o.at(0) !== excludeDefault);
+  const option = optionsWithoutExcludedDefault.find(([, value]) => {
     const stringValue = value.toLocaleString();
     return ignoreCase
       ? stringValue.toLocaleLowerCase() === inputValue.toLocaleLowerCase()
       : stringValue === inputValue;
   });
 
-  if (isNil(option) || (excludeDefault !== undefined && option.at(0) === excludeDefault)) {
+  if (isNil(option)) {
     throw new Error(
       `Invalid enum value '${inputValue}'. Valid options are: ${options
         .map(([, value]) => value)
