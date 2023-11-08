@@ -7,29 +7,34 @@ const ensureValue = <T>(value: T | null | undefined, propertyName: string): T =>
   return value;
 };
 
-const ensureValueIsOneOf = <T extends string>(
-  options: Array<T>,
-  value: string | undefined,
-  opts: { caseSensitive?: boolean } = {},
-): T | undefined => {
-  if (value === undefined) return undefined;
-  const match = options.find((option) => {
-    return opts.caseSensitive
-      ? option === value
-      : option.toLocaleLowerCase() === value.toLocaleLowerCase();
-  });
-  if (!isNil(match)) return match;
-  throw new Error(`Invalid enum value '${value}'. Valid options are: ${options.join(", ")}.`);
-};
-
-const ensureEnumValue = <
-  T extends string,
-  TEnumObject extends Record<string, T> = Record<string, T>,
->(
+const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<string, T>>(
   enumObject: TEnumObject,
-  value: string | undefined,
+  inputValue: string | null | undefined,
+  excludeDefault?: T,
+  ignoreCase = true,
 ): T | undefined => {
-  return ensureValueIsOneOf(Object.values(enumObject), value);
+  if (isNil(inputValue)) {
+    return undefined;
+  }
+
+  const options = Object.entries(enumObject) as unknown as Array<[string, string | number]>;
+  const option = options.find(([, value]) => {
+    const stringValue = value.toLocaleString();
+    return ignoreCase
+      ? stringValue.toLocaleLowerCase() === inputValue.toLocaleLowerCase()
+      : stringValue === inputValue;
+  });
+
+  if (isNil(option) || (excludeDefault !== undefined && option === excludeDefault)) {
+    throw new Error(
+      `Invalid enum value '${inputValue}'. Valid options are: ${options
+        .map(([, value]) => value)
+        .join(", ")}.`,
+    );
+  }
+
+  const [key] = option;
+  return enumObject[key] as unknown as T;
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -86,7 +91,6 @@ const getEnvVariable = (name: string): string | null => {
 export {
   isNil,
   ensureValue,
-  ensureValueIsOneOf,
   ensureEnumValue,
   sleep,
   isUrlAvailable,
