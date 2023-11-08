@@ -10,7 +10,7 @@ const ensureValue = <T>(value: T | null | undefined, propertyName: string): T =>
 const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<string, T>>(
   enumObject: TEnumObject,
   inputValue: string | null | undefined,
-  excludeDefault?: T,
+  excludeDefault: keyof TEnumObject | null,
   ignoreCase = true,
 ): T | undefined => {
   if (isNil(inputValue)) {
@@ -25,7 +25,7 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
       : stringValue === inputValue;
   });
 
-  if (isNil(option) || (excludeDefault !== undefined && option === excludeDefault)) {
+  if (isNil(option) || (excludeDefault && option.at(0) === excludeDefault)) {
     throw new Error(
       `Invalid enum value '${inputValue}'. Valid options are: ${options
         .map(([, value]) => value)
