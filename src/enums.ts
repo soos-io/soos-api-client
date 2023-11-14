@@ -50,13 +50,13 @@ export enum ScanType {
 }
 
 export enum LogLevel {
-  PASS = 0,
-  IGNORE = 1,
-  INFO = 2,
-  WARN = 3,
-  FAIL = 4,
-  DEBUG = 5,
-  ERROR = 6,
+  PASS = "PASS",
+  IGNORE = "IGNORE",
+  INFO = "INFO",
+  WARN = "WARN",
+  FAIL = "FAIL",
+  DEBUG = "DEBUG",
+  ERROR = "ERROR",
 }
 
 export enum OutputFormat {
