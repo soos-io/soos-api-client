@@ -31,7 +31,7 @@ class SOOSLogger {
   }
 
   private logWithTimestamp(level: LogLevel, message?: any, ...optionalParams: any[]): void {
-    if (level >= this.minLogLevel) {
+    if (Object.keys(LogLevel).indexOf(level) >= Object.keys(LogLevel).indexOf(this.minLogLevel)) {
       const logLevelKey = LogLevel[level];
       const timestamp = this.getTimeStamp();
       const logMessage = `${timestamp} UTC [${logLevelKey}] ${message}`;
