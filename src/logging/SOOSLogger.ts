@@ -31,12 +31,16 @@ class SOOSLogger {
   }
 
   private logWithTimestamp(level: LogLevel, message?: any, ...optionalParams: any[]): void {
-    if (Object.keys(LogLevel).indexOf(level) >= Object.keys(LogLevel).indexOf(this.minLogLevel)) {
+    if (this.isLevelAboveMin(level)) {
       const logLevelKey = LogLevel[level];
       const timestamp = this.getTimeStamp();
       const logMessage = `${timestamp} UTC [${logLevelKey}] ${message}`;
       this.console.log(logMessage, ...optionalParams);
     }
+  }
+
+  private isLevelAboveMin(level: LogLevel): boolean {
+    return Object.keys(LogLevel).indexOf(level) >= Object.keys(LogLevel).indexOf(this.minLogLevel);
   }
 
   setVerbose(verbose: boolean) {
