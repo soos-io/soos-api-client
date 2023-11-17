@@ -49,6 +49,14 @@ describe("ensureValue", () => {
 });
 
 describe("ensureNonEmptyValue", () => {
+  test("should throw an error for null", () => {
+    expect(() => ensureNonEmptyValue(null, "property")).toThrow("'property' is required.");
+  });
+
+  test("should throw an error for undefined", () => {
+    expect(() => ensureNonEmptyValue(undefined, "property")).toThrow("'property' is required.");
+  });
+
   test("should throw an error for an empty string", () => {
     expect(() => ensureNonEmptyValue("", "property")).toThrow("'property' is required.");
   });
