@@ -1,4 +1,6 @@
 tsconfig.json
+jest.config.js
+*.test.ts
 .prettierrc
 /.vscode
 /.github

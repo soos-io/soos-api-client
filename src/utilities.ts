@@ -2,8 +2,17 @@ import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
 
+const isEmptyString = (value: string): boolean => {
+  return value.trim() === "";
+};
+
 const ensureValue = <T>(value: T | null | undefined, propertyName: string): T => {
   if (isNil(value)) throw new Error(`'${propertyName}' is required.`);
+  return value;
+};
+
+const ensureNonEmptyValue = (value: string | null | undefined, propertyName: string): string => {
+  if (isNil(value) || isEmptyString(value)) throw new Error(`'${propertyName}' is required.`);
   return value;
 };
 
@@ -92,8 +101,10 @@ const getEnvVariable = (name: string): string | null => {
 
 export {
   isNil,
+  isEmptyString,
   ensureValue,
   ensureEnumValue,
+  ensureNonEmptyValue,
   sleep,
   isUrlAvailable,
   obfuscateProperties,

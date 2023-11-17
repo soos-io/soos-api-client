@@ -45,6 +45,7 @@ export enum ScanStatus {
 export enum ScanType {
   CSA = "Csa",
   DAST = "Dast",
+  SAST = "Sast",
   SBOM = "Sbom",
   SCA = "Sca",
 }
