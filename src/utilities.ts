@@ -11,8 +11,8 @@ const ensureValue = <T>(value: T | null | undefined, propertyName: string): T =>
   return value;
 };
 
-const ensureNonEmptyValue = (value: string, propertyName: string): string => {
-  if (isEmptyString(value)) throw new Error(`'${propertyName}' is required.`);
+const ensureNonEmptyValue = (value: string | null | undefined, propertyName: string): string => {
+  if (isNil(value) || isEmptyString(value)) throw new Error(`'${propertyName}' is required.`);
   return value;
 };
 
