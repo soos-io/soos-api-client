@@ -1,9 +1,16 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
-const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
+const isNil = (value: unknown): value is null | undefined =>
+  value === null || value === undefined || value === "";
+
+const isNilOrEmpty = (value: unknown): value is null | undefined => {
+  if (isNil(value)) return true;
+  if (typeof value === "string") return value.trim() === "";
+  return false;
+};
 
 const ensureValue = <T>(value: T | null | undefined, propertyName: string): T => {
-  if (isNil(value)) throw new Error(`'${propertyName}' is required.`);
+  if (isNilOrEmpty(value)) throw new Error(`'${propertyName}' is required.`);
   return value;
 };
 
@@ -92,6 +99,7 @@ const getEnvVariable = (name: string): string | null => {
 
 export {
   isNil,
+  isNilOrEmpty,
   ensureValue,
   ensureEnumValue,
   sleep,

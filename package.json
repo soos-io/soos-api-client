@@ -13,7 +13,7 @@
     "format": "prettier ./src --check",
     "format:fix": "prettier ./src --write",
     "typecheck": "tsc --noEmit",
-    "test:coverage": "npm run test -- --reporter xunit --reporter-option output=ResultsFile.xml",
+    "test": "jest",
     "check": "npm run format && npm run typecheck && npm outdated"
   },
   "publishConfig": {
@@ -42,9 +42,13 @@
     "tslib": "^2.6.2"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.23.3",
     "@types/glob": "^8.1.0",
+    "@types/jest": "^29.5.8",
     "@types/node": "^20.8.9",
+    "jest": "^29.7.0",
     "prettier": "^3.0.3",
+    "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
   }
 }
