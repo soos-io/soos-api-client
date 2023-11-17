@@ -7,8 +7,12 @@ const isEmptyString = (value: string): boolean => {
 };
 
 const ensureValue = <T>(value: T | null | undefined, propertyName: string): T => {
-  if (isNil(value) || isEmptyString(value as string))
-    throw new Error(`'${propertyName}' is required.`);
+  if (isNil(value)) throw new Error(`'${propertyName}' is required.`);
+  return value;
+};
+
+const ensureNonEmptyValue = (value: string, propertyName: string): string => {
+  if (isEmptyString(value)) throw new Error(`'${propertyName}' is required.`);
   return value;
 };
 
@@ -100,6 +104,7 @@ export {
   isEmptyString,
   ensureValue,
   ensureEnumValue,
+  ensureNonEmptyValue,
   sleep,
   isUrlAvailable,
   obfuscateProperties,
