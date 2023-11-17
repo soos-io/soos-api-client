@@ -1,4 +1,4 @@
-import { isNil, isNilOrEmpty, ensureValue, ensureEnumValue } from "./utilities";
+import { isNil, isEmptyString, ensureValue, ensureEnumValue } from "./utilities";
 
 describe("isNil", () => {
   test("should return true for null", () => {
@@ -9,34 +9,22 @@ describe("isNil", () => {
     expect(isNil(undefined)).toBe(true);
   });
 
-  test("should return true for an empty string", () => {
-    expect(isNil("")).toBe(true);
-  });
-
   test("should return false for a non-nil value", () => {
     expect(isNil("string")).toBe(false);
   });
 });
 
-describe("isNilOrEmpty", () => {
-  test("should return true for null", () => {
-    expect(isNilOrEmpty(null)).toBe(true);
-  });
-
-  test("should return true for undefined", () => {
-    expect(isNilOrEmpty(undefined)).toBe(true);
-  });
-
+describe("isEmptyString", () => {
   test("should return true for an empty string", () => {
-    expect(isNilOrEmpty("")).toBe(true);
+    expect(isEmptyString("")).toBe(true);
   });
 
   test("should return true for a string with only spaces", () => {
-    expect(isNilOrEmpty("   ")).toBe(true);
+    expect(isEmptyString("   ")).toBe(true);
   });
 
   test("should return false for a non-empty string", () => {
-    expect(isNilOrEmpty("value")).toBe(false);
+    expect(isEmptyString("value")).toBe(false);
   });
 });
 
@@ -65,10 +53,6 @@ describe("ensureEnumValue", () => {
 
   test("should return undefined for undefined", () => {
     expect(ensureEnumValue({ value: "value" }, undefined)).toBe(undefined);
-  });
-
-  test("should return undefined for an empty string", () => {
-    expect(ensureEnumValue({ value: "value" }, "")).toBe(undefined);
   });
 
   test("should throw an error for an invalid enum value", () => {
