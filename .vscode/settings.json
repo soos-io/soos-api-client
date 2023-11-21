@@ -4,10 +4,11 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "prettier.configPath": "./.prettierrc",
     "cSpell.words": [
-      "Dast",
-      "SOOS",
       "Csa",
-      "Sca"
+      "Dast",
+      "SARIF",
+      "Sca",
+      "SOOS"
     ],
     "sarif-viewer.connectToGithubCodeScanning": "off",
   }

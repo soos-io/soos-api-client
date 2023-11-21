@@ -5,6 +5,11 @@
 **Ticket:** https://soos.atlassian.net/browse/PA-0000
 
 <!---
+pre release: 
+set package.json version eg "version": "0.1.3-pre.1"
+npm run build
+npm publish --tag next
+
 If you want to create a release make sure to bump the version on package.json, once it's merged just push a tag with the version
 eg if package version is 1.0.0 push a tag with the version v1.0.0 (make sure to use the v as a prefix).
  This will be enough to release a new version
