@@ -12,3 +12,4 @@ If you maintain an Open Source project, sign up for the Free as in Beer [SOOS Co
 
 This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.
 
+
