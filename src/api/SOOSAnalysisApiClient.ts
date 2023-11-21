@@ -218,6 +218,11 @@ class SOOSAnalysisApiClient {
     const response = await this.client.post<IUploadManifestFilesResponse>(
       `clients/${clientId}/projects/${projectHash}/analysis/${analysisId}/manifests`,
       manifestFiles,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     return response.data;
@@ -285,6 +290,11 @@ class SOOSAnalysisApiClient {
     await this.client.put(
       `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}`,
       resultFile,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
   }
 }
