@@ -63,3 +63,8 @@ export enum LogLevel {
 export enum OutputFormat {
   SARIF = "SARIF",
 }
+
+export enum OnFailure {
+  Continue = "continue_on_failure",
+  Fail = "fail_the_build",
+}
