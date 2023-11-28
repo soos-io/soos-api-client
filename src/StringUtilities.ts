@@ -14,8 +14,10 @@ const StringUtilities = {
    * @see https://stackoverflow.com/a/7225474
    */
   fromCamelToTitleCase: (str: string): string => {
-    const [firstCharacter, ...rest] = str.replace(/([A-Z]+)*([A-Z][a-z])/g, "$1 $2").trim();
-    return `${firstCharacter.toLocaleUpperCase()}${rest.join("")}`;
+    const words = str.split(/(?<=[a-z])(?=[A-Z])/g).map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    });
+    return words.join(" ");
   },
   areEqual: (
     a: string,
