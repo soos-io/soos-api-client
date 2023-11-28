@@ -10,9 +10,6 @@ const StringUtilities = {
     const word = StringUtilities.pluralizeWord(count, singular, plural);
     return `${count ?? 0} ${word}`;
   },
-  /**
-   * @see https://stackoverflow.com/a/7225474
-   */
   fromCamelToTitleCase: (str: string): string => {
     const words = str.split(/(?<=[a-z])(?=[A-Z])/g).map((word) => {
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
