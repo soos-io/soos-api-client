@@ -59,6 +59,16 @@ interface ISetupScanParams {
   scanType: ScanType;
 }
 
+interface IUpdateScanStatusParams {
+  clientId: string;
+  projectHash: string;
+  branchHash: string;
+  scanType: ScanType;
+  analysisId: string;
+  status: ScanStatus;
+  message: string;
+}
+
 class AnalysisService {
   private analysisApiClient: SOOSAnalysisApiClient;
 
@@ -240,6 +250,27 @@ class AnalysisService {
         );
       }
     }
+  }
+
+  async updateScanStatus({
+    clientId,
+    projectHash,
+    branchHash,
+    scanType,
+    analysisId,
+    status,
+    message,
+  }: IUpdateScanStatusParams): Promise<void> {
+    await this.analysisApiClient.updateScanStatus({
+      clientId: clientId,
+      projectHash: projectHash,
+      branchHash: branchHash,
+      scanType: scanType,
+      scanId: analysisId,
+      status: status,
+      message: message,
+    });
+    soosLogger.error(message);
   }
 }
 
