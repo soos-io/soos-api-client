@@ -1,6 +1,13 @@
 import { SOOS_CONSTANTS } from "../constants";
 import FormData from "form-data";
-import { ManifestStatus, OutputFormat, PackageManagerType, ScanStatus, ScanType } from "../enums";
+import {
+  IntegrationName,
+  ManifestStatus,
+  OutputFormat,
+  PackageManagerType,
+  ScanStatus,
+  ScanType,
+} from "../enums";
 import { AxiosInstance } from "axios";
 import { ICodedMessageModel } from "../models";
 import SOOSApiClient from "./SOOSApiClient";
@@ -29,7 +36,7 @@ interface ICreateScanRequest {
   branchUri: string | null;
   integrationType: string;
   operatingEnvironment: string;
-  integrationName: string | null;
+  integrationName?: IntegrationName | null;
   scriptVersion: string | null;
   appVersion: string | null;
   contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];

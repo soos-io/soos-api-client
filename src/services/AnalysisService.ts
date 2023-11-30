@@ -4,7 +4,14 @@ import SOOSAnalysisApiClient, {
   ICreateScanResponse,
 } from "../api/SOOSAnalysisApiClient";
 import { SOOS_CONSTANTS } from "../constants";
-import { OutputFormat, ScanStatus, ScanType } from "../enums";
+import {
+  ContributingDeveloperSource,
+  ContributingDevelopersVariableNames,
+  IntegrationName,
+  OutputFormat,
+  ScanStatus,
+  ScanType,
+} from "../enums";
 import { soosLogger } from "../logging";
 import { sleep } from "../utilities";
 import * as FileSystem from "fs";
@@ -20,6 +27,36 @@ interface IRunOutputFormatParams {
   outputFormat: OutputFormat;
   sourceCodePath: string;
   workingDirectory: string;
+}
+
+interface IStartScanParams {
+  clientId: string;
+  projectHash: string;
+  analysisId: string;
+  scanType: ScanType;
+  scanUrl: string;
+}
+
+interface IWaitForScanToFinishParams {
+  scanStatusUrl: string;
+  scanUrl: string;
+}
+
+interface ISetupScanParams {
+  clientId: string;
+  projectName: string;
+  branchName: string;
+  commitHash: string;
+  buildVersion: string;
+  buildUri: string;
+  branchUri: string;
+  integrationType: string;
+  operatingEnvironment: string;
+  integrationName?: IntegrationName;
+  appVersion: string;
+  scriptVersion: string;
+  contributingDeveloperAudit: ICreateScanRequestContributingDeveloperAudit[];
+  scanType: ScanType;
 }
 
 class AnalysisService {
@@ -50,25 +87,23 @@ class AnalysisService {
     scriptVersion,
     contributingDeveloperAudit,
     scanType,
-  }: {
-    clientId: string;
-    projectName: string;
-    branchName: string;
-    commitHash: string;
-    buildVersion: string;
-    buildUri: string;
-    branchUri: string;
-    integrationType: string;
-    operatingEnvironment: string;
-    integrationName: string;
-    appVersion: string;
-    scriptVersion: string;
-    contributingDeveloperAudit: ICreateScanRequestContributingDeveloperAudit[];
-    scanType: ScanType;
-  }): Promise<ICreateScanResponse> {
+  }: ISetupScanParams): Promise<ICreateScanResponse> {
     soosLogger.info(`Starting SOOS ${scanType} Analysis`);
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
+
+    if (integrationName && contributingDeveloperAudit.length === 0) {
+      soosLogger.info(`Integration Name: ${integrationName}`);
+      const envVariableName = ContributingDevelopersVariableNames[integrationName];
+      const contributingDeveloper = process.env[envVariableName];
+      if (contributingDeveloper) {
+        contributingDeveloperAudit.push({
+          source: ContributingDeveloperSource.EnvironmentVariable,
+          sourceName: envVariableName,
+          contributingDeveloperId: contributingDeveloper,
+        });
+      }
+    }
 
     const result = await this.analysisApiClient.createScan({
       clientId: clientId,
@@ -97,13 +132,26 @@ class AnalysisService {
     return result;
   }
 
+  async startScan({
+    clientId,
+    projectHash,
+    analysisId,
+    scanType,
+    scanUrl,
+  }: IStartScanParams): Promise<void> {
+    soosLogger.info(`Starting ${scanType} Analysis scan`);
+    await this.analysisApiClient.startScan({
+      clientId: clientId,
+      projectHash: projectHash,
+      analysisId: analysisId,
+    });
+    soosLogger.info(`Analysis scan started successfully, to see the results visit: ${scanUrl}`);
+  }
+
   async waitForScanToFinish({
     scanStatusUrl,
     scanUrl,
-  }: {
-    scanStatusUrl: string;
-    scanUrl: string;
-  }): Promise<ScanStatus> {
+  }: IWaitForScanToFinishParams): Promise<ScanStatus> {
     const scanStatus = await this.analysisApiClient.getScanStatus({
       scanStatusUrl: scanStatusUrl,
     });
