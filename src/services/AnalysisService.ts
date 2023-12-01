@@ -17,7 +17,7 @@ import { sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 
-interface IRunOutputFormatParams {
+interface IGenerateFormattedOutputParams {
   clientId: string;
   projectHash: string;
   projectName: string;
@@ -70,7 +70,7 @@ interface IUpdateScanStatusParams {
 }
 
 class AnalysisService {
-  private analysisApiClient: SOOSAnalysisApiClient;
+  public analysisApiClient: SOOSAnalysisApiClient;
 
   constructor(analysisApiClient: SOOSAnalysisApiClient) {
     this.analysisApiClient = analysisApiClient;
@@ -190,11 +190,7 @@ class AnalysisService {
         "vulnerabilities",
       );
 
-      const violations = StringUtilities.pluralizeTemplate(
-        scanStatus.violations,
-        "violation",
-        "violations",
-      );
+      const violations = StringUtilities.pluralizeTemplate(scanStatus.violations, "violation");
 
       statusMessage = statusMessage.concat(
         `${
@@ -208,7 +204,7 @@ class AnalysisService {
     return scanStatus.status;
   }
 
-  async runOutputFormat({
+  async generateFormattedOutput({
     clientId,
     projectHash,
     projectName,
@@ -218,7 +214,7 @@ class AnalysisService {
     outputFormat,
     sourceCodePath,
     workingDirectory,
-  }: IRunOutputFormatParams): Promise<void> {
+  }: IGenerateFormattedOutputParams): Promise<void> {
     soosLogger.info(`Generating ${outputFormat} report ${projectName}...`);
     const output = await this.analysisApiClient.getFormattedScanResult({
       clientId: clientId,
