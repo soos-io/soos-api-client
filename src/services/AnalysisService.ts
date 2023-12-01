@@ -57,6 +57,8 @@ interface ISetupScanParams {
   scriptVersion: string;
   contributingDeveloperAudit: ICreateScanRequestContributingDeveloperAudit[];
   scanType: ScanType;
+  toolName?: string;
+  toolVersion?: string;
 }
 
 interface IUpdateScanStatusParams {
@@ -97,6 +99,8 @@ class AnalysisService {
     scriptVersion,
     contributingDeveloperAudit,
     scanType,
+    toolName,
+    toolVersion,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
     soosLogger.info(`Starting SOOS ${scanType} Analysis`);
     soosLogger.info(`Creating scan for project '${projectName}'...`);
@@ -130,8 +134,8 @@ class AnalysisService {
       scriptVersion: scriptVersion,
       contributingDeveloperAudit: contributingDeveloperAudit,
       scanType: scanType,
-      toolName: null,
-      toolVersion: null,
+      toolName: toolName,
+      toolVersion: toolVersion,
     });
 
     soosLogger.info(`Project Hash: ${result.projectHash}`);

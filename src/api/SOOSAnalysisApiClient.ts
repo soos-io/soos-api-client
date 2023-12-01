@@ -40,8 +40,8 @@ interface ICreateScanRequest {
   scriptVersion: string | null;
   appVersion: string | null;
   contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
-  toolName: string | null;
-  toolVersion: string | null;
+  toolName?: string | null;
+  toolVersion?: string | null;
 }
 
 interface ICreateScanResponse {
