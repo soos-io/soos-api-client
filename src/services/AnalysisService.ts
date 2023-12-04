@@ -4,7 +4,7 @@ import SOOSAnalysisApiClient, {
   ICreateScanResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
-import SOOSUsersApiClient from "../api/SOOSUsersApiClient";
+import SOOSUsersApiClient, { IApplicationStatusMessage } from "../api/SOOSUsersApiClient";
 import { SOOS_CONSTANTS } from "../constants";
 import {
   ContributingDeveloperSource,
@@ -12,6 +12,7 @@ import {
   OutputFormat,
   ScanStatus,
   ScanType,
+  SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
 import { sleep } from "../utilities";
@@ -107,9 +108,34 @@ class AnalysisService {
       apiKey,
       apiURL.replace("api.", "api-projects."),
     );
-    const userApiClient = new SOOSUserApiClient(apiKey, apiURL.replace("api.", "api-user."));
+    const usersApiClient = new SOOSUsersApiClient(apiKey, apiURL.replace("api.", "api-user."));
 
     return new AnalysisService(analysisApiClient, projectsApiClient, usersApiClient);
+  }
+
+  private logStatusMessage(message: IApplicationStatusMessage | null): void {
+    if (message) {
+      switch (message.severity) {
+        case SeverityEnum.Unknown:
+        case SeverityEnum.None:
+        case SeverityEnum.Info:
+        case SeverityEnum.Low:
+          soosLogger.info(message.message);
+          break;
+        case SeverityEnum.Medium:
+        case SeverityEnum.High:
+          soosLogger.warn(message.message);
+          break;
+        case SeverityEnum.Critical:
+          soosLogger.error(message.message);
+          break;
+      }
+
+      if (message.url) {
+        const linkText = message.linkText ? `[${message.linkText}]` : "";
+        soosLogger.info(`${linkText}(${message.url})`);
+      }
+    }
   }
 
   async setupScan({
@@ -132,22 +158,8 @@ class AnalysisService {
   }: ISetupScanParams): Promise<ICreateScanResponse> {
     soosLogger.info("Checking status...");
     const applicationStatus = await this.usersApiClient.getApplicationStatus(clientId);
-    if (applicationStatus.statusMessage) {
-      soosLogger.info(applicationStatus.statusMessage.message);
-      if (applicationStatus.statusMessage.linkText) {
-        soosLogger.info(
-          `[${applicationStatus.statusMessage.linkText}](${applicationStatus.statusMessage.url})`,
-        );
-      }
-    }
-    if (applicationStatus.clientMessage) {
-      soosLogger.info(applicationStatus.clientMessage.message);
-      if (applicationStatus.clientMessage.linkText) {
-        soosLogger.info(
-          `[${applicationStatus.clientMessage.linkText}](${applicationStatus.clientMessage.url})`,
-        );
-      }
-    }
+    this.logStatusMessage(applicationStatus.statusMessage);
+    this.logStatusMessage(applicationStatus.clientMessage);
     soosLogger.logLineSeparator();
     soosLogger.info(`Starting SOOS ${scanType} Analysis`);
     soosLogger.info(`Creating scan for project '${projectName}'...`);

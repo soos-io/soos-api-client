@@ -21,7 +21,7 @@ class SOOSUsersApiClient {
   private readonly apiKey: string;
   private readonly client: AxiosInstance;
 
-  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Users) {
+  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.User) {
     this.apiKey = apiKey;
     this.baseUri = baseUri;
     this.client = SOOSApiClient.create({
