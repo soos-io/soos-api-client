@@ -7,7 +7,6 @@ import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
 import { SOOS_CONSTANTS } from "../constants";
 import {
   ContributingDeveloperSource,
-  ContributingDevelopersVariableNames,
   IntegrationName,
   OutputFormat,
   ScanStatus,
@@ -72,18 +71,19 @@ interface IUpdateScanStatusParams {
   message: string;
 }
 
-const integrationEnvMap = new Map([
-  [IntegrationName.AWSCodeBuild, ContributingDevelopersVariableNames.AWSCodeBuild],
-  [IntegrationName.Bamboo, ContributingDevelopersVariableNames.Bamboo],
-  [IntegrationName.BitBucket, ContributingDevelopersVariableNames.BitBucket],
-  [IntegrationName.CircleCI, ContributingDevelopersVariableNames.CircleCI],
-  [IntegrationName.CodeShip, ContributingDevelopersVariableNames.CodeShip],
-  [IntegrationName.GithubActions, ContributingDevelopersVariableNames.GitHub],
-  [IntegrationName.GitLab, ContributingDevelopersVariableNames.GitLab],
-  [IntegrationName.Jenkins, ContributingDevelopersVariableNames.Jenkins],
-  [IntegrationName.TeamCity, ContributingDevelopersVariableNames.TeamCity],
-  [IntegrationName.TravisCI, ContributingDevelopersVariableNames.TravisCI],
-]);
+const integrationNameToEnvVariable: Record<IntegrationName, string> = {
+  [IntegrationName.AWSCodeBuild]: "CODEBUILD_BUILD_INITIATOR",
+  [IntegrationName.Bamboo]: "bamboo_planRepository_1_username",
+  [IntegrationName.BitBucket]: "BITBUCKET_STEP_TRIGGERER_UUID",
+  [IntegrationName.CircleCI]: "CIRCLE_USERNAME",
+  [IntegrationName.CodeShip]: "CI_COMMITTER_USERNAME",
+  [IntegrationName.GithubActions]: "GITHUB_ACTOR",
+  [IntegrationName.GitLab]: "GITLAB_USER_LOGIN",
+  [IntegrationName.Jenkins]: "CHANGE_AUTHOR",
+  [IntegrationName.Script]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.TeamCity]: "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
+  [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
+};
 
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
@@ -128,7 +128,7 @@ class AnalysisService {
 
     if (integrationName !== IntegrationName.Script && contributingDeveloperAudit.length === 0) {
       soosLogger.info(`Integration Name: ${integrationName}`);
-      const envVariableName = integrationEnvMap.get(integrationName);
+      const envVariableName = integrationNameToEnvVariable[integrationName];
       if (envVariableName) {
         const contributingDeveloper = process.env[envVariableName];
         if (contributingDeveloper) {

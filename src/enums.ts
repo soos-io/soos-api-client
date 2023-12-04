@@ -1,16 +1,3 @@
-export enum ContributingDevelopersVariableNames {
-  AWSCodeBuild = "CODEBUILD_BUILD_INITIATOR",
-  Bamboo = "bamboo_planRepository_1_username",
-  BitBucket = "BITBUCKET_STEP_TRIGGERER_UUID",
-  CircleCI = "CIRCLE_USERNAME",
-  CodeShip = "CI_COMMITTER_USERNAME",
-  GitHub = "GITHUB_ACTOR",
-  GitLab = "GITLAB_USER_LOGIN",
-  Jenkins = "CHANGE_AUTHOR",
-  TeamCity = "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
-  TravisCI = "TRAVIS_COMMIT",
-}
-
 export enum ContributingDeveloperSource {
   Unknown = "Unknown",
   GithubWebhook = "GithubWebhook",
