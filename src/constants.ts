@@ -1,4 +1,8 @@
 export const SOOS_CONSTANTS = {
+  EnvironmentVariables: {
+    ApiKey: "SOOS_API_KEY",
+    ClientId: "SOOS_CLIENT_ID",
+  },
   FileUploads: {
     Encoding: "utf8" as BufferEncoding,
     MaxManifests: 50,

@@ -1,6 +1,6 @@
 export enum ContributingDeveloperSource {
   Unknown = "Unknown",
-  GithubWebhook = "GithubWebhook",
+  GitHubWebhook = "GitHubWebhook",
   EnvironmentVariable = "EnvironmentVariable",
   OperatingSystem = "OperatingSystem",
 }
