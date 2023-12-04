@@ -16,7 +16,7 @@ interface IApplicationStatusModel {
   clientMessage: IApplicationStatusMessage | null;
 }
 
-class SOOSUsersApiClient {
+class SOOSUserApiClient {
   private readonly baseUri: string;
   private readonly apiKey: string;
   private readonly client: AxiosInstance;
@@ -42,4 +42,4 @@ class SOOSUsersApiClient {
 
 export { IApplicationStatusModel, IApplicationStatusMessage };
 
-export default SOOSUsersApiClient;
+export default SOOSUserApiClient;

@@ -4,7 +4,7 @@ import SOOSAnalysisApiClient, {
   ICreateScanResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
-import SOOSUsersApiClient, { IApplicationStatusMessage } from "../api/SOOSUsersApiClient";
+import SOOSUserApiClient, { IApplicationStatusMessage } from "../api/SOOSUserApiClient";
 import { SOOS_CONSTANTS } from "../constants";
 import {
   ContributingDeveloperSource,
@@ -90,16 +90,16 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
   public projectsApiClient: SOOSProjectsApiClient;
-  public usersApiClient: SOOSUsersApiClient;
+  public userApiClient: SOOSUserApiClient;
 
   constructor(
     analysisApiClient: SOOSAnalysisApiClient,
     projectsApiClient: SOOSProjectsApiClient,
-    usersApiClient: SOOSUsersApiClient,
+    userApiClient: SOOSUserApiClient,
   ) {
     this.analysisApiClient = analysisApiClient;
     this.projectsApiClient = projectsApiClient;
-    this.usersApiClient = usersApiClient;
+    this.userApiClient = userApiClient;
   }
 
   static create(apiKey: string, apiURL: string): AnalysisService {
@@ -108,9 +108,9 @@ class AnalysisService {
       apiKey,
       apiURL.replace("api.", "api-projects."),
     );
-    const usersApiClient = new SOOSUsersApiClient(apiKey, apiURL.replace("api.", "api-user."));
+    const userApiClient = new SOOSUserApiClient(apiKey, apiURL.replace("api.", "api-user."));
 
-    return new AnalysisService(analysisApiClient, projectsApiClient, usersApiClient);
+    return new AnalysisService(analysisApiClient, projectsApiClient, userApiClient);
   }
 
   private logStatusMessage(message: IApplicationStatusMessage | null): void {
@@ -157,7 +157,7 @@ class AnalysisService {
     toolVersion,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
     soosLogger.info("Checking status...");
-    const applicationStatus = await this.usersApiClient.getApplicationStatus(clientId);
+    const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
     this.logStatusMessage(applicationStatus.statusMessage);
     this.logStatusMessage(applicationStatus.clientMessage);
     soosLogger.logLineSeparator();
