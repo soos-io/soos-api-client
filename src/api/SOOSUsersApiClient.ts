@@ -27,7 +27,7 @@ class SOOSUsersApiClient {
     this.client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
-      apiClientName: "Users API",
+      apiClientName: "User API",
     });
   }
 

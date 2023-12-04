@@ -107,7 +107,7 @@ class AnalysisService {
       apiKey,
       apiURL.replace("api.", "api-projects."),
     );
-    const usersApiClient = new SOOSUsersApiClient(apiKey, apiURL.replace("api.", "api-user."));
+    const userApiClient = new SOOSUserApiClient(apiKey, apiURL.replace("api.", "api-user."));
 
     return new AnalysisService(analysisApiClient, projectsApiClient, usersApiClient);
   }
@@ -130,7 +130,7 @@ class AnalysisService {
     toolName,
     toolVersion,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
-    soosLogger.info("Getting application status...");
+    soosLogger.info("Checking status...");
     const applicationStatus = await this.usersApiClient.getApplicationStatus(clientId);
     if (applicationStatus.statusMessage) {
       soosLogger.info(applicationStatus.statusMessage.message);
