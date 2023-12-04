@@ -1,3 +1,24 @@
+export enum ContributingDeveloperSource {
+  Unknown = "Unknown",
+  GitHubWebhook = "GitHubWebhook",
+  EnvironmentVariable = "EnvironmentVariable",
+  OperatingSystem = "OperatingSystem",
+}
+
+export enum IntegrationName {
+  AWSCodeBuild = "AWSCodeBuild",
+  Bamboo = "Bamboo",
+  BitBucket = "BitBucket",
+  CircleCI = "CircleCI",
+  CodeShip = "CodeShip",
+  GithubActions = "GitHub",
+  GitLab = "GitLab",
+  Jenkins = "Jenkins",
+  Script = "Script",
+  TeamCity = "TeamCity",
+  TravisCI = "TravisCI",
+}
+
 export enum PackageManagerType {
   Unknown = "Unknown",
   CFamily = "CFamily",
@@ -50,6 +71,16 @@ export enum ScanType {
   SCA = "Sca",
 }
 
+export enum SeverityEnum {
+  Unknown = "Unknown",
+  None = "None",
+  Info = "Info",
+  Low = "Low",
+  Medium = "Medium",
+  High = "High",
+  Critical = "Critical",
+}
+
 export enum LogLevel {
   PASS = "PASS",
   IGNORE = "IGNORE",
@@ -62,4 +93,9 @@ export enum LogLevel {
 
 export enum OutputFormat {
   SARIF = "SARIF",
+}
+
+export enum OnFailure {
+  Continue = "continue_on_failure",
+  Fail = "fail_the_build",
 }
