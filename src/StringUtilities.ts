@@ -23,6 +23,9 @@ const StringUtilities = {
   ) => {
     return a.localeCompare(b, options?.locales, options) === 0;
   },
+  isEmptyString: (value: string): boolean => {
+    return value.trim() === "";
+  },
 };
 
 export default StringUtilities;

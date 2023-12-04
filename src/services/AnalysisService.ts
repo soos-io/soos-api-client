@@ -3,6 +3,7 @@ import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
 } from "../api/SOOSAnalysisApiClient";
+import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
 import { SOOS_CONSTANTS } from "../constants";
 import {
   ContributingDeveloperSource,
@@ -52,7 +53,7 @@ interface ISetupScanParams {
   branchUri: string;
   integrationType: string;
   operatingEnvironment: string;
-  integrationName?: IntegrationName;
+  integrationName: IntegrationName;
   appVersion: string;
   scriptVersion: string;
   contributingDeveloperAudit: ICreateScanRequestContributingDeveloperAudit[];
@@ -71,17 +72,36 @@ interface IUpdateScanStatusParams {
   message: string;
 }
 
+const integrationEnvMap = new Map([
+  [IntegrationName.AWSCodeBuild, ContributingDevelopersVariableNames.AWSCodeBuild],
+  [IntegrationName.Bamboo, ContributingDevelopersVariableNames.Bamboo],
+  [IntegrationName.BitBucket, ContributingDevelopersVariableNames.BitBucket],
+  [IntegrationName.CircleCI, ContributingDevelopersVariableNames.CircleCI],
+  [IntegrationName.CodeShip, ContributingDevelopersVariableNames.CodeShip],
+  [IntegrationName.GithubActions, ContributingDevelopersVariableNames.GitHub],
+  [IntegrationName.GitLab, ContributingDevelopersVariableNames.GitLab],
+  [IntegrationName.Jenkins, ContributingDevelopersVariableNames.Jenkins],
+  [IntegrationName.TeamCity, ContributingDevelopersVariableNames.TeamCity],
+  [IntegrationName.TravisCI, ContributingDevelopersVariableNames.TravisCI],
+]);
+
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
+  public projectsApiClient: SOOSProjectsApiClient;
 
-  constructor(analysisApiClient: SOOSAnalysisApiClient) {
+  constructor(analysisApiClient: SOOSAnalysisApiClient, projectsApiClient: SOOSProjectsApiClient) {
     this.analysisApiClient = analysisApiClient;
+    this.projectsApiClient = projectsApiClient;
   }
 
   static create(apiKey: string, apiURL: string): AnalysisService {
     const analysisApiClient = new SOOSAnalysisApiClient(apiKey, apiURL);
+    const projectsApiClient = new SOOSProjectsApiClient(
+      apiKey,
+      apiURL.replace("api.", "api-projects."),
+    );
 
-    return new AnalysisService(analysisApiClient);
+    return new AnalysisService(analysisApiClient, projectsApiClient);
   }
 
   async setupScan({
@@ -106,16 +126,18 @@ class AnalysisService {
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
 
-    if (integrationName && contributingDeveloperAudit.length === 0) {
+    if (integrationName !== IntegrationName.Script && contributingDeveloperAudit.length === 0) {
       soosLogger.info(`Integration Name: ${integrationName}`);
-      const envVariableName = ContributingDevelopersVariableNames[integrationName];
-      const contributingDeveloper = process.env[envVariableName];
-      if (contributingDeveloper) {
-        contributingDeveloperAudit.push({
-          source: ContributingDeveloperSource.EnvironmentVariable,
-          sourceName: envVariableName,
-          contributingDeveloperId: contributingDeveloper,
-        });
+      const envVariableName = integrationEnvMap.get(integrationName);
+      if (envVariableName) {
+        const contributingDeveloper = process.env[envVariableName];
+        if (contributingDeveloper) {
+          contributingDeveloperAudit.push({
+            source: ContributingDeveloperSource.EnvironmentVariable,
+            sourceName: envVariableName,
+            contributingDeveloperId: contributingDeveloper,
+          });
+        }
       }
     }
 
@@ -270,7 +292,7 @@ class AnalysisService {
       status: status,
       message: message,
     });
-    soosLogger.error(message);
+    if (status === ScanStatus.Incomplete || status === ScanStatus.Error) soosLogger.error(message);
   }
 }
 

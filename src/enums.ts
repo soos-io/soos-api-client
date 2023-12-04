@@ -25,10 +25,11 @@ export enum IntegrationName {
   CircleCI = "CircleCI",
   CodeShip = "CodeShip",
   GithubActions = "GitHub",
-  Gitlab = "GitLab",
+  GitLab = "GitLab",
   Jenkins = "Jenkins",
+  Script = "Script",
   TeamCity = "TeamCity",
-  Travis = "TravisCI",
+  TravisCI = "TravisCI",
 }
 
 export enum PackageManagerType {

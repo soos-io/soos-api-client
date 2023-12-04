@@ -36,7 +36,7 @@ interface ICreateScanRequest {
   branchUri: string | null;
   integrationType: string;
   operatingEnvironment: string;
-  integrationName?: IntegrationName | null;
+  integrationName: IntegrationName;
   scriptVersion: string | null;
   appVersion: string | null;
   contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];

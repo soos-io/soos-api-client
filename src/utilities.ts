@@ -1,11 +1,8 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
+import StringUtilities from "./StringUtilities";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
-
-const isEmptyString = (value: string): boolean => {
-  return value.trim() === "";
-};
 
 const ensureValue = <T>(value: T | null | undefined, propertyName: string): T => {
   if (isNil(value)) throw new Error(`'${propertyName}' is required.`);
@@ -13,7 +10,8 @@ const ensureValue = <T>(value: T | null | undefined, propertyName: string): T =>
 };
 
 const ensureNonEmptyValue = (value: string | null | undefined, propertyName: string): string => {
-  if (isNil(value) || isEmptyString(value)) throw new Error(`'${propertyName}' is required.`);
+  if (isNil(value) || StringUtilities.isEmptyString(value))
+    throw new Error(`'${propertyName}' is required.`);
   return value;
 };
 
@@ -117,7 +115,6 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
 export {
   isNil,
-  isEmptyString,
   ensureValue,
   ensureEnumValue,
   ensureNonEmptyValue,

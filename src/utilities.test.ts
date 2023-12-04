@@ -1,10 +1,4 @@
-import {
-  isNil,
-  isEmptyString,
-  ensureValue,
-  ensureEnumValue,
-  ensureNonEmptyValue,
-} from "./utilities";
+import { isNil, ensureValue, ensureEnumValue, ensureNonEmptyValue } from "./utilities";
 
 describe("isNil", () => {
   test("should return true for null", () => {
@@ -17,20 +11,6 @@ describe("isNil", () => {
 
   test("should return false for a non-nil value", () => {
     expect(isNil("string")).toBe(false);
-  });
-});
-
-describe("isEmptyString", () => {
-  test("should return true for an empty string", () => {
-    expect(isEmptyString("")).toBe(true);
-  });
-
-  test("should return true for a string with only spaces", () => {
-    expect(isEmptyString("   ")).toBe(true);
-  });
-
-  test("should return false for a non-empty string", () => {
-    expect(isEmptyString("value")).toBe(false);
   });
 });
 

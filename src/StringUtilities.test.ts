@@ -58,4 +58,18 @@ describe("areEqual", () => {
   test("areEqual should return true for equal strings with different cases when case is ignored", () => {
     expect(StringUtilities.areEqual("string", "STRING", { sensitivity: "base" })).toBe(true);
   });
+
+  describe("isEmptyString", () => {
+    test("should return true for an empty string", () => {
+      expect(StringUtilities.isEmptyString("")).toBe(true);
+    });
+
+    test("should return true for a string with only spaces", () => {
+      expect(StringUtilities.isEmptyString("   ")).toBe(true);
+    });
+
+    test("should return false for a non-empty string", () => {
+      expect(StringUtilities.isEmptyString("value")).toBe(false);
+    });
+  });
 });
