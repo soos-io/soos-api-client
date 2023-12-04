@@ -14,6 +14,7 @@ export const SOOS_CONSTANTS = {
     API: {
       Analysis: "https://api.soos.io/api/",
       Projects: "https://api-projects.soos.io/api/",
+      Users: "https://api-user.soos.io/api/",
     },
   },
   Status: {

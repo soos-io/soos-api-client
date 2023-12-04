@@ -71,6 +71,16 @@ export enum ScanType {
   SCA = "Sca",
 }
 
+export enum SeverityEnum {
+  Unknown = "Unknown",
+  None = "None",
+  Info = "Info",
+  Low = "Low",
+  Medium = "Medium",
+  High = "High",
+  Critical = "Critical",
+}
+
 export enum LogLevel {
   PASS = "PASS",
   IGNORE = "IGNORE",

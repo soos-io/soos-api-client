@@ -4,6 +4,7 @@ import SOOSAnalysisApiClient, {
   ICreateScanResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
+import SOOSUsersApiClient from "../api/SOOSUsersApiClient";
 import { SOOS_CONSTANTS } from "../constants";
 import {
   ContributingDeveloperSource,
@@ -88,10 +89,16 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
   public projectsApiClient: SOOSProjectsApiClient;
+  public usersApiClient: SOOSUsersApiClient;
 
-  constructor(analysisApiClient: SOOSAnalysisApiClient, projectsApiClient: SOOSProjectsApiClient) {
+  constructor(
+    analysisApiClient: SOOSAnalysisApiClient,
+    projectsApiClient: SOOSProjectsApiClient,
+    usersApiClient: SOOSUsersApiClient,
+  ) {
     this.analysisApiClient = analysisApiClient;
     this.projectsApiClient = projectsApiClient;
+    this.usersApiClient = usersApiClient;
   }
 
   static create(apiKey: string, apiURL: string): AnalysisService {
@@ -100,8 +107,9 @@ class AnalysisService {
       apiKey,
       apiURL.replace("api.", "api-projects."),
     );
+    const usersApiClient = new SOOSUsersApiClient(apiKey, apiURL.replace("api.", "api-user."));
 
-    return new AnalysisService(analysisApiClient, projectsApiClient);
+    return new AnalysisService(analysisApiClient, projectsApiClient, usersApiClient);
   }
 
   async setupScan({
@@ -122,6 +130,25 @@ class AnalysisService {
     toolName,
     toolVersion,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
+    soosLogger.info("Getting application status...");
+    const applicationStatus = await this.usersApiClient.getApplicationStatus(clientId);
+    if (applicationStatus.statusMessage) {
+      soosLogger.info(applicationStatus.statusMessage.message);
+      if (applicationStatus.statusMessage.linkText) {
+        soosLogger.info(
+          `[${applicationStatus.statusMessage.linkText}](${applicationStatus.statusMessage.url})`,
+        );
+      }
+    }
+    if (applicationStatus.clientMessage) {
+      soosLogger.info(applicationStatus.clientMessage.message);
+      if (applicationStatus.clientMessage.linkText) {
+        soosLogger.info(
+          `[${applicationStatus.clientMessage.linkText}](${applicationStatus.clientMessage.url})`,
+        );
+      }
+    }
+    soosLogger.logLineSeparator();
     soosLogger.info(`Starting SOOS ${scanType} Analysis`);
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
