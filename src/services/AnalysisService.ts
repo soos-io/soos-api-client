@@ -263,16 +263,19 @@ class AnalysisService {
 
     const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
 
-      const substitutions = isGeneratedScanType ? StringUtilities.pluralizeTemplate(
-        scanStatus.issues.DependencySubstitution?.count ?? 0,
-        "dependency substitution",
-      ) : '';
+    const substitutions = isGeneratedScanType
+      ? StringUtilities.pluralizeTemplate(
+          scanStatus.issues.DependencySubstitution?.count ?? 0,
+          "dependency substitution",
+        )
+      : "";
 
-      const typos = isGeneratedScanType ? StringUtilities.pluralizeTemplate(
-        scanStatus.issues.DependencyTypo?.count ?? 0,
-        "dependency typo",
-      );
-    }
+    const typos = isGeneratedScanType
+      ? StringUtilities.pluralizeTemplate(
+          scanStatus.issues.DependencyTypo?.count ?? 0,
+          "dependency typo",
+        )
+      : "";
 
     statusMessage = statusMessage.concat(
       `${scanStatus.isSuccess ? ", with" : " because of"} (${vulnerabilities}) (${violations})${
