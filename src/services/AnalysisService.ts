@@ -267,12 +267,12 @@ class AnalysisService {
     if (GeneratedScanTypes.includes(scanType)) {
       substitutions = StringUtilities.pluralizeTemplate(
         scanStatus.issues.DependencySubstitution?.count ?? 0,
-        "Dependency Substitution",
+        "dependency substitution",
       );
 
       typos = StringUtilities.pluralizeTemplate(
         scanStatus.issues.DependencyTypo?.count ?? 0,
-        "Dependency Typo",
+        "dependency typo",
       );
     }
 
