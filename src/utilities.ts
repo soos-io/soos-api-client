@@ -115,22 +115,25 @@ const formatBytes = (bytes: number, decimals = 2) => {
 };
 
 const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
+  let fail = false;
   if (scanStatus === ScanStatus.FailedWithIssues) {
-    soosLogger.info("Analysis complete - Failures reported");
-    soosLogger.info("Failing the build.");
-    return true;
+    soosLogger.warn("Analysis complete - Failures reported");
+    fail = true;
   } else if (scanStatus === ScanStatus.Incomplete) {
-    soosLogger.info(
+    soosLogger.warn(
       "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
     );
-    soosLogger.info("Failing the build.");
-    return true;
+    fail = true;
   } else if (scanStatus === ScanStatus.Error) {
-    soosLogger.info("Analysis Error.");
-    soosLogger.info("Failing the build.");
-    return true;
+    soosLogger.warn("Analysis Error.");
+    fail = true;
   }
-  return false;
+  
+  if (fail) {
+    soosLogger.warn("Failing the build.");  
+  }
+  
+  return fail;
 };
 
 export {
