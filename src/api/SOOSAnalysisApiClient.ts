@@ -101,6 +101,10 @@ interface IIssuesModel {
   Vulnerability: { count: number; maxSeverity: string } | null;
   DependencyTypo: { count: number; maxSeverity: string } | null;
   DependencySubstitution: { count: number; maxSeverity: string } | null;
+  Dast: { count: number; maxSeverity: string } | null;
+  Csa: { count: number; maxSeverity: string } | null;
+  IaC: { count: number; maxSeverity: string } | null;
+  Sast: { count: number; maxSeverity: string } | null;
 }
 
 interface IStartScanRequest {
@@ -322,6 +326,7 @@ export {
   IUploadManifestFilesResponse,
   IGetFormattedScanRequest as IFormattedScanRequest,
   IUploadScanToolResultRequest,
+  IIssuesModel,
 };
 
 export default SOOSAnalysisApiClient;

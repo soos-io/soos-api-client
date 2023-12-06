@@ -1,7 +1,8 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import StringUtilities from "./StringUtilities";
-import { ScanStatus } from "./enums";
+import { ScanStatus, ScanType } from "./enums";
+import { IIssuesModel } from "./api/SOOSAnalysisApiClient";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
 
@@ -136,6 +137,21 @@ const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
   return fail;
 };
 
+const getVulnerabilitiesByScanType = (issues: IIssuesModel, scanType: ScanType) => {
+  switch (scanType) {
+    case ScanType.SCA:
+      return issues.Vulnerability?.count;
+    case ScanType.DAST:
+      return issues.Dast?.count;
+    case ScanType.CSA:
+      return issues.Csa?.count;
+    case ScanType.SAST:
+      return issues.Sast?.count;
+    default:
+      return 0;
+  }
+};
+
 export {
   isNil,
   ensureValue,
@@ -148,4 +164,5 @@ export {
   getEnvVariable,
   formatBytes,
   verifyScanStatus,
+  getVulnerabilitiesByScanType,
 };

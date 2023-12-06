@@ -15,7 +15,7 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { sleep } from "../utilities";
+import { getVulnerabilitiesByScanType, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 
@@ -249,7 +249,7 @@ class AnalysisService {
     let statusMessage = `Scan ${scanStatus.isSuccess ? "passed" : "failed"}`;
 
     const vulnerabilities = StringUtilities.pluralizeTemplate(
-      scanStatus.issues.Vulnerability?.count ?? 0,
+      getVulnerabilitiesByScanType(scanStatus.issues, scanType) ?? 0,
       "vulnerability",
       "vulnerabilities",
     );
@@ -265,12 +265,12 @@ class AnalysisService {
     if (scanType === ScanType.SBOM || scanType === ScanType.SCA) {
       substitutions = StringUtilities.pluralizeTemplate(
         scanStatus.issues.DependencySubstitution?.count ?? 0,
-        "DependencySubstitution",
+        "Dependency Substitution",
       );
 
       typos = StringUtilities.pluralizeTemplate(
         scanStatus.issues.DependencyTypo?.count ?? 0,
-        "DependencyTypo",
+        "Dependency Typo",
       );
     }
 
