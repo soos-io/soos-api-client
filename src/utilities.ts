@@ -144,7 +144,7 @@ const getVulnerabilitiesByScanType = (issues: IIssuesModel, scanType: ScanType) 
     case ScanType.DAST:
       return issues.Dast?.count;
     case ScanType.CSA:
-      return issues.Csa?.count;
+      return issues.Vulnerability?.count;
     case ScanType.SAST:
       return issues.Sast?.count;
     default:

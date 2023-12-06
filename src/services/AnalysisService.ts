@@ -280,7 +280,7 @@ class AnalysisService {
       }${typos ? ` (${typos})` : ""}.`,
     );
 
-    const resultMessage = `${statusMessage}. View the results at: ${scanUrl}`;
+    const resultMessage = `${statusMessage}.\n View the results at: ${scanUrl}`;
     soosLogger.info(resultMessage);
     return scanStatus.status;
   }
