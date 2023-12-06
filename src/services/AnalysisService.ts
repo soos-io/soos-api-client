@@ -261,16 +261,14 @@ class AnalysisService {
       "violation",
     );
 
-    let substitutions = null;
-    let typos = null;
+    const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
 
-    if (GeneratedScanTypes.includes(scanType)) {
-      substitutions = StringUtilities.pluralizeTemplate(
+      const substitutions = isGeneratedScanType ? StringUtilities.pluralizeTemplate(
         scanStatus.issues.DependencySubstitution?.count ?? 0,
         "dependency substitution",
-      );
+      ) : '';
 
-      typos = StringUtilities.pluralizeTemplate(
+      const typos = isGeneratedScanType ? StringUtilities.pluralizeTemplate(
         scanStatus.issues.DependencyTypo?.count ?? 0,
         "dependency typo",
       );
