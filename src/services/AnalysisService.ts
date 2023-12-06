@@ -15,7 +15,7 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { sleep } from "../utilities";
+import { getVulnerabilitiesByScanType, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 
@@ -42,6 +42,7 @@ interface IStartScanParams {
 interface IWaitForScanToFinishParams {
   scanStatusUrl: string;
   scanUrl: string;
+  scanType: ScanType;
 }
 
 interface ISetupScanParams {
@@ -87,6 +88,8 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
   [IntegrationName.TeamCity]: "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
   [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
 };
+
+const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
@@ -227,6 +230,7 @@ class AnalysisService {
   async waitForScanToFinish({
     scanStatusUrl,
     scanUrl,
+    scanType,
   }: IWaitForScanToFinishParams): Promise<ScanStatus> {
     const scanStatus = await this.analysisApiClient.getScanStatus({
       scanStatusUrl: scanStatusUrl,
@@ -235,7 +239,7 @@ class AnalysisService {
     if (!scanStatus.isComplete) {
       soosLogger.info(`${StringUtilities.fromCamelToTitleCase(scanStatus.status)}...`);
       await sleep(SOOS_CONSTANTS.Status.DelayTime);
-      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl });
+      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType });
     }
 
     if (scanStatus.errors.length > 0) {
@@ -244,29 +248,43 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    if (scanStatus.isSuccess) {
-      scanStatus.vulnerabilities > 0 || scanStatus.violations > 0;
-    }
-
     let statusMessage = `Scan ${scanStatus.isSuccess ? "passed" : "failed"}`;
-    if (scanStatus.hasIssues) {
-      const vulnerabilities = StringUtilities.pluralizeTemplate(
-        scanStatus.vulnerabilities,
-        "vulnerability",
-        "vulnerabilities",
-      );
 
-      const violations = StringUtilities.pluralizeTemplate(scanStatus.violations, "violation");
+    const vulnerabilities = StringUtilities.pluralizeTemplate(
+      getVulnerabilitiesByScanType(scanStatus.issues, scanType) ?? 0,
+      "vulnerability",
+      "vulnerabilities",
+    );
 
-      statusMessage = statusMessage.concat(
-        `${
-          scanStatus.isSuccess ? ", but had" : " because of"
-        } ${vulnerabilities} and ${violations}`,
-      );
-    }
+    const violations = StringUtilities.pluralizeTemplate(
+      scanStatus.issues.Violation?.count ?? 0,
+      "violation",
+    );
 
-    const resultMessage = `${statusMessage}. View the results at: ${scanUrl}`;
-    soosLogger.info(resultMessage);
+    const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
+
+    const substitutions = isGeneratedScanType
+      ? StringUtilities.pluralizeTemplate(
+          scanStatus.issues.DependencySubstitution?.count ?? 0,
+          "dependency substitution",
+        )
+      : "";
+
+    const typos = isGeneratedScanType
+      ? StringUtilities.pluralizeTemplate(
+          scanStatus.issues.DependencyTypo?.count ?? 0,
+          "dependency typo",
+        )
+      : "";
+
+    statusMessage = statusMessage.concat(
+      `${scanStatus.isSuccess ? ", with" : " because of"} (${vulnerabilities}) (${violations})${
+        substitutions ? ` (${substitutions})` : ""
+      }${typos ? ` (${typos})` : ""}.`,
+    );
+
+    soosLogger.info(statusMessage);
+    soosLogger.info(`View the results at: ${scanUrl}`);
     return scanStatus.status;
   }
 
@@ -335,5 +353,7 @@ class AnalysisService {
     if (status === ScanStatus.Incomplete || status === ScanStatus.Error) soosLogger.error(message);
   }
 }
+
+export { GeneratedScanTypes };
 
 export default AnalysisService;
