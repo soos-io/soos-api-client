@@ -6,6 +6,7 @@ export enum ContributingDeveloperSource {
 }
 
 export enum IntegrationName {
+  AzureDevOps = "AzureDevOps",
   AWSCodeBuild = "AWSCodeBuild",
   Bamboo = "Bamboo",
   BitBucket = "BitBucket",

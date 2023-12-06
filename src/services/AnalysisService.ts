@@ -74,6 +74,7 @@ interface IUpdateScanStatusParams {
 }
 
 const integrationNameToEnvVariable: Record<IntegrationName, string> = {
+  [IntegrationName.AzureDevOps]: "Build.RequestedFor",
   [IntegrationName.AWSCodeBuild]: "CODEBUILD_BUILD_INITIATOR",
   [IntegrationName.Bamboo]: "bamboo_planRepository_1_username",
   [IntegrationName.BitBucket]: "BITBUCKET_STEP_TRIGGERER_UUID",
@@ -165,7 +166,7 @@ class AnalysisService {
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
 
-    if (integrationName !== IntegrationName.Script && contributingDeveloperAudit.length === 0) {
+    if (contributingDeveloperAudit.length === 0) {
       soosLogger.info(`Integration Name: ${integrationName}`);
       const envVariableName = integrationNameToEnvVariable[integrationName];
       if (envVariableName) {
