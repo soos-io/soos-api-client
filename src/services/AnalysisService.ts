@@ -89,6 +89,8 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
   [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
 };
 
+const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
+
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
   public projectsApiClient: SOOSProjectsApiClient;
@@ -262,7 +264,7 @@ class AnalysisService {
     let substitutions = null;
     let typos = null;
 
-    if (scanType === ScanType.SBOM || scanType === ScanType.SCA) {
+    if (GeneratedScanTypes.includes(scanType)) {
       substitutions = StringUtilities.pluralizeTemplate(
         scanStatus.issues.DependencySubstitution?.count ?? 0,
         "Dependency Substitution",
@@ -350,5 +352,7 @@ class AnalysisService {
     if (status === ScanStatus.Incomplete || status === ScanStatus.Error) soosLogger.error(message);
   }
 }
+
+export { GeneratedScanTypes };
 
 export default AnalysisService;

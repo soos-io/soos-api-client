@@ -139,16 +139,12 @@ const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
 
 const getVulnerabilitiesByScanType = (issues: IIssuesModel, scanType: ScanType) => {
   switch (scanType) {
-    case ScanType.SCA:
-      return issues.Vulnerability?.count;
     case ScanType.DAST:
       return issues.Dast?.count;
-    case ScanType.CSA:
-      return issues.Vulnerability?.count;
     case ScanType.SAST:
       return issues.Sast?.count;
     default:
-      return 0;
+      return issues.Vulnerability?.count;
   }
 };
 
