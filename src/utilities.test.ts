@@ -1,4 +1,11 @@
-import { isNil, ensureValue, ensureEnumValue, ensureNonEmptyValue } from "./utilities";
+import { ScanStatus } from "./enums";
+import {
+  isNil,
+  ensureValue,
+  ensureEnumValue,
+  ensureNonEmptyValue,
+  verifyScanStatus,
+} from "./utilities";
 
 describe("isNil", () => {
   test("should return true for null", () => {
@@ -71,5 +78,23 @@ describe("ensureEnumValue", () => {
 
   test("should return the enum value for a valid enum value with different case", () => {
     expect(ensureEnumValue({ value: "value" }, "VALUE")).toBe("value");
+  });
+});
+
+describe("verifyScanStatus", () => {
+  test("should return false for Finished", () => {
+    expect(verifyScanStatus(ScanStatus.Finished)).toBe(false);
+  });
+
+  test("should return true for an Incomplete status", () => {
+    expect(verifyScanStatus(ScanStatus.Incomplete)).toBe(true);
+  });
+
+  test("should return true for an Error status", () => {
+    expect(verifyScanStatus(ScanStatus.Error)).toBe(true);
+  });
+
+  test("should return true for a FailedWithIssues status", () => {
+    expect(verifyScanStatus(ScanStatus.FailedWithIssues)).toBe(true);
   });
 });

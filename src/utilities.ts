@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import StringUtilities from "./StringUtilities";
+import { ScanStatus } from "./enums";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
 
@@ -113,6 +114,28 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${count} ${unit}`;
 };
 
+const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
+  let fail = false;
+  if (scanStatus === ScanStatus.FailedWithIssues) {
+    soosLogger.warn("Analysis complete - Failures reported");
+    fail = true;
+  } else if (scanStatus === ScanStatus.Incomplete) {
+    soosLogger.warn(
+      "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
+    );
+    fail = true;
+  } else if (scanStatus === ScanStatus.Error) {
+    soosLogger.warn("Analysis Error.");
+    fail = true;
+  }
+
+  if (fail) {
+    soosLogger.warn("Failing the build.");
+  }
+
+  return fail;
+};
+
 export {
   isNil,
   ensureValue,
@@ -124,4 +147,5 @@ export {
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
+  verifyScanStatus,
 };
