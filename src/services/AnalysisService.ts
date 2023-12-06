@@ -42,6 +42,7 @@ interface IStartScanParams {
 interface IWaitForScanToFinishParams {
   scanStatusUrl: string;
   scanUrl: string;
+  scanType: ScanType;
 }
 
 interface ISetupScanParams {
@@ -227,6 +228,7 @@ class AnalysisService {
   async waitForScanToFinish({
     scanStatusUrl,
     scanUrl,
+    scanType,
   }: IWaitForScanToFinishParams): Promise<ScanStatus> {
     const scanStatus = await this.analysisApiClient.getScanStatus({
       scanStatusUrl: scanStatusUrl,
@@ -235,7 +237,7 @@ class AnalysisService {
     if (!scanStatus.isComplete) {
       soosLogger.info(`${StringUtilities.fromCamelToTitleCase(scanStatus.status)}...`);
       await sleep(SOOS_CONSTANTS.Status.DelayTime);
-      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl });
+      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType });
     }
 
     if (scanStatus.errors.length > 0) {
@@ -244,26 +246,39 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    if (scanStatus.isSuccess) {
-      scanStatus.vulnerabilities > 0 || scanStatus.violations > 0;
-    }
-
     let statusMessage = `Scan ${scanStatus.isSuccess ? "passed" : "failed"}`;
-    if (scanStatus.hasIssues) {
-      const vulnerabilities = StringUtilities.pluralizeTemplate(
-        scanStatus.vulnerabilities,
-        "vulnerability",
-        "vulnerabilities",
+
+    const vulnerabilities = StringUtilities.pluralizeTemplate(
+      scanStatus.issues.Vulnerability?.count ?? 0,
+      "vulnerability",
+      "vulnerabilities",
+    );
+
+    const violations = StringUtilities.pluralizeTemplate(
+      scanStatus.issues.Violation?.count ?? 0,
+      "violation",
+    );
+
+    let substitutions = null;
+    let typos = null;
+
+    if (scanType === ScanType.SBOM || scanType === ScanType.SCA) {
+      substitutions = StringUtilities.pluralizeTemplate(
+        scanStatus.issues.DependencySubstitution?.count ?? 0,
+        "DependencySubstitution",
       );
 
-      const violations = StringUtilities.pluralizeTemplate(scanStatus.violations, "violation");
-
-      statusMessage = statusMessage.concat(
-        `${
-          scanStatus.isSuccess ? ", but had" : " because of"
-        } ${vulnerabilities} and ${violations}`,
+      typos = StringUtilities.pluralizeTemplate(
+        scanStatus.issues.DependencyTypo?.count ?? 0,
+        "DependencyTypo",
       );
     }
+
+    statusMessage = statusMessage.concat(
+      `${scanStatus.isSuccess ? ", with" : " because of"} (${vulnerabilities}) (${violations})${
+        substitutions ? ` (${substitutions})` : ""
+      }${typos ? ` (${typos})` : ""}.`,
+    );
 
     const resultMessage = `${statusMessage}. View the results at: ${scanUrl}`;
     soosLogger.info(resultMessage);

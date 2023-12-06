@@ -78,16 +78,13 @@ interface IScanStatusRequest {
 interface IScanStatusResponse extends Pick<IScanStatusApiResponse, "status"> {
   isComplete: boolean;
   isSuccess: boolean;
-  hasIssues: boolean;
-  violations: number;
-  vulnerabilities: number;
+  issues: IIssuesModel;
   errors: ICodedMessageModel[];
 }
 
 interface IScanStatusApiResponse {
   status: ScanStatus;
-  violations: { count: number } | null;
-  vulnerabilities: { count: number } | null;
+  issues: IIssuesModel;
   clientHash: string;
   projectHash: string;
   branchHash: string;
@@ -97,6 +94,13 @@ interface IScanStatusApiResponse {
   scanUrl: string;
   scanStatusUrl: string;
   errors: ICodedMessageModel[] | null;
+}
+
+interface IIssuesModel {
+  Violation: { count: number; maxSeverity: string } | null;
+  Vulnerability: { count: number; maxSeverity: string } | null;
+  DependencyTypo: { count: number; maxSeverity: string } | null;
+  DependencySubstitution: { count: number; maxSeverity: string } | null;
 }
 
 interface IStartScanRequest {
@@ -259,15 +263,11 @@ class SOOSAnalysisApiClient {
 
   async getScanStatus({ scanStatusUrl }: IScanStatusRequest): Promise<IScanStatusResponse> {
     const response = await this.client.get<IScanStatusApiResponse>(scanStatusUrl);
-    const violationCount = response.data.violations?.count ?? 0;
-    const vulnerabilityCount = response.data.vulnerabilities?.count ?? 0;
     return {
       status: response.data.status,
       isComplete: CompletedScanStatuses.includes(response.data.status),
       isSuccess: response.data.status === ScanStatus.Finished,
-      hasIssues: violationCount > 0 || vulnerabilityCount > 0,
-      violations: violationCount,
-      vulnerabilities: vulnerabilityCount,
+      issues: response.data.issues,
       errors: response.data.errors ?? [],
     };
   }
