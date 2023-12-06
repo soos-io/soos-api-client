@@ -128,11 +128,11 @@ const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
     soosLogger.warn("Analysis Error.");
     fail = true;
   }
-  
+
   if (fail) {
-    soosLogger.warn("Failing the build.");  
+    soosLogger.warn("Failing the build.");
   }
-  
+
   return fail;
 };
 
