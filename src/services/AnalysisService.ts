@@ -15,7 +15,7 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { getVulnerabilitiesByScanType, sleep } from "../utilities";
+import { getVulnerabilitiesByScanType, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 
@@ -72,6 +72,7 @@ interface IUpdateScanStatusParams {
   analysisId: string;
   status: ScanStatus;
   message: string;
+  scanStatusUrl?: string;
 }
 
 const integrationNameToEnvVariable: Record<IntegrationName, string> = {
@@ -261,7 +262,7 @@ class AnalysisService {
     );
 
     const violations = StringUtilities.pluralizeTemplate(
-      scanStatus.issues.Violation?.count ?? 0,
+      scanStatus.issues?.Violation?.count ?? 0,
       "violation",
     );
 
@@ -269,14 +270,14 @@ class AnalysisService {
 
     const substitutions = isGeneratedScanType
       ? StringUtilities.pluralizeTemplate(
-          scanStatus.issues.DependencySubstitution?.count ?? 0,
+          scanStatus.issues?.DependencySubstitution?.count ?? 0,
           "dependency substitution",
         )
       : "";
 
     const typos = isGeneratedScanType
       ? StringUtilities.pluralizeTemplate(
-          scanStatus.issues.DependencyTypo?.count ?? 0,
+          scanStatus.issues?.DependencyTypo?.count ?? 0,
           "dependency typo",
         )
       : "";
@@ -344,7 +345,15 @@ class AnalysisService {
     analysisId,
     status,
     message,
+    scanStatusUrl,
   }: IUpdateScanStatusParams): Promise<void> {
+    if (!isNil(scanStatusUrl)) {
+      const scanStatus = await this.analysisApiClient.getScanStatus({
+        scanStatusUrl: scanStatusUrl,
+      });
+      if (scanStatus.isComplete) return;
+    }
+
     await this.analysisApiClient.updateScanStatus({
       clientId: clientId,
       projectHash: projectHash,

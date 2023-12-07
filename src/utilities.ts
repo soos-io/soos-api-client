@@ -137,7 +137,8 @@ const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
   return fail;
 };
 
-const getVulnerabilitiesByScanType = (issues: IIssuesModel, scanType: ScanType) => {
+const getVulnerabilitiesByScanType = (issues: IIssuesModel | null, scanType: ScanType) => {
+  if (isNil(issues)) return 0;
   switch (scanType) {
     case ScanType.DAST:
       return issues.Dast?.count;
