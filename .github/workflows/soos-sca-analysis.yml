@@ -19,4 +19,3 @@ jobs:
         project_name: "soos-api-client"
         client_id: ${{ secrets.SOOS_CLIENT_ID }}
         api_key: ${{ secrets.SOOS_API_KEY }}
-        api_url: "https://dev-api.soos.io/api/"
