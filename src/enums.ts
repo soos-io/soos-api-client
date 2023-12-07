@@ -15,7 +15,11 @@ export enum IntegrationName {
   GithubActions = "GitHub",
   GitLab = "GitLab",
   Jenkins = "Jenkins",
-  Script = "Script",
+  SoosCsa = "SoosCsa",
+  SoosDast = "SoosDast",
+  SoosSast = "SoosSast",
+  SoosSca = "SoosSca",
+  SoosSbom = "SoosSbom",
   TeamCity = "TeamCity",
   TravisCI = "TravisCI",
 }
