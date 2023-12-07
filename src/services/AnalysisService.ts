@@ -84,7 +84,11 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
   [IntegrationName.GithubActions]: "GITHUB_ACTOR",
   [IntegrationName.GitLab]: "GITLAB_USER_LOGIN",
   [IntegrationName.Jenkins]: "CHANGE_AUTHOR",
-  [IntegrationName.Script]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.SoosCsa]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.SoosDast]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.SoosSast]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.SoosSca]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.SoosSbom]: "SOOS_CONTRIBUTING_DEVELOPER",
   [IntegrationName.TeamCity]: "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
   [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
 };
