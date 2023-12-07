@@ -78,13 +78,13 @@ interface IScanStatusRequest {
 interface IScanStatusResponse extends Pick<IScanStatusApiResponse, "status"> {
   isComplete: boolean;
   isSuccess: boolean;
-  issues: IIssuesModel;
+  issues: IIssuesModel | null;
   errors: ICodedMessageModel[];
 }
 
 interface IScanStatusApiResponse {
   status: ScanStatus;
-  issues: IIssuesModel;
+  issues: IIssuesModel | null;
   clientHash: string;
   projectHash: string;
   branchHash: string;
