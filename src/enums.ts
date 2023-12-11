@@ -24,6 +24,16 @@ export enum IntegrationName {
   TravisCI = "TravisCI",
 }
 
+export enum IntegrationType {
+  None = "None",
+  IDE = "IDE",
+  Script = "Script",
+  Webhook = "Webhook",
+  Plugin = "Plugin",
+  AppRepo = "AppRepo",
+  AppUpload = "AppUpload",
+}
+
 export enum PackageManagerType {
   Unknown = "Unknown",
   CFamily = "CFamily",
