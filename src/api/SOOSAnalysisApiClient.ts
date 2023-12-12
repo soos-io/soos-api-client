@@ -2,6 +2,7 @@ import { SOOS_CONSTANTS } from "../constants";
 import FormData from "form-data";
 import {
   IntegrationName,
+  IntegrationType,
   ManifestStatus,
   OutputFormat,
   PackageManagerType,
@@ -34,7 +35,7 @@ interface ICreateScanRequest {
   buildVersion: string | null;
   buildUri: string | null;
   branchUri: string | null;
-  integrationType: string;
+  integrationType: IntegrationType;
   operatingEnvironment: string;
   integrationName: IntegrationName;
   scriptVersion: string | null;

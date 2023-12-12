@@ -9,6 +9,7 @@ import { SOOS_CONSTANTS } from "../constants";
 import {
   ContributingDeveloperSource,
   IntegrationName,
+  IntegrationType,
   OutputFormat,
   ScanStatus,
   ScanType,
@@ -53,7 +54,7 @@ interface ISetupScanParams {
   buildVersion: string;
   buildUri: string;
   branchUri: string;
-  integrationType: string;
+  integrationType: IntegrationType;
   operatingEnvironment: string;
   integrationName: IntegrationName;
   appVersion: string;
