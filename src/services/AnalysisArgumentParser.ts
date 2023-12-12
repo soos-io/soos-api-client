@@ -1,5 +1,11 @@
 import { ArgumentParser } from "argparse";
-import { IntegrationName, IntegrationType, LogLevel, ScanType } from "../enums";
+import {
+  ContributingDeveloperSource,
+  IntegrationName,
+  IntegrationType,
+  LogLevel,
+  ScanType,
+} from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
 
@@ -84,6 +90,10 @@ class AnalysisArgumentParser {
     this.argumentParser.add_argument("--contributingDeveloperSource", {
       help: "Contributing Developer Source - Intended for internal use only.",
       required: false,
+      type: (value: string) => {
+        return ensureEnumValue(ContributingDeveloperSource, value);
+      },
+      default: ContributingDeveloperSource.Unknown,
     });
 
     this.argumentParser.add_argument("--contributingDeveloperSourceName", {
