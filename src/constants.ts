@@ -16,6 +16,9 @@ export const SOOS_CONSTANTS = {
       Projects: "https://api-projects.soos.io/api/",
       User: "https://api-user.soos.io/api/",
     },
+    App: {
+      Home: "https://app.soos.io/",
+    },
   },
   Status: {
     DelayTime: 5000,

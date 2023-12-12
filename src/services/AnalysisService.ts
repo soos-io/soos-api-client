@@ -369,5 +369,4 @@ class AnalysisService {
 }
 
 export { GeneratedScanTypes };
-
 export default AnalysisService;
