@@ -16,21 +16,23 @@ const getIntegrateUrl = (scanType: ScanType) =>
 
 class AnalysisArgumentParser {
   public scanType: ScanType;
-  public scriptVersion: string;
   public argumentParser: ArgumentParser;
 
-  constructor(scanType: ScanType, scriptVersion: string, argumentParser: ArgumentParser) {
+  constructor(scanType: ScanType, argumentParser: ArgumentParser) {
     this.scanType = scanType;
-    this.scriptVersion = scriptVersion;
     this.argumentParser = argumentParser;
   }
 
-  static create(scanType: ScanType, scriptVersion: string): AnalysisArgumentParser {
+  static create(scanType: ScanType): AnalysisArgumentParser {
     const parser = new ArgumentParser({ description: `SOOS ${scanType}` });
-    return new AnalysisArgumentParser(scanType, scriptVersion, parser);
+    return new AnalysisArgumentParser(scanType, parser);
   }
 
-  addBaseScanArguments() {
+  addBaseScanArguments(
+    integrationName: IntegrationName,
+    integrationType: IntegrationType,
+    scriptVersion: string,
+  ) {
     this.argumentParser.add_argument("--apiKey", {
       help: `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`,
       default: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey),
@@ -107,7 +109,7 @@ class AnalysisArgumentParser {
       type: (value: string) => {
         return ensureEnumValue(IntegrationName, value);
       },
-      default: IntegrationName.SoosSca,
+      default: integrationName,
     });
 
     this.argumentParser.add_argument("--integrationType", {
@@ -116,7 +118,7 @@ class AnalysisArgumentParser {
       type: (value: string) => {
         return ensureEnumValue(IntegrationType, value);
       },
-      default: IntegrationType.Script,
+      default: integrationType,
     });
 
     this.argumentParser.add_argument("--logLevel", {
@@ -144,7 +146,7 @@ class AnalysisArgumentParser {
     this.argumentParser.add_argument("--scriptVersion", {
       help: "Script Version - Intended for internal use only.",
       required: false,
-      default: this.scriptVersion,
+      default: scriptVersion,
     });
 
     this.argumentParser.add_argument("--verbose", {
