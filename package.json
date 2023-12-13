@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.",
   "main": "dist/index.js",
   "scripts": {
@@ -41,7 +41,8 @@
     "argparse": "^2.0.1",
     "axios": "^1.6.2",
     "form-data": "^4.0.0",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.2",
+    "glob": "^10.3.10"
   },
   "devDependencies": {
     "@types/argparse": "^2.0.14",

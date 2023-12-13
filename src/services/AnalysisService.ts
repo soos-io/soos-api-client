@@ -16,9 +16,11 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { getVulnerabilitiesByScanType, isNil, sleep } from "../utilities";
+import Glob from "glob";
+import { formatBytes, getVulnerabilitiesByScanType, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
+import FormData from "form-data";
 
 interface IGenerateFormattedOutputParams {
   clientId: string;
@@ -365,6 +367,86 @@ class AnalysisService {
       message: message,
     });
     if (status === ScanStatus.Incomplete || status === ScanStatus.Error) soosLogger.error(message);
+  }
+
+  async findAnalysisFiles(
+    scanType: ScanType,
+    path: string,
+    pattern: string,
+    filesToExclude: string[] | null = null,
+    directoriesToExclude: string[] | null = null,
+    maxFiles: number = 0,
+  ): Promise<{ filePaths: string[]; hasMoreThanMaximumFiles: boolean }> {
+    process.chdir(path);
+    soosLogger.info(`Searching for ${scanType} files from ${path}...`);
+    const files = Glob.sync(pattern, {
+      ignore: [...(filesToExclude || []), ...(directoriesToExclude || [])],
+      nocase: true,
+    });
+
+    const matchingFiles = files.map((x) => Path.resolve(x));
+
+    soosLogger.info(`${matchingFiles.length} files found matching pattern '${pattern}'.`);
+
+    matchingFiles.flat().map((filePath) => {
+      const filename = Path.basename(filePath);
+      const fileStats = FileSystem.statSync(filePath);
+      const fileSize = formatBytes(fileStats.size);
+      soosLogger.info(
+        `Found ${scanType} file '${filename}' (${fileSize}) at location '${filePath}'.`,
+      );
+    });
+
+    if (maxFiles < 1) {
+      return { filePaths: matchingFiles, hasMoreThanMaximumFiles: false };
+    }
+
+    const hasMoreThanMaximumFiles = matchingFiles.length > maxFiles;
+    const filesToUpload = matchingFiles.slice(0, maxFiles);
+
+    if (hasMoreThanMaximumFiles) {
+      const filesToSkip = matchingFiles.slice(maxFiles);
+      const filesDetectedString = StringUtilities.pluralizeTemplate(
+        matchingFiles.length,
+        "file was",
+        "files were",
+      );
+      const filesSkippedString = StringUtilities.pluralizeTemplate(filesToSkip.length, "file");
+      soosLogger.info(
+        `The maximum number of ${scanType} files per scan is ${maxFiles}. ${filesDetectedString} detected, and ${filesSkippedString} will be not be uploaded. \n`,
+        `The following files will not be included in the scan: \n`,
+        filesToSkip.map((file) => `  "${Path.basename(file)}": "${file}"`).join("\n"),
+      );
+    }
+
+    return { filePaths: filesToUpload, hasMoreThanMaximumFiles };
+  }
+
+  async getAnalysisFilesAsFormData(
+    analysisFilePaths: string[],
+    workingDirectory: string,
+  ): Promise<FormData> {
+    const analysisFiles = analysisFilePaths.map((filePath) => {
+      return {
+        name: Path.basename(filePath),
+        path: filePath,
+      };
+    });
+    const formData = analysisFiles.reduce((formDataAcc: FormData, analysisFile, index) => {
+      const fileParts = analysisFile.path.replace(workingDirectory, "").split(Path.sep);
+      const parentFolder =
+        fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
+      const suffix = index > 0 ? index : "";
+      const fileReadStream = FileSystem.createReadStream(analysisFile.path, {
+        encoding: SOOS_CONSTANTS.FileUploads.Encoding,
+      });
+      formDataAcc.append(`file${suffix}`, fileReadStream);
+      formDataAcc.append(`parentFolder${suffix}`, parentFolder);
+
+      return formDataAcc;
+    }, new FormData());
+
+    return formData;
   }
 }
 

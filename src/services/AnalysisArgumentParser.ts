@@ -156,6 +156,10 @@ class AnalysisArgumentParser {
       required: false,
     });
   }
+
+  parseArguments() {
+    return this.argumentParser.parse_args();
+  }
 }
 
 export default AnalysisArgumentParser;
