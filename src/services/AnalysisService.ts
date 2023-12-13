@@ -397,9 +397,9 @@ class AnalysisService {
       );
     });
 
-   if (maxFiles < 1) {
-     return { filePaths: matchingFiles, hasMoreThanMaximumFiles: false };
-   }
+    if (maxFiles < 1) {
+      return { filePaths: matchingFiles, hasMoreThanMaximumFiles: false };
+    }
 
     const hasMoreThanMaximumFiles = matchingFiles.length > maxFiles;
     const filesToUpload = matchingFiles.slice(0, maxFiles);
@@ -411,13 +411,10 @@ class AnalysisService {
         "file was",
         "files were",
       );
-      const filesSkippedString = StringUtilities.pluralizeTemplate(
-        filesToSkip.length,
-        "file"
-      );
+      const filesSkippedString = StringUtilities.pluralizeTemplate(filesToSkip.length, "file");
       soosLogger.info(
         `The maximum number of ${scanType} files per scan is ${maxFiles}. ${filesDetectedString} detected, and ${filesSkippedString} will be not be uploaded. \n`,
-        `The following manifests will not be included in the scan: \n`,
+        `The following files will not be included in the scan: \n`,
         filesToSkip.map((file) => `  "${Path.basename(file)}": "${file}"`).join("\n"),
       );
     }
