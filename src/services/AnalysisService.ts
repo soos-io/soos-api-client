@@ -16,11 +16,11 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import Glob from "glob";
 import { formatBytes, getVulnerabilitiesByScanType, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
+import * as Glob from "glob";
 
 interface IGenerateFormattedOutputParams {
   clientId: string;
