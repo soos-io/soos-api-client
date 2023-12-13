@@ -413,8 +413,7 @@ class AnalysisService {
       );
       const filesSkippedString = StringUtilities.pluralizeTemplate(
         filesToSkip.length,
-        "file",
-        "files",
+        "file"
       );
       soosLogger.info(
         `The maximum number of ${scanType} files per scan is ${maxFiles}. ${filesDetectedString} detected, and ${filesSkippedString} will be not be uploaded. \n`,
