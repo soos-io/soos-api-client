@@ -370,11 +370,12 @@ class AnalysisService {
   }
 
   async findAnalysisFiles(
+    scanType: ScanType,
     path: string,
     pattern: string,
     filesToExclude: string[] | null = null,
     directoriesToExclude: string[] | null = null,
-    scanType: ScanType,
+    maxFiles: number = 0,
   ): Promise<{ filePaths: string[]; hasMoreThanMaximumManifests: boolean }> {
     process.chdir(path);
     soosLogger.info(`Searching for ${scanType} files from ${path}...`);
