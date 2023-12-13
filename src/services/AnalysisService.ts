@@ -376,7 +376,7 @@ class AnalysisService {
     filesToExclude: string[] | null = null,
     directoriesToExclude: string[] | null = null,
     maxFiles: number = 0,
-  ): Promise<{ filePaths: string[]; hasMoreThanMaximumManifests: boolean }> {
+  ): Promise<{ filePaths: string[]; hasMoreThanMaximumFiles: boolean }> {
     process.chdir(path);
     soosLogger.info(`Searching for ${scanType} files from ${path}...`);
     const files = Glob.sync(pattern, {
@@ -397,12 +397,15 @@ class AnalysisService {
       );
     });
 
-    const hasMoreThanMaximumManifests =
-      matchingFiles.length > SOOS_CONSTANTS.FileUploads.MaxManifests;
-    const filesToUpload = matchingFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
+   if (maxFiles < 1) {
+     return { filePaths: matchingFiles, hasMoreThanMaximumFiles: false };
+   }
 
-    if (hasMoreThanMaximumManifests) {
-      const filesToSkip = matchingFiles.slice(SOOS_CONSTANTS.FileUploads.MaxManifests);
+    const hasMoreThanMaximumFiles = matchingFiles.length > maxFiles;
+    const filesToUpload = matchingFiles.slice(0, maxFiles);
+
+    if (hasMoreThanMaximumFiles) {
+      const filesToSkip = matchingFiles.slice(maxFiles);
       const filesDetectedString = StringUtilities.pluralizeTemplate(
         matchingFiles.length,
         "file was",
@@ -414,13 +417,13 @@ class AnalysisService {
         "files",
       );
       soosLogger.info(
-        `The maximum number of ${scanType} files per scan is ${SOOS_CONSTANTS.FileUploads.MaxManifests}. ${filesDetectedString} detected, and ${filesSkippedString} will be not be uploaded. \n`,
+        `The maximum number of ${scanType} files per scan is ${maxFiles}. ${filesDetectedString} detected, and ${filesSkippedString} will be not be uploaded. \n`,
         `The following manifests will not be included in the scan: \n`,
         filesToSkip.map((file) => `  "${Path.basename(file)}": "${file}"`).join("\n"),
       );
     }
 
-    return { filePaths: filesToUpload, hasMoreThanMaximumManifests };
+    return { filePaths: filesToUpload, hasMoreThanMaximumFiles };
   }
 
   async getAnalysisFilesAsFormData(
