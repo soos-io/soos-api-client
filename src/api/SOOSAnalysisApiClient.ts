@@ -127,6 +127,7 @@ interface IUploadManifestFilesRequest {
   branchHash: string;
   analysisId: string;
   manifestFiles: FormData;
+  hasMoreThanMaximumManifests: boolean;
 }
 interface IUploadManifestFilesResponseManifestStatus {
   name: string;
@@ -156,6 +157,7 @@ interface IUploadScanToolResultRequest {
   scanType: ScanType;
   scanId: string;
   resultFile: FormData;
+  hasMoreThanMaximumFiles: boolean;
 }
 
 class SOOSAnalysisApiClient {
@@ -228,6 +230,7 @@ class SOOSAnalysisApiClient {
     projectHash,
     analysisId,
     manifestFiles,
+    hasMoreThanMaximumManifests,
   }: IUploadManifestFilesRequest): Promise<IUploadManifestFilesResponse> {
     const response = await this.client.post<IUploadManifestFilesResponse>(
       `clients/${clientId}/projects/${projectHash}/analysis/${analysisId}/manifests`,
@@ -235,6 +238,9 @@ class SOOSAnalysisApiClient {
       {
         headers: {
           "Content-Type": "multipart/form-data",
+        },
+        params: {
+          hasMoreThanMaximumManifests: hasMoreThanMaximumManifests ? "true" : "false",
         },
       },
     );
@@ -296,6 +302,7 @@ class SOOSAnalysisApiClient {
     scanType,
     scanId,
     resultFile,
+    hasMoreThanMaximumFiles,
   }: IUploadScanToolResultRequest): Promise<void> {
     await this.client.put(
       `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}`,
@@ -303,6 +310,9 @@ class SOOSAnalysisApiClient {
       {
         headers: {
           "Content-Type": "multipart/form-data",
+        },
+        params: {
+          hasMoreThanMaximumFiles: hasMoreThanMaximumFiles ? "true" : "false",
         },
       },
     );
