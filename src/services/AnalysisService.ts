@@ -17,7 +17,7 @@ import {
 } from "../enums";
 import { soosLogger } from "../logging";
 import Glob from "glob";
-import { getVulnerabilitiesByScanType, isNil, sleep } from "../utilities";
+import { formatBytes, getVulnerabilitiesByScanType, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
@@ -76,11 +76,6 @@ interface IUpdateScanStatusParams {
   status: ScanStatus;
   message: string;
   scanStatusUrl?: string;
-}
-
-interface IAnalysisFile {
-  name: string;
-  path: string;
 }
 
 const integrationNameToEnvVariable: Record<IntegrationName, string> = {
@@ -383,8 +378,7 @@ class AnalysisService {
   ): Promise<{ filePaths: string[]; hasMoreThanMaximumManifests: boolean }> {
     process.chdir(path);
     soosLogger.info(`Searching for ${scanType} files from ${path}...`);
-    const finalPattern = `${path}/${pattern}`;
-    const files = Glob.sync(finalPattern, {
+    const files = Glob.sync(pattern, {
       ignore: [...(filesToExclude || []), ...(directoriesToExclude || [])],
       nocase: true,
     });
@@ -392,6 +386,15 @@ class AnalysisService {
     const matchingFiles = files.map((x) => Path.resolve(x));
 
     soosLogger.info(`${matchingFiles.length} files found matching pattern '${pattern}'.`);
+
+    matchingFiles.flat().map((filePath) => {
+      const filename = Path.basename(filePath);
+      const fileStats = FileSystem.statSync(filePath);
+      const fileSize = formatBytes(fileStats.size);
+      soosLogger.info(
+        `Found ${scanType} file '${filename}' (${fileSize}) at location '${filePath}'.`,
+      );
+    });
 
     const hasMoreThanMaximumManifests =
       matchingFiles.length > SOOS_CONSTANTS.FileUploads.MaxManifests;
@@ -420,9 +423,15 @@ class AnalysisService {
   }
 
   async getAnalysisFilesAsFormData(
-    analysisFiles: IAnalysisFile[],
+    analysisFilePaths: string[],
     workingDirectory: string,
   ): Promise<FormData> {
+    const analysisFiles = analysisFilePaths.map((filePath) => {
+      return {
+        name: Path.basename(filePath),
+        path: filePath,
+      };
+    });
     const formData = analysisFiles.reduce((formDataAcc: FormData, analysisFile, index) => {
       const fileParts = analysisFile.path.replace(workingDirectory, "").split(Path.sep);
       const parentFolder =
