@@ -117,8 +117,9 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
 const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
   let fail = false;
+
   if (scanStatus === ScanStatus.FailedWithIssues) {
-    soosLogger.warn("Analysis complete - Failures reported");
+    soosLogger.warn("Analysis Complete. Failures reported.");
     fail = true;
   } else if (scanStatus === ScanStatus.Incomplete) {
     soosLogger.warn(
@@ -128,10 +129,6 @@ const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
   } else if (scanStatus === ScanStatus.Error) {
     soosLogger.warn("Analysis Error.");
     fail = true;
-  }
-
-  if (fail) {
-    soosLogger.warn("Failing the build.");
   }
 
   return fail;
