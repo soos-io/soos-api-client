@@ -115,23 +115,23 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${count} ${unit}`;
 };
 
-const verifyScanStatus = (scanStatus: ScanStatus): boolean => {
-  let fail = false;
+const getExitCodeFromStatus = (scanStatus: ScanStatus): number => {
+  let exitCode = 0;
 
   if (scanStatus === ScanStatus.FailedWithIssues) {
     soosLogger.warn("Analysis Complete. Failures reported.");
-    fail = true;
+    exitCode = 2;
   } else if (scanStatus === ScanStatus.Incomplete) {
     soosLogger.warn(
       "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
     );
-    fail = true;
+    exitCode = 1;
   } else if (scanStatus === ScanStatus.Error) {
     soosLogger.warn("Analysis Error.");
-    fail = true;
+    exitCode = 1;
   }
 
-  return fail;
+  return exitCode;
 };
 
 const getVulnerabilitiesByScanType = (issues: IIssuesModel | null, scanType: ScanType) => {
@@ -157,6 +157,6 @@ export {
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
-  verifyScanStatus,
+  getExitCodeFromStatus,
   getVulnerabilitiesByScanType,
 };
