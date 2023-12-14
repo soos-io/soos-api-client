@@ -380,7 +380,11 @@ class AnalysisService {
     process.chdir(path);
     soosLogger.info(`Searching for ${scanType} files from ${path}...`);
     const files = Glob.sync(pattern, {
-      ignore: [...(filesToExclude || []), ...(directoriesToExclude || [])],
+      ignore: [
+        ...(filesToExclude || []),
+        ...(directoriesToExclude || []),
+        SOOS_CONSTANTS.Files.SoosDirectoryExclusionGlobPattern,
+      ],
       nocase: true,
     });
 

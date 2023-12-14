@@ -8,6 +8,7 @@ export const SOOS_CONSTANTS = {
     MaxManifests: 50,
   },
   Files: {
+    SoosDirectoryExclusionGlobPattern: "**/soos/**",
     SarifOutput: "results.sarif",
   },
   Urls: {
