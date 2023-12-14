@@ -4,7 +4,7 @@ import {
   ensureValue,
   ensureEnumValue,
   ensureNonEmptyValue,
-  verifyScanStatus,
+  getExitCodeFromStatus,
 } from "./utilities";
 
 describe("isNil", () => {
@@ -81,20 +81,20 @@ describe("ensureEnumValue", () => {
   });
 });
 
-describe("verifyScanStatus", () => {
-  test("should return false for Finished", () => {
-    expect(verifyScanStatus(ScanStatus.Finished)).toBe(false);
+describe("getExitCodeFromStatus", () => {
+  test("should return 0 for Finished", () => {
+    expect(getExitCodeFromStatus(ScanStatus.Finished)).toBe(0);
   });
 
-  test("should return true for an Incomplete status", () => {
-    expect(verifyScanStatus(ScanStatus.Incomplete)).toBe(true);
+  test("should return 1 for an Incomplete status", () => {
+    expect(getExitCodeFromStatus(ScanStatus.Incomplete)).toBe(1);
   });
 
-  test("should return true for an Error status", () => {
-    expect(verifyScanStatus(ScanStatus.Error)).toBe(true);
+  test("should return 1 for an Error status", () => {
+    expect(getExitCodeFromStatus(ScanStatus.Error)).toBe(1);
   });
 
-  test("should return true for a FailedWithIssues status", () => {
-    expect(verifyScanStatus(ScanStatus.FailedWithIssues)).toBe(true);
+  test("should return 2 for a FailedWithIssues status", () => {
+    expect(getExitCodeFromStatus(ScanStatus.FailedWithIssues)).toBe(2);
   });
 });
