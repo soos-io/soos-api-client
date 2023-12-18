@@ -41,7 +41,7 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
   if (isNil(option)) {
     throw new Error(
       `Invalid value '${inputValue}' for ${
-        parameterName ? `'${parameterName}.'` : "parameter"
+        parameterName ? `'${parameterName}'` : "parameter"
       }. Valid options are: ${options.map(([, value]) => value).join(", ")}.`,
     );
   }
