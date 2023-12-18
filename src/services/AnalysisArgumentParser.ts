@@ -4,6 +4,7 @@ import {
   IntegrationName,
   IntegrationType,
   LogLevel,
+  OnFailure,
   ScanType,
 } from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
@@ -13,6 +14,29 @@ const getIntegrateUrl = (scanType: ScanType) =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
     scanType == ScanType.CSA ? "containers" : scanType.toLowerCase()
   }`;
+
+interface IBaseScanArguments {
+  apiKey: string;
+  apiURL: string;
+  appVersion: string;
+  branchName: string;
+  branchURI: string;
+  buildURI: string;
+  buildVersion: string;
+  clientId: string;
+  commitHash: string;
+  contributingDeveloperId: string;
+  contributingDeveloperSource: ContributingDeveloperSource;
+  contributingDeveloperSourceName: string;
+  integrationName: IntegrationName;
+  integrationType: IntegrationType;
+  logLevel: LogLevel;
+  onFailure: OnFailure;
+  operatingEnvironment: string;
+  projectName: string;
+  scriptVersion: string;
+  verbose: boolean;
+}
 
 class AnalysisArgumentParser {
   public scanType: ScanType;
@@ -89,45 +113,44 @@ class AnalysisArgumentParser {
       required: false,
     });
 
-    this.argumentParser.add_argument("--contributingDeveloperSource", {
-      help: "Contributing Developer Source - Intended for internal use only.",
-      required: false,
-      type: (value: string) => {
-        return ensureEnumValue(ContributingDeveloperSource, value);
+    this.addEnumArgument(
+      this.argumentParser,
+      "--contributingDeveloperSource",
+      ContributingDeveloperSource,
+      {
+        help: "Contributing Developer Source - Intended for internal use only.",
+        required: false,
+        default: ContributingDeveloperSource.Unknown,
       },
-      default: ContributingDeveloperSource.Unknown,
-    });
+    );
 
     this.argumentParser.add_argument("--contributingDeveloperSourceName", {
       help: "Contributing Developer Source Name - Intended for internal use only.",
       required: false,
     });
 
-    this.argumentParser.add_argument("--integrationName", {
+    this.addEnumArgument(this.argumentParser, "--integrationName", IntegrationName, {
       help: "Integration Name - Intended for internal use only.",
       required: false,
-      type: (value: string) => {
-        return ensureEnumValue(IntegrationName, value);
-      },
       default: integrationName,
     });
 
-    this.argumentParser.add_argument("--integrationType", {
+    this.addEnumArgument(this.argumentParser, "--integrationType", IntegrationType, {
       help: "Integration Type - Intended for internal use only.",
       required: false,
-      type: (value: string) => {
-        return ensureEnumValue(IntegrationType, value);
-      },
       default: integrationType,
     });
 
-    this.argumentParser.add_argument("--logLevel", {
+    this.addEnumArgument(this.argumentParser, "--logLevel", LogLevel, {
       help: "Minimum level to show logs: PASS, IGNORE, INFO, WARN or FAIL.",
       default: LogLevel.INFO,
       required: false,
-      type: (value: string) => {
-        return ensureEnumValue(LogLevel, value);
-      },
+    });
+
+    this.addEnumArgument(this.argumentParser, "--onFailure", OnFailure, {
+      help: "Action to perform when the scan fails. Options: fail_the_build, continue_on_failure.",
+      default: OnFailure.Continue,
+      required: false,
     });
 
     this.argumentParser.add_argument("--operatingEnvironment", {
@@ -157,9 +180,33 @@ class AnalysisArgumentParser {
     });
   }
 
+  addEnumArgument(
+    parser: ArgumentParser,
+    argName: string,
+    enumObject: Record<string, unknown>,
+    options = {},
+  ) {
+    parser.add_argument(argName, {
+      ...options,
+      type: (value: string) => {
+        return ensureEnumValue(enumObject, value, argName);
+      },
+    });
+  }
+
   parseArguments() {
-    return this.argumentParser.parse_args();
+    const args = this.argumentParser.parse_args();
+    this.ensureRequiredArguments(args);
+    return args;
+  }
+
+  ensureRequiredArguments(args: any) {
+    ensureNonEmptyValue(args.clientId, "clientId");
+    ensureNonEmptyValue(args.apiKey, "apiKey");
+    ensureNonEmptyValue(args.projectName, "projectName");
   }
 }
 
 export default AnalysisArgumentParser;
+
+export { IBaseScanArguments };
