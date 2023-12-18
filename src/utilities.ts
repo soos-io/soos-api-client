@@ -20,6 +20,7 @@ const ensureNonEmptyValue = (value: string | null | undefined, propertyName: str
 const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<string, T>>(
   enumObject: TEnumObject,
   inputValue: string | null | undefined,
+  parameterName?: string,
   excludeDefault?: keyof TEnumObject,
   ignoreCase = true,
 ): T | undefined => {
@@ -39,9 +40,13 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
 
   if (isNil(option)) {
     throw new Error(
-      `Invalid enum value '${inputValue}'. Valid options are: ${options
-        .map(([, value]) => value)
-        .join(", ")}.`,
+      parameterName
+        ? `Invalid value ${inputValue} for parameter '${parameterName}'. Valid options are: ${options
+            .map(([, value]) => value)
+            .join(", ")}.`
+        : `Invalid enum value '${inputValue}'. Valid options are: ${options
+            .map(([, value]) => value)
+            .join(", ")}.`,
     );
   }
 

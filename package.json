@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.",
   "main": "dist/index.js",
   "scripts": {
@@ -35,8 +35,16 @@
     "oss",
     "csa"
   ],
-  "author": "soos",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soos-io/soos-api-client.git"
+  },
+  "author": "SOOS",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/soos-io/soos-api-client/issues"
+  },
+  "homepage": "https://github.com/soos-io/soos-api-client#readme",
   "dependencies": {
     "argparse": "^2.0.1",
     "axios": "^1.6.2",
