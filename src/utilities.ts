@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import StringUtilities from "./StringUtilities";
-import { ScanStatus, ScanType } from "./enums";
+import { IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
 import { IIssuesModel } from "./api/SOOSAnalysisApiClient";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
@@ -115,18 +115,29 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${count} ${unit}`;
 };
 
-const getExitCodeFromStatus = (scanStatus: ScanStatus): number => {
+const getExitCode = (
+  scanStatus: ScanStatus,
+  integrationName: IntegrationName,
+  onFailure: OnFailure,
+): number => {
+  let exitCode = 0;
+
   if (scanStatus === ScanStatus.FailedWithIssues) {
-    soosLogger.warn("Analysis Complete. Failures reported.");
-    return 2;
-  } else if (scanStatus === ScanStatus.Incomplete) {
-    soosLogger.warn(
-      "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
-    );
-    return 1;
-  } else if (scanStatus === ScanStatus.Error) {
-    soosLogger.warn("Analysis Error.");
-    return 1;
+    exitCode = 2;
+  } else if (scanStatus === ScanStatus.Incomplete || scanStatus === ScanStatus.Error) {
+    exitCode = 1;
+  }
+
+  if (exitCode > 0) {
+    if (
+      onFailure === OnFailure.Fail ||
+      (exitCode === 2 && integrationName === IntegrationName.AzureDevOps)
+    ) {
+      soosLogger.warn("Failing the build due to issues found.");
+      return exitCode;
+    } else if (exitCode === 2) {
+      soosLogger.warn("Issues found but continuing the build.");
+    }
   }
 
   return 0;
@@ -155,6 +166,6 @@ export {
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
-  getExitCodeFromStatus,
+  getExitCode,
   getVulnerabilitiesByScanType,
 };
