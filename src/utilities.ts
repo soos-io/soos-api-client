@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import StringUtilities from "./StringUtilities";
-import { ScanStatus, ScanType } from "./enums";
+import { IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
 import { IIssuesModel } from "./api/SOOSAnalysisApiClient";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
@@ -115,18 +115,26 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${count} ${unit}`;
 };
 
-const getExitCodeFromStatus = (scanStatus: ScanStatus): number => {
+const getAnalysisExitCode = (
+  scanStatus: ScanStatus,
+  integrationName: IntegrationName,
+  onFailure: OnFailure,
+): number => {
   if (scanStatus === ScanStatus.FailedWithIssues) {
-    soosLogger.warn("Analysis Complete. Failures reported.");
-    return 2;
+    soosLogger.warn("Analysis Complete. Issues reported.");
+    return onFailure === OnFailure.Fail
+      ? 1
+      : integrationName === IntegrationName.AzureDevOps
+        ? 2
+        : 0;
   } else if (scanStatus === ScanStatus.Incomplete) {
     soosLogger.warn(
       "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
     );
-    return 1;
+    return onFailure === OnFailure.Fail ? 1 : 0;
   } else if (scanStatus === ScanStatus.Error) {
     soosLogger.warn("Analysis Error.");
-    return 1;
+    return onFailure === OnFailure.Fail ? 1 : 0;
   }
 
   return 0;
@@ -155,6 +163,6 @@ export {
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
-  getExitCodeFromStatus,
+  getAnalysisExitCode,
   getVulnerabilitiesByScanType,
 };
