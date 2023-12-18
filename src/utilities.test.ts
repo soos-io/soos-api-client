@@ -68,7 +68,7 @@ describe("ensureEnumValue", () => {
 
   test("should throw an error for an invalid enum value", () => {
     expect(() => ensureEnumValue({ value: "value" }, "invalid")).toThrow(
-      "Invalid enum value 'invalid'. Valid options are: value.",
+      "Invalid value 'invalid' for parameter. Valid options are: value.",
     );
   });
 
