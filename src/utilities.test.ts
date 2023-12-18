@@ -1,5 +1,11 @@
 import { IntegrationName, OnFailure, ScanStatus } from "./enums";
-import { isNil, ensureValue, ensureEnumValue, ensureNonEmptyValue, getExitCode } from "./utilities";
+import {
+  isNil,
+  ensureValue,
+  ensureEnumValue,
+  ensureNonEmptyValue,
+  getAnalysisExitCode,
+} from "./utilities";
 
 describe("isNil", () => {
   test("should return true for null", () => {
@@ -75,28 +81,36 @@ describe("ensureEnumValue", () => {
   });
 });
 
-describe("getExitCode", () => {
+describe("getAnalysisExitCode", () => {
   test("should exit with code 0", () => {
-    expect(getExitCode(ScanStatus.Finished, IntegrationName.SoosSca, OnFailure.Continue)).toBe(0);
+    expect(
+      getAnalysisExitCode(ScanStatus.Finished, IntegrationName.SoosSca, OnFailure.Continue),
+    ).toBe(0);
   });
 
   test("should return 0 for an Incomplete status on continue on failure", () => {
-    expect(getExitCode(ScanStatus.Incomplete, IntegrationName.SoosSca, OnFailure.Continue)).toBe(0);
+    expect(
+      getAnalysisExitCode(ScanStatus.Incomplete, IntegrationName.SoosSca, OnFailure.Continue),
+    ).toBe(0);
   });
 
   test("should return 1 for an Error status on fail", () => {
-    expect(getExitCode(ScanStatus.Error, IntegrationName.SoosSca, OnFailure.Fail)).toBe(1);
+    expect(getAnalysisExitCode(ScanStatus.Error, IntegrationName.SoosSca, OnFailure.Fail)).toBe(1);
   });
 
   test("should return 2 for a FailedWithIssues status on continue with Azure Devops", () => {
     expect(
-      getExitCode(ScanStatus.FailedWithIssues, IntegrationName.AzureDevOps, OnFailure.Continue),
+      getAnalysisExitCode(
+        ScanStatus.FailedWithIssues,
+        IntegrationName.AzureDevOps,
+        OnFailure.Continue,
+      ),
     ).toBe(2);
   });
 
   test("should return 0 for a FailedWithIssues status without azure devops", () => {
     expect(
-      getExitCode(ScanStatus.FailedWithIssues, IntegrationName.SoosSca, OnFailure.Continue),
+      getAnalysisExitCode(ScanStatus.FailedWithIssues, IntegrationName.SoosSca, OnFailure.Continue),
     ).toBe(0);
   });
 });

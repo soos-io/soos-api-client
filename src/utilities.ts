@@ -115,29 +115,26 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${count} ${unit}`;
 };
 
-const getExitCode = (
+const getAnalysisExitCode = (
   scanStatus: ScanStatus,
   integrationName: IntegrationName,
   onFailure: OnFailure,
 ): number => {
-  let exitCode = 0;
-
   if (scanStatus === ScanStatus.FailedWithIssues) {
-    exitCode = 2;
-  } else if (scanStatus === ScanStatus.Incomplete || scanStatus === ScanStatus.Error) {
-    exitCode = 1;
-  }
-
-  if (exitCode > 0) {
-    if (
-      onFailure === OnFailure.Fail ||
-      (exitCode === 2 && integrationName === IntegrationName.AzureDevOps)
-    ) {
-      soosLogger.warn("Failing the build due to issues found.");
-      return exitCode;
-    } else if (exitCode === 2) {
-      soosLogger.warn("Issues found but continuing the build.");
-    }
+    soosLogger.warn("Analysis Complete. Issues reported.");
+    return onFailure === OnFailure.Fail
+      ? 1
+      : integrationName === IntegrationName.AzureDevOps
+        ? 2
+        : 0;
+  } else if (scanStatus === ScanStatus.Incomplete) {
+    soosLogger.warn(
+      "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
+    );
+    return onFailure === OnFailure.Fail ? 1 : 0;
+  } else if (scanStatus === ScanStatus.Error) {
+    soosLogger.warn("Analysis Error.");
+    return onFailure === OnFailure.Fail ? 1 : 0;
   }
 
   return 0;
@@ -166,6 +163,6 @@ export {
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
-  getExitCode,
+  getAnalysisExitCode,
   getVulnerabilitiesByScanType,
 };
