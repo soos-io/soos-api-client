@@ -30,7 +30,6 @@ interface IGenerateFormattedOutputParams {
   scanType: ScanType;
   analysisId: string;
   outputFormat: OutputFormat;
-  sourceCodePath: string;
   workingDirectory: string;
 }
 
