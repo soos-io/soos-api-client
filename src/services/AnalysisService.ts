@@ -304,7 +304,6 @@ class AnalysisService {
     scanType,
     analysisId,
     outputFormat,
-    sourceCodePath,
     workingDirectory,
   }: IGenerateFormattedOutputParams): Promise<void> {
     soosLogger.info(`Generating ${outputFormat} report ${projectName}...`);
@@ -320,10 +319,10 @@ class AnalysisService {
       soosLogger.info(`${outputFormat} report generated successfully.`);
       soosLogger.info(`Output ('${outputFormat}' format):`);
       soosLogger.info(JSON.stringify(output, null, 2));
-      if (sourceCodePath) {
+      if (workingDirectory) {
         soosLogger.info(
           `Writing ${outputFormat} report to ${Path.join(
-            sourceCodePath,
+            workingDirectory,
             SOOS_CONSTANTS.Files.SarifOutput,
           )}`,
         );
