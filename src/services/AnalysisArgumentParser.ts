@@ -189,7 +189,11 @@ class AnalysisArgumentParser {
     parser.add_argument(argName, {
       ...options,
       type: (value: string) => {
-        return ensureEnumValue(enumObject, value, argName);
+        return value
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => v !== "")
+          .map((v) => ensureEnumValue(enumObject, v, argName));
       },
     });
   }
