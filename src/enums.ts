@@ -35,9 +35,14 @@ export enum IntegrationType {
 }
 
 export enum PackageManagerType {
+  Unknown = "Unknown",
+  Alpine = "Alpine",
   CFamily = "CFamily",
   Dart = "Dart",
+  Debian = "Debian",
+  Docker = "Docker",
   Erlang = "Erlang",
+  Fedora = "Fedora",
   Go = "Go",
   Homebrew = "Homebrew",
   Java = "Java",
@@ -47,6 +52,8 @@ export enum PackageManagerType {
   Python = "Python",
   Ruby = "Ruby",
   Rust = "Rust",
+  Swift = "Swift",
+  Wolfi = "Wolfi",
 }
 
 export enum ManifestStatus {
