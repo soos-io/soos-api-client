@@ -185,10 +185,19 @@ class AnalysisArgumentParser {
     argName: string,
     enumObject: Record<string, unknown>,
     options = {},
+    allowMultipleValues = false,
   ) {
     parser.add_argument(argName, {
       ...options,
       type: (value: string) => {
+        if (allowMultipleValues) {
+          return value
+            .split(",")
+            .map((v) => v.trim())
+            .filter((v) => v !== "")
+            .map((v) => ensureEnumValue(enumObject, v, argName));
+        }
+        
         return ensureEnumValue(enumObject, value, argName);
       },
     });
