@@ -35,7 +35,6 @@ export enum IntegrationType {
 }
 
 export enum PackageManagerType {
-  Unknown = "Unknown",
   CFamily = "CFamily",
   Dart = "Dart",
   Erlang = "Erlang",
@@ -48,7 +47,6 @@ export enum PackageManagerType {
   Python = "Python",
   Ruby = "Ruby",
   Rust = "Rust",
-  Swift = "Swift",
 }
 
 export enum ManifestStatus {
