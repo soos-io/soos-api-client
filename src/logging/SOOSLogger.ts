@@ -12,7 +12,6 @@ class SOOSLogger {
   ) {
     this.verbose = verbose;
     this.console = console;
-    // Verbose overrides min Log LEVEL
     this.minLogLevel = this.verbose ? LogLevel.DEBUG : minLogLevel;
   }
 
@@ -47,7 +46,6 @@ class SOOSLogger {
 
   setVerbose(verbose: boolean) {
     this.verbose = verbose;
-    // Verbose overrides min Log LEVEL
     if (this.verbose) this.setMinLogLevel(LogLevel.DEBUG);
   }
 
