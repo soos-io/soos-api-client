@@ -12,7 +12,7 @@ class SOOSLogger {
   ) {
     this.verbose = verbose;
     this.console = console;
-    this.minLogLevel = minLogLevel;
+    this.minLogLevel = this.verbose ? LogLevel.DEBUG : minLogLevel;
   }
 
   private getTimeStamp(): string {
@@ -46,6 +46,7 @@ class SOOSLogger {
 
   setVerbose(verbose: boolean) {
     this.verbose = verbose;
+    if (this.verbose) this.setMinLogLevel(LogLevel.DEBUG);
   }
 
   setMinLogLevel(minLogLevel: LogLevel) {
