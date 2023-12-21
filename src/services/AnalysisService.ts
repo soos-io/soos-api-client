@@ -325,14 +325,9 @@ class AnalysisService {
             SOOS_CONSTANTS.Files.SarifOutput,
           )}`,
         );
-        FileSystem.writeFile(
-          `${workingDirectory}/${SOOS_CONSTANTS.Files.SarifOutput}`,
+        FileSystem.writeFileSync(
+          Path.join(workingDirectory, SOOS_CONSTANTS.Files.SarifOutput),
           JSON.stringify(output, null, 2),
-          (error) => {
-            if (error) {
-              soosLogger.error(error);
-            }
-          },
         );
       }
     }
