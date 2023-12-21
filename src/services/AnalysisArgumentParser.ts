@@ -197,7 +197,7 @@ class AnalysisArgumentParser {
             .filter((v) => v !== "")
             .map((v) => ensureEnumValue(enumObject, v, argName));
         }
-        
+
         return ensureEnumValue(enumObject, value, argName);
       },
     });
