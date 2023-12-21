@@ -102,8 +102,6 @@ export enum SeverityEnum {
 }
 
 export enum LogLevel {
-  PASS = "PASS",
-  IGNORE = "IGNORE",
   DEBUG = "DEBUG",
   INFO = "INFO",
   WARN = "WARN",
