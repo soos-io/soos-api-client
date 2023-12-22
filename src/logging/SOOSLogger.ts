@@ -114,6 +114,12 @@ class SOOSLogger {
     }
   }
 
+  always(message?: any, ...optionalParams: any[]): void {
+    const timestamp = this.getTimeStamp();
+    const logMessage = `${timestamp} UTC [SOOS] ${message}`;
+    this.console.log(logMessage, ...optionalParams);
+  }
+
   logLineSeparator(): void {
     const separator = "-".repeat(80);
     this.console.log(`${separator}\n`);
