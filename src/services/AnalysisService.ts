@@ -255,8 +255,6 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    let statusMessage = `Scan ${scanStatus.isSuccess ? "passed" : "failed"}`;
-
     const vulnerabilities = StringUtilities.pluralizeTemplate(
       getVulnerabilitiesByScanType(scanStatus.issues, scanType) ?? 0,
       "vulnerability",
@@ -284,13 +282,13 @@ class AnalysisService {
         )
       : "";
 
-    statusMessage = statusMessage.concat(
-      `${scanStatus.isSuccess ? ", with" : " because of"} (${vulnerabilities}) (${violations})${
-        substitutions ? ` (${substitutions})` : ""
-      }${typos ? ` (${typos})` : ""}.`,
+    soosLogger.always(
+      `Scan ${scanStatus.isSuccess ? "passed" : "failed"}${
+        scanStatus.isSuccess ? ", with" : " because of"
+      } (${vulnerabilities}) (${violations})${substitutions ? ` (${substitutions})` : ""}${
+        typos ? ` (${typos})` : ""
+      }.`,
     );
-
-    soosLogger.info(statusMessage);
     soosLogger.info(`View the results at: ${scanUrl}`);
     return scanStatus.status;
   }

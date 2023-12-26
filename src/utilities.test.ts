@@ -4,7 +4,7 @@ import {
   ensureValue,
   ensureEnumValue,
   ensureNonEmptyValue,
-  getAnalysisExitCode,
+  getAnalysisExitCodeWithMessage,
 } from "./utilities";
 
 describe("isNil", () => {
@@ -87,36 +87,112 @@ describe("ensureEnumValue", () => {
   });
 });
 
-describe("getAnalysisExitCode", () => {
-  test("should exit with code 0", () => {
+describe("getAnalysisExitCodeWithMessage", () => {
+  test("should return 0 on finished with continue", () => {
     expect(
-      getAnalysisExitCode(ScanStatus.Finished, IntegrationName.SoosSca, OnFailure.Continue),
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.Finished,
+        IntegrationName.SoosCsa,
+        OnFailure.Continue,
+      ).exitCode,
     ).toBe(0);
   });
 
-  test("should return 0 for an Incomplete status on continue on failure", () => {
+  test("should return 0 on finished with fail", () => {
     expect(
-      getAnalysisExitCode(ScanStatus.Incomplete, IntegrationName.SoosSca, OnFailure.Continue),
+      getAnalysisExitCodeWithMessage(ScanStatus.Finished, IntegrationName.SoosSca, OnFailure.Fail)
+        .exitCode,
     ).toBe(0);
   });
 
-  test("should return 1 for an Error status on fail", () => {
-    expect(getAnalysisExitCode(ScanStatus.Error, IntegrationName.SoosSca, OnFailure.Fail)).toBe(1);
+  test("should return 0 for an Incomplete status with continue", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.Incomplete,
+        IntegrationName.SoosSca,
+        OnFailure.Continue,
+      ).exitCode,
+    ).toBe(0);
   });
 
-  test("should return 2 for a FailedWithIssues status on continue with Azure Devops", () => {
+  test("should return 1 for an Incomplete status with fail", () => {
     expect(
-      getAnalysisExitCode(
+      getAnalysisExitCodeWithMessage(ScanStatus.Incomplete, IntegrationName.SoosSca, OnFailure.Fail)
+        .exitCode,
+    ).toBe(1);
+  });
+
+  test("should return 0 for an Error status with continue", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(ScanStatus.Error, IntegrationName.SoosSca, OnFailure.Continue)
+        .exitCode,
+    ).toBe(0);
+  });
+
+  test("should return 1 for an Error status with fail", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(ScanStatus.Error, IntegrationName.SoosSca, OnFailure.Fail)
+        .exitCode,
+    ).toBe(1);
+  });
+
+  test("should return 0 for a FailedWithIssues status with continue", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.FailedWithIssues,
+        IntegrationName.SoosSca,
+        OnFailure.Continue,
+      ).exitCode,
+    ).toBe(0);
+  });
+
+  test("should return 1 for a FailedWithIssues status with fail", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.FailedWithIssues,
+        IntegrationName.SoosSca,
+        OnFailure.Fail,
+      ).exitCode,
+    ).toBe(1);
+  });
+
+  test("should return 2 for a FailedWithIssues status with continue when DevOps", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(
         ScanStatus.FailedWithIssues,
         IntegrationName.AzureDevOps,
         OnFailure.Continue,
-      ),
+      ).exitCode,
     ).toBe(2);
   });
 
-  test("should return 0 for a FailedWithIssues status without azure devops", () => {
+  test("should return 1 for a FailedWithIssues status with fail when DevOps", () => {
     expect(
-      getAnalysisExitCode(ScanStatus.FailedWithIssues, IntegrationName.SoosSca, OnFailure.Continue),
-    ).toBe(0);
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.FailedWithIssues,
+        IntegrationName.AzureDevOps,
+        OnFailure.Fail,
+      ).exitCode,
+    ).toBe(1);
+  });
+
+  test("should return 2 for an Incomplete status with continue when DevOps", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.Incomplete,
+        IntegrationName.AzureDevOps,
+        OnFailure.Continue,
+      ).exitCode,
+    ).toBe(2);
+  });
+
+  test("should return 1 for an Incomplete status with fail when DevOps", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.Incomplete,
+        IntegrationName.AzureDevOps,
+        OnFailure.Fail,
+      ).exitCode,
+    ).toBe(1);
   });
 });
