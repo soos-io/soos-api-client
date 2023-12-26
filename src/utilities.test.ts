@@ -175,4 +175,21 @@ describe("getAnalysisExitCodeWithMessage", () => {
       ).exitCode,
     ).toBe(1);
   });
+
+  test("should return 2 for an Incomplete status with continue when DevOps", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.Incomplete,
+        IntegrationName.SoosSca,
+        OnFailure.Continue,
+      ).exitCode,
+    ).toBe(2);
+  });
+
+  test("should return 1 for an Incomplete status with fail when DevOps", () => {
+    expect(
+      getAnalysisExitCodeWithMessage(ScanStatus.Incomplete, IntegrationName.SoosSca, OnFailure.Fail)
+        .exitCode,
+    ).toBe(1);
+  });
 });
