@@ -1,4 +1,4 @@
-import { IntegrationName, OnFailure, ScanStatus } from "./enums";
+import { OnFailure, ScanStatus } from "./enums";
 import {
   isNil,
   ensureValue,
@@ -88,35 +88,35 @@ describe("ensureEnumValue", () => {
 });
 
 describe("getAnalysisExitCode", () => {
-  test("should exit with code 0", () => {
-    expect(
-      getAnalysisExitCode(ScanStatus.Finished, IntegrationName.SoosSca, OnFailure.Continue),
-    ).toBe(0);
+  test("should return 0 on finished with continue", () => {
+    expect(getAnalysisExitCode(ScanStatus.Finished, OnFailure.Continue).exitCode).toBe(0);
   });
 
-  test("should return 0 for an Incomplete status on continue on failure", () => {
-    expect(
-      getAnalysisExitCode(ScanStatus.Incomplete, IntegrationName.SoosSca, OnFailure.Continue),
-    ).toBe(0);
+  test("should return 0 on finished with fail", () => {
+    expect(getAnalysisExitCode(ScanStatus.Finished, OnFailure.Fail).exitCode).toBe(0);
   });
 
-  test("should return 1 for an Error status on fail", () => {
-    expect(getAnalysisExitCode(ScanStatus.Error, IntegrationName.SoosSca, OnFailure.Fail)).toBe(1);
+  test("should return 0 for an Incomplete status with continue", () => {
+    expect(getAnalysisExitCode(ScanStatus.Incomplete, OnFailure.Continue).exitCode).toBe(0);
   });
 
-  test("should return 2 for a FailedWithIssues status on continue with Azure Devops", () => {
-    expect(
-      getAnalysisExitCode(
-        ScanStatus.FailedWithIssues,
-        IntegrationName.AzureDevOps,
-        OnFailure.Continue,
-      ),
-    ).toBe(2);
+  test("should return 1 for an Incomplete status with fail", () => {
+    expect(getAnalysisExitCode(ScanStatus.Incomplete, OnFailure.Fail).exitCode).toBe(1);
   });
 
-  test("should return 0 for a FailedWithIssues status without azure devops", () => {
-    expect(
-      getAnalysisExitCode(ScanStatus.FailedWithIssues, IntegrationName.SoosSca, OnFailure.Continue),
-    ).toBe(0);
+  test("should return 0 for an Error status with continue", () => {
+    expect(getAnalysisExitCode(ScanStatus.Error, OnFailure.Continue).exitCode).toBe(0);
+  });
+
+  test("should return 1 for an Error status with fail", () => {
+    expect(getAnalysisExitCode(ScanStatus.Error, OnFailure.Fail).exitCode).toBe(1);
+  });
+
+  test("should return 0 for a FailedWithIssues status with continue", () => {
+    expect(getAnalysisExitCode(ScanStatus.FailedWithIssues, OnFailure.Continue).exitCode).toBe(0);
+  });
+
+  test("should return 1 for a FailedWithIssues status with fail", () => {
+    expect(getAnalysisExitCode(ScanStatus.FailedWithIssues, OnFailure.Fail).exitCode).toBe(1);
   });
 });

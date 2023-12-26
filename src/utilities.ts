@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import StringUtilities from "./StringUtilities";
-import { IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
+import { OnFailure, ScanStatus, ScanType } from "./enums";
 import { IIssuesModel } from "./api/SOOSAnalysisApiClient";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
@@ -118,27 +118,30 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
 const getAnalysisExitCode = (
   scanStatus: ScanStatus,
-  integrationName: IntegrationName,
   onFailure: OnFailure,
-): number => {
+): { exitCode: number; message: string } => {
   if (scanStatus === ScanStatus.FailedWithIssues) {
-    soosLogger.warn("Analysis Complete. Issues reported.");
-    return onFailure === OnFailure.Fail
-      ? 1
-      : integrationName === IntegrationName.AzureDevOps
-        ? 2
-        : 0;
+    return {
+      exitCode: onFailure === OnFailure.Fail ? 1 : 0,
+      message: "Analysis Complete. Issues reported.",
+    };
   } else if (scanStatus === ScanStatus.Incomplete) {
-    soosLogger.warn(
-      "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
-    );
-    return onFailure === OnFailure.Fail ? 1 : 0;
+    return {
+      exitCode: onFailure === OnFailure.Fail ? 1 : 0,
+      message: "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
+    };
   } else if (scanStatus === ScanStatus.Error) {
-    soosLogger.warn("Analysis Error.");
-    return onFailure === OnFailure.Fail ? 1 : 0;
+    return {
+      exitCode: onFailure === OnFailure.Fail ? 1 : 0,
+      message:
+        "Analysis Error. Please check the logs and/or set the logLevel to DEBUG for more information.",
+    };
   }
 
-  return 0;
+  return {
+    exitCode: 0,
+    message: "Analysis Complete.",
+  };
 };
 
 const getVulnerabilitiesByScanType = (issues: IIssuesModel | null, scanType: ScanType) => {
