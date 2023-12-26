@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import StringUtilities from "./StringUtilities";
-import { OnFailure, ScanStatus, ScanType } from "./enums";
+import { IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
 import { IIssuesModel } from "./api/SOOSAnalysisApiClient";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
@@ -118,16 +118,19 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
 const getAnalysisExitCodeWithMessage = (
   scanStatus: ScanStatus,
+  integrationName: IntegrationName,
   onFailure: OnFailure,
 ): { exitCode: number; message: string } => {
   if (scanStatus === ScanStatus.FailedWithIssues) {
     return {
-      exitCode: onFailure === OnFailure.Fail ? 1 : 0,
+      exitCode:
+        onFailure === OnFailure.Fail ? 1 : integrationName === IntegrationName.AzureDevOps ? 2 : 0,
       message: "Analysis Complete. Issues reported.",
     };
   } else if (scanStatus === ScanStatus.Incomplete) {
     return {
-      exitCode: onFailure === OnFailure.Fail ? 1 : 0,
+      exitCode:
+        onFailure === OnFailure.Fail ? 1 : integrationName === IntegrationName.AzureDevOps ? 2 : 0,
       message: "Analysis Incomplete. It may have been cancelled or superseded by another scan.",
     };
   } else if (scanStatus === ScanStatus.Error) {
