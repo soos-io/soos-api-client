@@ -4,7 +4,7 @@ import {
   ensureValue,
   ensureEnumValue,
   ensureNonEmptyValue,
-  getAnalysisExitCode,
+  getAnalysisExitCodeWithMessage,
 } from "./utilities";
 
 describe("isNil", () => {
@@ -87,36 +87,44 @@ describe("ensureEnumValue", () => {
   });
 });
 
-describe("getAnalysisExitCode", () => {
+describe("getAnalysisExitCodeWithMessage", () => {
   test("should return 0 on finished with continue", () => {
-    expect(getAnalysisExitCode(ScanStatus.Finished, OnFailure.Continue).exitCode).toBe(0);
+    expect(getAnalysisExitCodeWithMessage(ScanStatus.Finished, OnFailure.Continue).exitCode).toBe(
+      0,
+    );
   });
 
   test("should return 0 on finished with fail", () => {
-    expect(getAnalysisExitCode(ScanStatus.Finished, OnFailure.Fail).exitCode).toBe(0);
+    expect(getAnalysisExitCodeWithMessage(ScanStatus.Finished, OnFailure.Fail).exitCode).toBe(0);
   });
 
   test("should return 0 for an Incomplete status with continue", () => {
-    expect(getAnalysisExitCode(ScanStatus.Incomplete, OnFailure.Continue).exitCode).toBe(0);
+    expect(getAnalysisExitCodeWithMessage(ScanStatus.Incomplete, OnFailure.Continue).exitCode).toBe(
+      0,
+    );
   });
 
   test("should return 1 for an Incomplete status with fail", () => {
-    expect(getAnalysisExitCode(ScanStatus.Incomplete, OnFailure.Fail).exitCode).toBe(1);
+    expect(getAnalysisExitCodeWithMessage(ScanStatus.Incomplete, OnFailure.Fail).exitCode).toBe(1);
   });
 
   test("should return 0 for an Error status with continue", () => {
-    expect(getAnalysisExitCode(ScanStatus.Error, OnFailure.Continue).exitCode).toBe(0);
+    expect(getAnalysisExitCodeWithMessage(ScanStatus.Error, OnFailure.Continue).exitCode).toBe(0);
   });
 
   test("should return 1 for an Error status with fail", () => {
-    expect(getAnalysisExitCode(ScanStatus.Error, OnFailure.Fail).exitCode).toBe(1);
+    expect(getAnalysisExitCodeWithMessage(ScanStatus.Error, OnFailure.Fail).exitCode).toBe(1);
   });
 
   test("should return 0 for a FailedWithIssues status with continue", () => {
-    expect(getAnalysisExitCode(ScanStatus.FailedWithIssues, OnFailure.Continue).exitCode).toBe(0);
+    expect(
+      getAnalysisExitCodeWithMessage(ScanStatus.FailedWithIssues, OnFailure.Continue).exitCode,
+    ).toBe(0);
   });
 
   test("should return 1 for a FailedWithIssues status with fail", () => {
-    expect(getAnalysisExitCode(ScanStatus.FailedWithIssues, OnFailure.Fail).exitCode).toBe(1);
+    expect(
+      getAnalysisExitCodeWithMessage(ScanStatus.FailedWithIssues, OnFailure.Fail).exitCode,
+    ).toBe(1);
   });
 });

@@ -116,7 +116,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${count} ${unit}`;
 };
 
-const getAnalysisExitCode = (
+const getAnalysisExitCodeWithMessage = (
   scanStatus: ScanStatus,
   onFailure: OnFailure,
 ): { exitCode: number; message: string } => {
@@ -167,6 +167,6 @@ export {
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
-  getAnalysisExitCode,
+  getAnalysisExitCodeWithMessage,
   getVulnerabilitiesByScanType,
 };
