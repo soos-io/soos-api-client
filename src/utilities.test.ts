@@ -180,7 +180,7 @@ describe("getAnalysisExitCodeWithMessage", () => {
     expect(
       getAnalysisExitCodeWithMessage(
         ScanStatus.Incomplete,
-        IntegrationName.SoosSca,
+        IntegrationName.AzureDevOps,
         OnFailure.Continue,
       ).exitCode,
     ).toBe(2);
@@ -188,8 +188,11 @@ describe("getAnalysisExitCodeWithMessage", () => {
 
   test("should return 1 for an Incomplete status with fail when DevOps", () => {
     expect(
-      getAnalysisExitCodeWithMessage(ScanStatus.Incomplete, IntegrationName.SoosSca, OnFailure.Fail)
-        .exitCode,
+      getAnalysisExitCodeWithMessage(
+        ScanStatus.Incomplete,
+        IntegrationName.AzureDevOps,
+        OnFailure.Fail,
+      ).exitCode,
     ).toBe(1);
   });
 });
