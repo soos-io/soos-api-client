@@ -35,6 +35,12 @@ class SOOSApiClient {
             apiClientName,
             `Request URL: ${request.method?.toLocaleUpperCase()} ${request.url}`,
           );
+          if (request.params) {
+            soosLogger.verboseDebug(
+              apiClientName,
+              `Request Params: ${JSON.stringify(request.params)}`,
+            );
+          }
           soosLogger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
         }
         return request;
