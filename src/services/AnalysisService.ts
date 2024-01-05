@@ -1,4 +1,3 @@
-import StringUtilities from "../StringUtilities";
 import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
@@ -16,7 +15,13 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { formatBytes, getVulnerabilitiesByScanType, isNil, sleep } from "../utilities";
+import {
+  StringUtilities,
+  formatBytes,
+  getVulnerabilitiesByScanType,
+  isNil,
+  sleep,
+} from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
