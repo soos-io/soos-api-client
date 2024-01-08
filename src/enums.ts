@@ -91,6 +91,11 @@ export enum ScanType {
   SCA = "Sca",
 }
 
+export enum ScmType {
+  Unknown = "Unknown",
+  GitHub = "GitHub",
+}
+
 export enum SeverityEnum {
   Unknown = "Unknown",
   None = "None",
