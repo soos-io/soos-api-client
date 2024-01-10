@@ -99,10 +99,10 @@ class GitHubApiClient {
 
     client.interceptors.response.use(
       async (response) => {
+        soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         if (response.config.url?.includes("per_page")) {
           return await GitHubApiClient.handlePagination(response, client);
         }
-        soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         return response;
       },
       async (error) => {
