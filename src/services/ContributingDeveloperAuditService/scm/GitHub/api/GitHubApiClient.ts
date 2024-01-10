@@ -1,5 +1,6 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { soosLogger } from "../../../../../logging/SOOSLogger";
+import { sleep } from "../../../../../utilities";
 
 interface IHttpRequestParameters {
   baseUri: string;
@@ -43,13 +44,16 @@ export interface Commits {
 export interface Author {
   name: string;
   email: string;
+  date: string;
 }
 
-const d = new Date();
-d.setDate(d.getDate() - 90);
-export const threeMonthsDate = `${d.getUTCFullYear()}-${
-  d.getMonth() + 1
-}-${d.getUTCDate()}T${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}Z`;
+export const threeMonthsDate = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() - 90);
+  return `${d.getUTCFullYear()}-${
+    d.getMonth() + 1
+  }-${d.getUTCDate()}T${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}Z`;
+})();
 
 class GitHubApiClient {
   private readonly client: AxiosInstance;
@@ -94,22 +98,61 @@ class GitHubApiClient {
     );
 
     client.interceptors.response.use(
-      (response) => {
+      async (response) => {
+        if (response.config.url?.includes("per_page")) {
+          return await GitHubApiClient.handlePagination(response, client);
+        }
         soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         return response;
       },
-      (rejectedResponse) => {
-        if (rejectedResponse.response?.status) {
+      async (error) => {
+        const { config, response } = error;
+        const maxRetries = 3;
+        config.retryCount = config.retryCount || 0;
+
+        if (response?.status === 429 && config.retryCount < maxRetries) {
+          config.retryCount += 1;
           soosLogger.verboseDebug(
             apiClientName,
-            `Response Status: ${rejectedResponse.response?.status}`,
+            `Retrying request (${config.retryCount}) after 3 minutes due to 429 status.`,
           );
+          await sleep(180000);
+          return client(config);
         }
-        return Promise.reject(rejectedResponse);
+
+        if (response?.status) {
+          soosLogger.verboseDebug(apiClientName, `Response Status: ${response.status}`);
+        }
+        return Promise.reject(error);
       },
     );
 
     return client;
+  }
+
+  private static async handlePagination(
+    response: AxiosResponse,
+    client: AxiosInstance,
+  ): Promise<AxiosResponse> {
+    let data = response.data;
+    let nextUrl = GitHubApiClient.getNextPageUrl(response);
+    while (nextUrl) {
+      soosLogger.verboseDebug("Handling pagination for ", response.config.url);
+      soosLogger.verboseDebug("Next url being fetched for pagination", nextUrl);
+      const nextPageResponse = await client.get(nextUrl);
+      data = data.concat(nextPageResponse.data);
+      nextUrl = GitHubApiClient.getNextPageUrl(nextPageResponse);
+    }
+
+    return { ...response, data };
+  }
+
+  private static getNextPageUrl(response: AxiosResponse): string | null {
+    const linkHeader = response.headers["link"] as string | undefined;
+    const nextLink = linkHeader?.split(",").find((s) => s.includes('rel="next"'));
+    return nextLink
+      ? new URL(nextLink.split(";")[0].trim().slice(1, -1), response.config.baseURL).toString()
+      : null;
   }
 
   async getGithubOrgs(): Promise<GitHubOrganization[]> {
@@ -121,7 +164,7 @@ class GitHubApiClient {
 
   async getGitHubOrgRepos(org: GitHubOrganization): Promise<GitHubRepository[]> {
     const response = await this.client.get<GitHubRepository[]>(
-      `/orgs/${org.login}/repos?per_page=1`,
+      `/orgs/${org.login}/repos?per_page=50`,
     );
 
     const repos: GitHubRepository[] = response.data;
@@ -137,30 +180,34 @@ class GitHubApiClient {
 
     const contributors: ContributingDeveloper[] = [];
     commits.forEach((commit) => {
-      const username = commit.commit.author;
+      const username = commit.commit.author.name;
+      const commitDate = commit.commit.author.date;
+
       const repo = {
         id: repository.id,
         name: repository.name,
-        lastCommit: threeMonthsDate, // TODO - get the last commit date
+        lastCommit: commitDate,
         isPrivate: repository.private,
       };
-      const existingContributor = contributors.find(
-        (contributor) => contributor.username === username.name,
+
+      let existingContributor = contributors.find(
+        (contributor) => contributor.username === username,
       );
-      // TODO - do this more performant
-      if (existingContributor) {
-        existingContributor.repositories.forEach((existingRepo) => {
-          if (existingRepo.id === repo.id) {
-            return;
-          } else {
-            existingContributor.repositories.push(repo);
-          }
-        });
-      } else {
-        contributors.push({
-          username: username.name,
+      if (!existingContributor) {
+        existingContributor = {
+          username,
           repositories: [repo],
-        });
+        };
+        contributors.push(existingContributor);
+      } else {
+        const existingRepository = existingContributor.repositories.find((r) => r.id === repo.id);
+        if (!existingRepository) {
+          existingContributor.repositories.push(repo);
+        } else {
+          if (new Date(existingRepository.lastCommit) < new Date(commitDate)) {
+            existingRepository.lastCommit = commitDate;
+          }
+        }
       }
     });
 

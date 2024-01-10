@@ -1,25 +1,37 @@
-import { sleep } from "../../../../utilities";
+import { soosLogger } from "../../../../logging";
 import { IContributingDeveloperAudit } from "../../ContributingDeveloperAuditService";
 import GitHubService from "./GitHubService";
 import { ContributingDeveloper } from "./api/GitHubApiClient";
+import { mergeContributors } from "./utilities";
 
 class GitHubAudit implements IContributingDeveloperAudit {
-  public async audit(implementationParams: string[]): Promise<ContributingDeveloper[]> {
-    const githubService = new GitHubService(implementationParams[0]);
+  public async audit(
+    implementationParams: Record<string, string>,
+  ): Promise<ContributingDeveloper[]> {
+    const githubPAT = implementationParams["githubPAT"];
+    if (!githubPAT) {
+      throw new Error("GitHub token is required");
+    }
+    const githubService = new GitHubService(githubPAT);
     const organizations = await githubService.getGitHubOrgs();
+    soosLogger.verboseDebug("Fetching GitHub repositories");
     const repositories = await Promise.all(
-      organizations.map((org) => githubService.getGitHubOrgRepos(org)),
+      organizations
+        .filter((org) => org.login === "soos-io") // TODO - REMOVE THIS FILTER ONLY FOR TESTING
+        .map((org) => githubService.getGitHubOrgRepos(org)),
     );
+
+    soosLogger.verboseDebug("Fetching commits for each repository");
     const contributors = await Promise.all(
       repositories.flatMap((repoArray) =>
         repoArray.map(async (repo) => {
-          await sleep(1000); // TODO - AXIOS INTERCEPTOR
           const contributors = await githubService.getContributorsForRepo(repo);
           return contributors;
         }),
       ),
     );
-    return contributors.flat();
+
+    return mergeContributors(contributors);
   }
 }
 

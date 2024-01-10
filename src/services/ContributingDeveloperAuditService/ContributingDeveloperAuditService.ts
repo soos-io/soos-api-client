@@ -1,8 +1,9 @@
 import { ScmType } from "../../enums";
 import GitHubAudit from "./scm/GitHub/GitHubAudit";
+import { ContributingDeveloper } from "./scm/GitHub/api";
 
 export interface IContributingDeveloperAudit {
-  audit(implementationParams: string[]): Promise<any>;
+  audit(implementationParams: Record<string, string>): Promise<ContributingDeveloper[]>;
 }
 
 class ContributingDeveloperAuditService {
@@ -16,7 +17,7 @@ class ContributingDeveloperAuditService {
     }
   }
 
-  public async audit(implementationParams: string[]) {
+  public async audit(implementationParams: Record<string, string>) {
     return this.scmImplementation.audit(implementationParams);
   }
 }
