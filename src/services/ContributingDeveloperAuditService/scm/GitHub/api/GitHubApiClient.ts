@@ -178,8 +178,7 @@ class GitHubApiClient {
 
     const commits: Commits[] = await response.data;
 
-    const contributors: ContributingDeveloper[] = [];
-    commits.forEach((commit) => {
+    const contributors = commits.reduce<ContributingDeveloper[]>((acc, commit) => {
       const username = commit.commit.author.name;
       const commitDate = commit.commit.author.date;
 
@@ -190,15 +189,11 @@ class GitHubApiClient {
         isPrivate: repository.private,
       };
 
-      let existingContributor = contributors.find(
-        (contributor) => contributor.username === username,
-      );
+      let existingContributor = acc.find((contributor) => contributor.username === username);
+
       if (!existingContributor) {
-        existingContributor = {
-          username,
-          repositories: [repo],
-        };
-        contributors.push(existingContributor);
+        existingContributor = { username, repositories: [repo] };
+        acc.push(existingContributor);
       } else {
         const existingRepository = existingContributor.repositories.find((r) => r.id === repo.id);
         if (!existingRepository) {
@@ -209,7 +204,9 @@ class GitHubApiClient {
           }
         }
       }
-    });
+
+      return acc;
+    }, []);
 
     return contributors;
   }
