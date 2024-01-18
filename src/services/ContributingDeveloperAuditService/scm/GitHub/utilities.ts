@@ -1,11 +1,11 @@
-import { ContributingDeveloperRepositories } from "./api/GitHubApiClient";
+import { IContributorAuditRepositories } from "../../../../api/SOOSHooksApiClient";
 
 const mergeContributors = (
-  contributorsArray: ContributingDeveloperRepositories[][],
-): ContributingDeveloperRepositories[] => {
+  contributorsArray: IContributorAuditRepositories[][],
+): IContributorAuditRepositories[] => {
   const flattenedContributors = contributorsArray.flat();
 
-  const mergedContributors = new Map<string, ContributingDeveloperRepositories>();
+  const mergedContributors = new Map<string, IContributorAuditRepositories>();
 
   flattenedContributors.forEach((contributor) => {
     const existingContributor = mergedContributors.get(contributor.username);

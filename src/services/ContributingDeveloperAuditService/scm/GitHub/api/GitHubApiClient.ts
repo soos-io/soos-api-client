@@ -1,7 +1,11 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { soosLogger } from "../../../../../logging/SOOSLogger";
 import { DateUtilities, sleep } from "../../../../../utilities";
-import { GITHUB_CONSTANTS } from "../constants";
+import { SOOS_CONTRIBUTOR_GITHUB_CONSTANTS } from "../constants";
+import {
+  IContributorAuditRepositories,
+  IContributorAuditRepository,
+} from "../../../../../api/SOOSHooksApiClient";
 
 interface IHttpRequestParameters {
   baseUri: string;
@@ -27,29 +31,6 @@ export interface GitHubRepository {
 }
 
 // TODO - Contributing developer interfaces should be moved to a more appropriate location
-export interface ContributingDeveloperMetadata {
-  scriptVersion: string;
-  days: number;
-}
-
-export interface ContributingDeveloper {
-  metadata: ContributingDeveloperMetadata;
-  organizationName: string;
-  repositories: ContributingDeveloperRepositories[];
-}
-
-export interface ContributingDeveloperRepositories {
-  username: string;
-  repositories: ContributingDeveloperRepository[];
-}
-
-interface ContributingDeveloperRepository {
-  id: number;
-  name: string;
-  lastCommit: string;
-  isPrivate: boolean;
-}
-
 export interface Commits {
   commit: {
     author: Author;
@@ -69,7 +50,7 @@ class GitHubApiClient {
   private readonly dateToFilter: string;
 
   constructor(
-    baseUri: string = GITHUB_CONSTANTS.Urls.API.Base,
+    baseUri: string = SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.API.Base,
     days: number,
     githubPAT: string,
     organizationName: string,
@@ -201,18 +182,18 @@ class GitHubApiClient {
 
   async getContributorsForRepo(
     repository: GitHubRepository,
-  ): Promise<ContributingDeveloperRepositories[]> {
+  ): Promise<IContributorAuditRepositories[]> {
     const response = await this.client.get<Commits[]>(
       `repos/${repository.owner.login}/${repository.name}/commits?per_page=100&since=${this.dateToFilter}`,
     );
 
     const commits: Commits[] = await response.data;
 
-    const contributors = commits.reduce<ContributingDeveloperRepositories[]>((acc, commit) => {
+    const contributors = commits.reduce<IContributorAuditRepositories[]>((acc, commit) => {
       const username = commit.commit.author.name;
       const commitDate = commit.commit.author.date;
 
-      const repo: ContributingDeveloperRepository = {
+      const repo: IContributorAuditRepository = {
         id: repository.id,
         name: repository.name,
         lastCommit: commitDate,

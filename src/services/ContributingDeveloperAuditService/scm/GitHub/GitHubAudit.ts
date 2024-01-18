@@ -1,14 +1,14 @@
+import { IContributorAuditModel } from "../../../../api/SOOSHooksApiClient";
 import { soosLogger } from "../../../../logging";
 import { IContributingDeveloperAuditProvider } from "../../ContributingDeveloperAuditService";
 import { ParamUtilities } from "../../utilities";
 import GitHubService from "./GitHubService";
-import { ContributingDeveloper } from "./api/GitHubApiClient";
 import { mergeContributors } from "./utilities";
 
 class GitHubAudit implements IContributingDeveloperAuditProvider {
   public async audit(
     implementationParams: Record<string, string | number>,
-  ): Promise<ContributingDeveloper> {
+  ): Promise<IContributorAuditModel> {
     const githubPAT = ParamUtilities.getParamAsString(implementationParams, "secret");
     const organizationName = ParamUtilities.getParamAsString(
       implementationParams,
@@ -34,13 +34,13 @@ class GitHubAudit implements IContributingDeveloperAuditProvider {
 
     const scriptVersion = ParamUtilities.getParamAsString(implementationParams, "scriptVersion");
 
-    const finalContributors: ContributingDeveloper = {
+    const finalContributors: IContributorAuditModel = {
       metadata: {
         scriptVersion: scriptVersion,
         days: days,
       },
       organizationName: organizationName,
-      repositories: mergeContributors(contributors),
+      contributors: mergeContributors(contributors),
     };
 
     return finalContributors;

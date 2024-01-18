@@ -1,13 +1,13 @@
+import { IContributorAuditModel } from "../../api/SOOSHooksApiClient";
 import { SOOS_CONSTANTS } from "../../constants";
 import { ScmType } from "../../enums";
 import { soosLogger } from "../../logging";
 import GitHubAudit from "./scm/GitHub/GitHubAudit";
-import { ContributingDeveloper } from "./scm/GitHub/api";
 import FileSystem from "fs";
 import * as Path from "path";
 
 export interface IContributingDeveloperAuditProvider {
-  audit(implementationParams: Record<string, string | number>): Promise<ContributingDeveloper>;
+  audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
   validateParams(implementationParams: Record<string, string | number>): void;
 }
 
@@ -27,7 +27,7 @@ class ContributingDeveloperAuditService {
     return this.auditProvider.audit(implementationParams);
   }
 
-  public async saveResults(results: ContributingDeveloper) {
+  public async saveResults(results: IContributorAuditModel) {
     soosLogger.info(`Saving results.`);
     FileSystem.writeFileSync(
       Path.join(process.cwd(), SOOS_CONSTANTS.Files.ContributingDevelopersOutput),

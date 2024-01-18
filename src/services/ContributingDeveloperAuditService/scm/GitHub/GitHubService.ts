@@ -1,8 +1,5 @@
-import GitHubApiClient, {
-  ContributingDeveloperRepositories,
-  GitHubOrganization,
-  GitHubRepository,
-} from "./api/GitHubApiClient";
+import { IContributorAuditRepositories } from "../../../../api/SOOSHooksApiClient";
+import GitHubApiClient, { GitHubOrganization, GitHubRepository } from "./api/GitHubApiClient";
 
 class GitHubService {
   private readonly client: GitHubApiClient;
@@ -26,9 +23,7 @@ class GitHubService {
     return repos;
   }
 
-  async getContributorsForRepo(
-    repo: GitHubRepository,
-  ): Promise<ContributingDeveloperRepositories[]> {
+  async getContributorsForRepo(repo: GitHubRepository): Promise<IContributorAuditRepositories[]> {
     const contributors = await this.client.getContributorsForRepo(repo);
     return contributors;
   }
