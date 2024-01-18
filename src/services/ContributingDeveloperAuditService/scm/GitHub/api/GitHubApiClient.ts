@@ -23,6 +23,7 @@ export interface GitHubRepository {
   full_name: string;
   private: boolean;
   owner: GitHubOrganization;
+  pushed_at: string;
 }
 
 // TODO - Contributing developer interfaces should be moved to a more appropriate location
@@ -65,6 +66,7 @@ class GitHubApiClient {
   private readonly client: AxiosInstance;
   private readonly organizationName: string;
   private readonly days: number;
+  private readonly dateToFilter: string;
 
   constructor(
     baseUri: string = GITHUB_CONSTANTS.Urls.API.Base,
@@ -79,6 +81,7 @@ class GitHubApiClient {
     });
     this.organizationName = organizationName;
     this.days = days;
+    this.dateToFilter = DateUtilities.getDate(this.days).toISOString();
   }
 
   private static createHttpClient({ baseUri, githubPAT, apiClientName }: IHttpClientParameters) {
@@ -189,16 +192,18 @@ class GitHubApiClient {
       `orgs/${org.login}/repos?per_page=50`,
     );
 
-    const repos: GitHubRepository[] = response.data;
+    const repos: GitHubRepository[] = response.data.filter(
+      (repo) => new Date(repo.pushed_at) >= new Date(this.dateToFilter),
+    );
+
     return repos;
   }
 
   async getContributorsForRepo(
     repository: GitHubRepository,
   ): Promise<ContributingDeveloperRepositories[]> {
-    const threeMonthsDate = DateUtilities.getDate(this.days).toISOString();
     const response = await this.client.get<Commits[]>(
-      `repos/${repository.owner.login}/${repository.name}/commits?per_page=100&since=${threeMonthsDate}`,
+      `repos/${repository.owner.login}/${repository.name}/commits?per_page=100&since=${this.dateToFilter}`,
     );
 
     const commits: Commits[] = await response.data;
