@@ -15,13 +15,7 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import {
-  StringUtilities,
-  formatBytes,
-  getVulnerabilitiesByScanType,
-  isNil,
-  sleep,
-} from "../utilities";
+import { StringUtilities, formatBytes, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
@@ -260,41 +254,60 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    const vulnerabilities = StringUtilities.pluralizeTemplate(
-      getVulnerabilitiesByScanType(scanStatus.issues, scanType) ?? 0,
-      "vulnerability",
-      "vulnerabilities",
-    );
-
-    const violations = StringUtilities.pluralizeTemplate(
-      scanStatus.issues?.Violation?.count ?? 0,
-      "violation",
-    );
-
     const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
 
+    const vulnerabilities = isGeneratedScanType
+      ? `(${StringUtilities.pluralizeTemplate(
+          scanStatus.issues?.Vulnerability?.count ?? 0,
+          "vulnerability",
+          "vulnerabilities",
+        )}) `
+      : "";
+
+    const codeIssues =
+      scanType === ScanType.SAST
+        ? `(${StringUtilities.pluralizeTemplate(
+            scanStatus.issues?.Sast?.count ?? 0,
+            "code issue",
+          )}) `
+        : "";
+
+    const webVulnerabilities =
+      scanType === ScanType.DAST
+        ? `(${StringUtilities.pluralizeTemplate(
+            scanStatus.issues?.Dast?.count ?? 0,
+            "web vulnerability",
+            "web vulnerabilities",
+          )}) `
+        : "";
+
+    const violations = isGeneratedScanType
+      ? `(${StringUtilities.pluralizeTemplate(
+          scanStatus.issues?.Violation?.count ?? 0,
+          "violation",
+        )} `
+      : "";
+
     const substitutions = isGeneratedScanType
-      ? StringUtilities.pluralizeTemplate(
+      ? `(${StringUtilities.pluralizeTemplate(
           scanStatus.issues?.DependencySubstitution?.count ?? 0,
           "dependency substitution",
-        )
+        )}) `
       : "";
 
     const typos = isGeneratedScanType
-      ? StringUtilities.pluralizeTemplate(
+      ? `(${StringUtilities.pluralizeTemplate(
           scanStatus.issues?.DependencyTypo?.count ?? 0,
           "dependency typo",
-        )
+        )}) `
       : "";
 
     soosLogger.always(
       `Scan ${scanStatus.isSuccess ? "passed" : "failed"}${
         scanStatus.isSuccess ? ", with" : " because of"
-      } (${vulnerabilities}) (${violations})${substitutions ? ` (${substitutions})` : ""}${
-        typos ? ` (${typos})` : ""
-      }.`,
+      } ${vulnerabilities}${codeIssues}${webVulnerabilities}${violations}${substitutions}${typos}`,
     );
-    soosLogger.info(`View the results at: ${scanUrl}`);
+    soosLogger.info(`View the results here: ${scanUrl}`);
     return scanStatus.status;
   }
 
