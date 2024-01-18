@@ -285,7 +285,7 @@ class AnalysisService {
       ? `(${StringUtilities.pluralizeTemplate(
           scanStatus.issues?.Violation?.count ?? 0,
           "violation",
-        )} `
+        )}) `
       : "";
 
     const substitutions = isGeneratedScanType
