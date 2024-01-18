@@ -6,26 +6,28 @@ import { ContributingDeveloper } from "./scm/GitHub/api";
 import FileSystem from "fs";
 import * as Path from "path";
 
-export interface IContributingDeveloperAudit {
-  audit(implementationParams: Record<string, string>): Promise<ContributingDeveloper[]>;
+export interface IContributingDeveloperAuditProvider {
+  audit(implementationParams: Record<string, string | number>): Promise<ContributingDeveloper>;
+  validateParams(implementationParams: Record<string, string | number>): void;
 }
 
 class ContributingDeveloperAuditService {
-  private scmImplementation: IContributingDeveloperAudit;
+  private auditProvider: IContributingDeveloperAuditProvider;
 
   constructor(scmType: ScmType) {
     if (scmType === ScmType.GitHub) {
-      this.scmImplementation = new GitHubAudit();
+      this.auditProvider = new GitHubAudit();
     } else {
       throw new Error("Unsupported SCM type");
     }
   }
 
-  public async audit(implementationParams: Record<string, string>) {
-    return this.scmImplementation.audit(implementationParams);
+  public async audit(implementationParams: Record<string, string | number>) {
+    this.auditProvider.validateParams(implementationParams);
+    return this.auditProvider.audit(implementationParams);
   }
 
-  public async saveResults(results: ContributingDeveloper[]) {
+  public async saveResults(results: ContributingDeveloper) {
     soosLogger.info(`Saving results.`);
     FileSystem.writeFileSync(
       Path.join(process.cwd(), SOOS_CONSTANTS.Files.ContributingDevelopersOutput),

@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { soosLogger } from "../../../../../logging/SOOSLogger";
-import { sleep } from "../../../../../utilities";
+import { DateUtilities, sleep } from "../../../../../utilities";
+import { GITHUB_CONSTANTS } from "../constants";
 
 interface IHttpRequestParameters {
   baseUri: string;
@@ -11,6 +12,7 @@ interface IHttpClientParameters extends IHttpRequestParameters {
   apiClientName: string;
 }
 
+// NOTE - GitHub related interfaces do not represent the full response from GitHub, only the fields we care about
 export interface GitHubOrganization {
   login: string;
 }
@@ -23,12 +25,24 @@ export interface GitHubRepository {
   owner: GitHubOrganization;
 }
 
+// TODO - Contributing developer interfaces should be moved to a more appropriate location
+export interface ContributingDeveloperMetadata {
+  scriptVersion: string;
+  days: number;
+}
+
 export interface ContributingDeveloper {
-  username: string;
+  metadata: ContributingDeveloperMetadata;
+  organizationName: string;
   repositories: ContributingDeveloperRepositories[];
 }
 
-interface ContributingDeveloperRepositories {
+export interface ContributingDeveloperRepositories {
+  username: string;
+  repositories: ContributingDeveloperRepository[];
+}
+
+interface ContributingDeveloperRepository {
   id: number;
   name: string;
   lastCommit: string;
@@ -47,23 +61,24 @@ export interface Author {
   date: string;
 }
 
-export const threeMonthsDate = (() => {
-  const d = new Date();
-  d.setDate(d.getDate() - 90);
-  return `${d.getUTCFullYear()}-${
-    d.getMonth() + 1
-  }-${d.getUTCDate()}T${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}Z`;
-})();
-
 class GitHubApiClient {
   private readonly client: AxiosInstance;
+  private readonly organizationName: string;
+  private readonly days: number;
 
-  constructor(githubPAT: string, baseUri: string = "https://api.github.com") {
+  constructor(
+    baseUri: string = GITHUB_CONSTANTS.Urls.API.Base,
+    days: number,
+    githubPAT: string,
+    organizationName: string,
+  ) {
     this.client = GitHubApiClient.createHttpClient({
       baseUri,
       githubPAT,
       apiClientName: "GitHub API",
     });
+    this.organizationName = organizationName;
+    this.days = days;
   }
 
   private static createHttpClient({ baseUri, githubPAT, apiClientName }: IHttpClientParameters) {
@@ -156,33 +171,43 @@ class GitHubApiClient {
   }
 
   async getGithubOrgs(): Promise<GitHubOrganization[]> {
-    const response = await this.client.get<GitHubOrganization[]>(`/user/orgs?per_page=100`);
+    const response = await this.client.get<GitHubOrganization[]>(`user/orgs?per_page=100`);
 
-    const orgs: GitHubOrganization[] = response.data;
+    const orgs: GitHubOrganization[] = response.data.filter(
+      (org) => org.login === this.organizationName,
+    );
+
+    if (orgs.length === 0) {
+      throw new Error(`Organization ${this.organizationName} not found`);
+    }
+
     return orgs;
   }
 
   async getGitHubOrgRepos(org: GitHubOrganization): Promise<GitHubRepository[]> {
     const response = await this.client.get<GitHubRepository[]>(
-      `/orgs/${org.login}/repos?per_page=50`,
+      `orgs/${org.login}/repos?per_page=50`,
     );
 
     const repos: GitHubRepository[] = response.data;
     return repos;
   }
 
-  async getContributorsForRepo(repository: GitHubRepository): Promise<ContributingDeveloper[]> {
+  async getContributorsForRepo(
+    repository: GitHubRepository,
+  ): Promise<ContributingDeveloperRepositories[]> {
+    const threeMonthsDate = DateUtilities.getDate(this.days).toISOString();
     const response = await this.client.get<Commits[]>(
-      `/repos/${repository.owner.login}/${repository.name}/commits?per_page=100&since=${threeMonthsDate}`,
+      `repos/${repository.owner.login}/${repository.name}/commits?per_page=100&since=${threeMonthsDate}`,
     );
 
     const commits: Commits[] = await response.data;
 
-    const contributors = commits.reduce<ContributingDeveloper[]>((acc, commit) => {
+    const contributors = commits.reduce<ContributingDeveloperRepositories[]>((acc, commit) => {
       const username = commit.commit.author.name;
       const commitDate = commit.commit.author.date;
 
-      const repo = {
+      const repo: ContributingDeveloperRepository = {
         id: repository.id,
         name: repository.name,
         lastCommit: commitDate,

@@ -10,6 +10,7 @@ import {
 } from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
+import { CONTRIBUTING_DEVELOPER_CONSTANTS } from "./ContributingDeveloperAuditService/constants";
 
 const getIntegrateUrl = (scanType: ScanType) =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -191,8 +192,15 @@ class AnalysisArgumentParser {
   addSCMAuditArguments(scriptVersion: string) {
     this.addCommonArguments(scriptVersion);
 
-    this.argumentParser.add_argument("--githubPAT", {
-      help: "GitHub Personal Access token, used when --scmType=GitHub.",
+    this.argumentParser.add_argument("--days", {
+      help: "Number of days to look back for commits.",
+      default: CONTRIBUTING_DEVELOPER_CONSTANTS.Parameters.DefaultDaysAgo,
+      required: false,
+      type: Number,
+    });
+
+    this.argumentParser.add_argument("--secret", {
+      help: "Secret to use for api calls, for example when --scmType=GitHub this needs to have the value of a GPAT.",
       default: false,
       required: false,
     });
@@ -207,6 +215,12 @@ class AnalysisArgumentParser {
     this.addEnumArgument(this.argumentParser, "--scmType", ScmType, {
       help: "Scm Type to use for the audit. Options: GitHub.",
       default: ScmType.GitHub,
+      required: false,
+    });
+
+    this.argumentParser.add_argument("--organizationName", {
+      help: "Organization name to use for the audit.",
+      default: false,
       required: false,
     });
   }

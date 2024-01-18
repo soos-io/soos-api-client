@@ -158,6 +158,14 @@ const getVulnerabilitiesByScanType = (issues: IIssuesModel | null, scanType: Sca
   }
 };
 
+const DateUtilities = {
+  getDate: (daysAgo: number = 0): Date => {
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date;
+  },
+};
+
 const StringUtilities = {
   pluralizeWord: (
     count: number | null | undefined,
@@ -201,5 +209,6 @@ export {
   formatBytes,
   getAnalysisExitCodeWithMessage,
   getVulnerabilitiesByScanType,
+  DateUtilities,
   StringUtilities,
 };

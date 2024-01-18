@@ -1,11 +1,11 @@
-import { ContributingDeveloper } from "./api/GitHubApiClient";
+import { ContributingDeveloperRepositories } from "./api/GitHubApiClient";
 
 const mergeContributors = (
-  contributorsArray: ContributingDeveloper[][],
-): ContributingDeveloper[] => {
+  contributorsArray: ContributingDeveloperRepositories[][],
+): ContributingDeveloperRepositories[] => {
   const flattenedContributors = contributorsArray.flat();
 
-  const mergedContributors = new Map<string, ContributingDeveloper>();
+  const mergedContributors = new Map<string, ContributingDeveloperRepositories>();
 
   flattenedContributors.forEach((contributor) => {
     const existingContributor = mergedContributors.get(contributor.username);

@@ -1,5 +1,5 @@
 import GitHubApiClient, {
-  ContributingDeveloper,
+  ContributingDeveloperRepositories,
   GitHubOrganization,
   GitHubRepository,
 } from "./api/GitHubApiClient";
@@ -7,8 +7,13 @@ import GitHubApiClient, {
 class GitHubService {
   private readonly client: GitHubApiClient;
 
-  constructor(githubPAT: string, baseUri: string = "https://api.github.com") {
-    this.client = new GitHubApiClient(githubPAT, baseUri);
+  constructor(
+    days: number,
+    githubPAT: string,
+    organizationName: string,
+    baseUri: string = "https://api.github.com",
+  ) {
+    this.client = new GitHubApiClient(baseUri, days, githubPAT, organizationName);
   }
 
   async getGitHubOrgs(): Promise<GitHubOrganization[]> {
@@ -21,7 +26,9 @@ class GitHubService {
     return repos;
   }
 
-  async getContributorsForRepo(repo: GitHubRepository): Promise<ContributingDeveloper[]> {
+  async getContributorsForRepo(
+    repo: GitHubRepository,
+  ): Promise<ContributingDeveloperRepositories[]> {
     const contributors = await this.client.getContributorsForRepo(repo);
     return contributors;
   }
