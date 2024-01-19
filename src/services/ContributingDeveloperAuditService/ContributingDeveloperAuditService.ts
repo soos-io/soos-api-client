@@ -1,10 +1,11 @@
-import { IContributorAuditModel } from "../../api/SOOSHooksApiClient";
+import SOOSHooksApiClient, { IContributorAuditModel } from "../../api/SOOSHooksApiClient";
 import { SOOS_CONSTANTS } from "../../constants";
 import { ScmType } from "../../enums";
 import { soosLogger } from "../../logging";
 import GitHubAudit from "./scm/GitHub/GitHubAudit";
 import FileSystem from "fs";
 import * as Path from "path";
+import { ParamUtilities } from "./utilities";
 
 export interface IContributingDeveloperAuditProvider {
   audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
@@ -13,18 +14,47 @@ export interface IContributingDeveloperAuditProvider {
 
 class ContributingDeveloperAuditService {
   private auditProvider: IContributingDeveloperAuditProvider;
+  public soosHooksApiClient: SOOSHooksApiClient;
 
-  constructor(scmType: ScmType) {
+  constructor(
+    auditProvider: IContributingDeveloperAuditProvider,
+    hooksApiClient: SOOSHooksApiClient,
+  ) {
+    this.auditProvider = auditProvider;
+    this.soosHooksApiClient = hooksApiClient;
+  }
+
+  static create(
+    apiKey: string,
+    apiURL: string,
+    scmType: ScmType,
+  ): ContributingDeveloperAuditService {
+    let auditProvider: IContributingDeveloperAuditProvider;
+
     if (scmType === ScmType.GitHub) {
-      this.auditProvider = new GitHubAudit();
+      auditProvider = new GitHubAudit();
     } else {
       throw new Error("Unsupported SCM type");
     }
+
+    const hooksApiClient = new SOOSHooksApiClient(apiKey, apiURL.replace("api.", "api-hooks."));
+
+    return new ContributingDeveloperAuditService(auditProvider, hooksApiClient);
   }
 
   public async audit(implementationParams: Record<string, string | number>) {
+    this.validateCommonParams(implementationParams);
     this.auditProvider.validateParams(implementationParams);
     return this.auditProvider.audit(implementationParams);
+  }
+
+  public async uploadContributorAudits(
+    clientHash: string,
+    contributorAudit: IContributorAuditModel,
+  ): Promise<void> {
+    soosLogger.info(`Uploading Contributor Audit.`);
+    await this.soosHooksApiClient.postContributorAudits(clientHash, contributorAudit);
+    soosLogger.info(`Results uploaded successfully.`);
   }
 
   public async saveResults(results: IContributorAuditModel) {
@@ -38,6 +68,18 @@ class ContributingDeveloperAuditService {
         SOOS_CONSTANTS.Files.ContributingDevelopersOutput
       }`,
     );
+  }
+
+  private validateCommonParams(implementationParams: Record<string, string | number>) {
+    if (!implementationParams["organizationName"]) {
+      throw new Error("Organization name is required");
+    }
+    if (!implementationParams["days"]) {
+      throw new Error("Days is required");
+    }
+    if (ParamUtilities.getParamAsNumber(implementationParams, "days") < 0) {
+      throw new Error("Days must be greater than 0");
+    }
   }
 }
 

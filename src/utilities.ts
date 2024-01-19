@@ -164,6 +164,9 @@ const DateUtilities = {
     date.setDate(date.getDate() - daysAgo);
     return date;
   },
+  getDateFromUnixUTC: (unixUTC: number): Date => {
+    return new Date(unixUTC * 1000);
+  },
 };
 
 const StringUtilities = {

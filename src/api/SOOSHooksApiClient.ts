@@ -32,10 +32,7 @@ class SOOSHooksApiClient {
 
   constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Hooks) {
     this.apiKey = apiKey;
-    this.baseUri =
-      baseUri != SOOS_CONSTANTS.Urls.API.Hooks
-        ? baseUri.replace("api.", "api-hooks.")
-        : SOOS_CONSTANTS.Urls.API.Hooks; // TODO - REMOVE THIS LOGIC FROM HERE, maybe put in analysis service
+    this.baseUri = baseUri;
     this.client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,

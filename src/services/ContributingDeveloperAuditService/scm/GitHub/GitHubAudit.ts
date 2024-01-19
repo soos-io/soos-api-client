@@ -3,6 +3,7 @@ import { soosLogger } from "../../../../logging";
 import { IContributingDeveloperAuditProvider } from "../../ContributingDeveloperAuditService";
 import { ParamUtilities } from "../../utilities";
 import GitHubService from "./GitHubService";
+import { SOOS_CONTRIBUTOR_GITHUB_CONSTANTS } from "./constants";
 import { mergeContributors } from "./utilities";
 
 class GitHubAudit implements IContributingDeveloperAuditProvider {
@@ -48,16 +49,9 @@ class GitHubAudit implements IContributingDeveloperAuditProvider {
 
   public validateParams(implementationParams: Record<string, string | number>): void {
     if (!implementationParams["secret"]) {
-      throw new Error("GitHub token is required");
-    }
-    if (!implementationParams["organizationName"]) {
-      throw new Error("Organization name is required");
-    }
-    if (!implementationParams["days"]) {
-      throw new Error("Days is required");
-    }
-    if (ParamUtilities.getParamAsNumber(implementationParams, "days") < 0) {
-      throw new Error("Days must be greater than 0");
+      throw new Error(
+        `GitHub token is required, learn more at ${SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.Docs.PAT}`,
+      );
     }
   }
 }

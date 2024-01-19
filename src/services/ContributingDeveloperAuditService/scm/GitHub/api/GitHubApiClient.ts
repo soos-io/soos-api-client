@@ -109,13 +109,22 @@ class GitHubApiClient {
         const maxRetries = 3;
         config.retryCount = config.retryCount || 0;
 
-        if (response?.status === 429 && config.retryCount < maxRetries) {
-          config.retryCount += 1;
-          soosLogger.verboseDebug(
-            apiClientName,
-            `Retrying request (${config.retryCount}) after 3 minutes due to 429 status.`,
-          );
-          await sleep(180000);
+        if (
+          (response?.status === 429 || response?.status === 403) &&
+          config.retryCount < maxRetries
+        ) {
+          const rateLimitReset = response?.headers["x-ratelimit-reset"] as number;
+          if (rateLimitReset) {
+            soosLogger.verboseDebug(`Trying to parse rate limit reset: ${rateLimitReset}`);
+            const rateLimitDate = DateUtilities.getDateFromUnixUTC(rateLimitReset);
+            const timeToWait = Math.floor((rateLimitDate.getTime() - Date.now()) / 1000);
+            soosLogger.verboseDebug(
+              apiClientName,
+              `Rate limit exceeded on the GitHub API. Waiting ${timeToWait} seconds before retrying. Retry count: ${config.retryCount}`,
+            );
+            config.retryCount += 1;
+            await sleep(timeToWait * 1000);
+          }
           return client(config);
         }
 
