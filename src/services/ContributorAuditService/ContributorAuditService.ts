@@ -12,7 +12,7 @@ export interface IContributorAuditProvider {
   validateParams(implementationParams: Record<string, string | number>): void;
 }
 
-class ContributingDeveloperAuditService {
+class ContributorAuditService {
   private auditProvider: IContributorAuditProvider;
   public hooksApiClient: SOOSHooksApiClient;
 
@@ -21,11 +21,7 @@ class ContributingDeveloperAuditService {
     this.hooksApiClient = hooksApiClient;
   }
 
-  static create(
-    apiKey: string,
-    apiURL: string,
-    scmType: ScmType,
-  ): ContributingDeveloperAuditService {
+  static create(apiKey: string, apiURL: string, scmType: ScmType): ContributorAuditService {
     let auditProvider: IContributorAuditProvider;
 
     if (scmType === ScmType.GitHub) {
@@ -36,7 +32,7 @@ class ContributingDeveloperAuditService {
 
     const hooksApiClient = new SOOSHooksApiClient(apiKey, apiURL.replace("api.", "api-hooks."));
 
-    return new ContributingDeveloperAuditService(auditProvider, hooksApiClient);
+    return new ContributorAuditService(auditProvider, hooksApiClient);
   }
 
   public async audit(implementationParams: Record<string, string | number>) {
@@ -81,4 +77,4 @@ class ContributingDeveloperAuditService {
   }
 }
 
-export default ContributingDeveloperAuditService;
+export default ContributorAuditService;

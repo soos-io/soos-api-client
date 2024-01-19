@@ -10,7 +10,7 @@ import {
 } from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
-import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributingDeveloperAuditService/constants";
+import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 
 const getIntegrateUrl = (scanType?: ScanType): string => {
   const baseMessage = `${SOOS_CONSTANTS.Urls.App.Home}integrate/`;

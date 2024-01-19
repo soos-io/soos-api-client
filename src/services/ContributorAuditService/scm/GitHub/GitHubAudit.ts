@@ -3,7 +3,7 @@ import {
   IContributorAuditRepositories,
 } from "../../../../api/SOOSHooksApiClient";
 import { soosLogger } from "../../../../logging";
-import { IContributorAuditProvider } from "../../ContributingDeveloperAuditService";
+import { IContributorAuditProvider } from "../../ContributorAuditService";
 import { ParamUtilities } from "../../utilities";
 import GitHubApiClient, { GitHubRepository } from "./api/GitHubApiClient";
 import { SOOS_CONTRIBUTOR_GITHUB_CONSTANTS } from "./constants";

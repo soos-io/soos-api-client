@@ -30,7 +30,6 @@ export interface GitHubRepository {
   pushed_at: string;
 }
 
-// TODO - Contributing developer interfaces should be moved to a more appropriate location
 export interface Commits {
   commit: {
     author: Author;
