@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import { IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
-import { IIssuesModel } from "./api/SOOSAnalysisApiClient";
+import { IIssuesModel } from "./api";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
 
