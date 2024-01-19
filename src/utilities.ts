@@ -1,7 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
-import { IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
-import { IIssuesModel } from "./api";
+import { IntegrationName, OnFailure, ScanStatus } from "./enums";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
 
@@ -146,18 +145,6 @@ const getAnalysisExitCodeWithMessage = (
   };
 };
 
-const getVulnerabilitiesByScanType = (issues: IIssuesModel | null, scanType: ScanType) => {
-  if (isNil(issues)) return 0;
-  switch (scanType) {
-    case ScanType.DAST:
-      return issues.Dast?.count;
-    case ScanType.SAST:
-      return issues.Sast?.count;
-    default:
-      return issues.Vulnerability?.count;
-  }
-};
-
 const DateUtilities = {
   getDate: (daysAgo: number = 0): Date => {
     const date = new Date();
@@ -211,7 +198,6 @@ export {
   getEnvVariable,
   formatBytes,
   getAnalysisExitCodeWithMessage,
-  getVulnerabilitiesByScanType,
   DateUtilities,
   StringUtilities,
 };

@@ -14,9 +14,10 @@ import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/cons
 
 const getIntegrateUrl = (scanType?: ScanType): string => {
   const baseMessage = `${SOOS_CONSTANTS.Urls.App.Home}integrate/`;
-  if (!scanType) return `${baseMessage}${ScanType.SCA.toLowerCase()}`;
 
-  return `${baseMessage}${scanType == ScanType.CSA ? "containers" : scanType.toLowerCase()}`;
+  return `${baseMessage}${
+    scanType == ScanType.CSA ? "containers" : (scanType ?? ScanType.SCA).toLowerCase()
+  }`;
 };
 
 interface IBaseScanArguments extends ICommonArguments {

@@ -9,7 +9,7 @@ import {
 
 interface IHttpRequestParameters {
   baseUri: string;
-  githubPAT: string;
+  gitHubPAT: string;
 }
 
 interface IHttpClientParameters extends IHttpRequestParameters {
@@ -50,13 +50,13 @@ class GitHubApiClient {
 
   constructor(
     days: number,
-    githubPAT: string,
+    gitHubPAT: string,
     organizationName: string,
     baseUri: string = SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.API.Base,
   ) {
     this.client = GitHubApiClient.createHttpClient({
       baseUri,
-      githubPAT,
+      gitHubPAT: gitHubPAT,
       apiClientName: "GitHub API",
     });
     this.organizationName = organizationName;
@@ -64,12 +64,16 @@ class GitHubApiClient {
     this.dateToFilter = DateUtilities.getDate(this.days).toISOString();
   }
 
-  private static createHttpClient({ baseUri, githubPAT, apiClientName }: IHttpClientParameters) {
+  private static createHttpClient({
+    baseUri,
+    gitHubPAT: gitHubPAT,
+    apiClientName,
+  }: IHttpClientParameters) {
     const client = axios.create({
       baseURL: baseUri,
       headers: {
         accept: "application/vnd.github+json",
-        Authorization: `Bearer ${githubPAT}`,
+        Authorization: `Bearer ${gitHubPAT}`,
       },
     });
 
@@ -144,7 +148,7 @@ class GitHubApiClient {
     let data = response.data;
     let nextUrl = GitHubApiClient.getNextPageUrl(response);
     while (nextUrl) {
-      soosLogger.verboseDebug("Next url being fetched for pagination", nextUrl);
+      soosLogger.verboseDebug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get(nextUrl);
       data = data.concat(nextPageResponse.data);
       nextUrl = GitHubApiClient.getNextPageUrl(nextPageResponse);
@@ -161,7 +165,7 @@ class GitHubApiClient {
       : null;
   }
 
-  async getGithubOrgs(): Promise<GitHubOrganization[]> {
+  async getGitHubOrganizations(): Promise<GitHubOrganization[]> {
     const response = await this.client.get<GitHubOrganization[]>(`user/orgs?per_page=100`);
 
     const orgs: GitHubOrganization[] = response.data.filter(
@@ -175,9 +179,11 @@ class GitHubApiClient {
     return orgs;
   }
 
-  async getGitHubOrgRepos(org: GitHubOrganization): Promise<GitHubRepository[]> {
+  async getGitHubOrganizationRepositories(
+    organization: GitHubOrganization,
+  ): Promise<GitHubRepository[]> {
     const response = await this.client.get<GitHubRepository[]>(
-      `orgs/${org.login}/repos?per_page=50`,
+      `orgs/${organization.login}/repos?per_page=50`,
     );
 
     const repos: GitHubRepository[] = response.data.filter(
@@ -187,7 +193,7 @@ class GitHubApiClient {
     return repos;
   }
 
-  async getContributorsForRepo(
+  async getGitHubRepositoryContributors(
     repository: GitHubRepository,
   ): Promise<IContributorAuditRepositories[]> {
     const response = await this.client.get<Commits[]>(

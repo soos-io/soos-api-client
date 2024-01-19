@@ -13,22 +13,22 @@ class GitHubAuditProvider implements IContributorAuditProvider {
   public async audit(
     implementationParams: Record<string, string | number>,
   ): Promise<IContributorAuditModel> {
-    const githubPAT = ParamUtilities.getParamAsString(implementationParams, "secret");
+    const gitHubPAT = ParamUtilities.getParamAsString(implementationParams, "secret");
     const organizationName = ParamUtilities.getParamAsString(
       implementationParams,
       "organizationName",
     );
     const days = ParamUtilities.getParamAsNumber(implementationParams, "days");
-    const githubApiClient = new GitHubApiClient(days, githubPAT, organizationName);
-    const organizations = await githubApiClient.getGithubOrgs();
+    const gitHubApiClient = new GitHubApiClient(days, gitHubPAT, organizationName);
+    const organizations = await gitHubApiClient.getGitHubOrganizations();
     soosLogger.verboseDebug("Fetching GitHub repositories");
     const repositories = await Promise.all(
-      organizations.map((org) => githubApiClient.getGitHubOrgRepos(org)),
+      organizations.map((org) => gitHubApiClient.getGitHubOrganizationRepositories(org)),
     );
 
     soosLogger.verboseDebug("Fetching commits for each repository");
     const contributors = await this.processInBatches(
-      githubApiClient,
+      gitHubApiClient,
       repositories.flatMap((repoArray) => {
         return repoArray;
       }),
@@ -52,13 +52,13 @@ class GitHubAuditProvider implements IContributorAuditProvider {
   public validateParams(implementationParams: Record<string, string | number>): void {
     if (!implementationParams["secret"]) {
       throw new Error(
-        `GitHub token is required, learn more at ${SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.Docs.PAT}`,
+        `A GitHub personal access token (PAT) is required as the '--secret', learn more at ${SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.Docs.PAT}`,
       );
     }
   }
 
   private async processInBatches(
-    githubApiClient: GitHubApiClient,
+    gitHubApiClient: GitHubApiClient,
     repositories: GitHubRepository[],
     batchSize: number,
   ): Promise<IContributorAuditRepositories[]> {
@@ -67,7 +67,7 @@ class GitHubAuditProvider implements IContributorAuditProvider {
     for (let i = 0; i < repositories.length; i += batchSize) {
       const batch = repositories.slice(i, i + batchSize);
       const results = await Promise.all(
-        batch.map((repo) => githubApiClient.getContributorsForRepo(repo)),
+        batch.map((repo) => gitHubApiClient.getGitHubRepositoryContributors(repo)),
       );
       contributorsArray.push(...results);
     }
