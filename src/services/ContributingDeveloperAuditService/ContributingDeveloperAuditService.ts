@@ -2,26 +2,23 @@ import SOOSHooksApiClient, { IContributorAuditModel } from "../../api/SOOSHooksA
 import { SOOS_CONSTANTS } from "../../constants";
 import { ScmType } from "../../enums";
 import { soosLogger } from "../../logging";
-import GitHubAudit from "./scm/GitHub/GitHubAudit";
+import GitHubAuditProvider from "./scm/GitHub/GitHubAudit";
 import FileSystem from "fs";
 import * as Path from "path";
 import { ParamUtilities } from "./utilities";
 
-export interface IContributingDeveloperAuditProvider {
+export interface IContributorAuditProvider {
   audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
   validateParams(implementationParams: Record<string, string | number>): void;
 }
 
 class ContributingDeveloperAuditService {
-  private auditProvider: IContributingDeveloperAuditProvider;
-  public soosHooksApiClient: SOOSHooksApiClient;
+  private auditProvider: IContributorAuditProvider;
+  public hooksApiClient: SOOSHooksApiClient;
 
-  constructor(
-    auditProvider: IContributingDeveloperAuditProvider,
-    hooksApiClient: SOOSHooksApiClient,
-  ) {
+  constructor(auditProvider: IContributorAuditProvider, hooksApiClient: SOOSHooksApiClient) {
     this.auditProvider = auditProvider;
-    this.soosHooksApiClient = hooksApiClient;
+    this.hooksApiClient = hooksApiClient;
   }
 
   static create(
@@ -29,10 +26,10 @@ class ContributingDeveloperAuditService {
     apiURL: string,
     scmType: ScmType,
   ): ContributingDeveloperAuditService {
-    let auditProvider: IContributingDeveloperAuditProvider;
+    let auditProvider: IContributorAuditProvider;
 
     if (scmType === ScmType.GitHub) {
-      auditProvider = new GitHubAudit();
+      auditProvider = new GitHubAuditProvider();
     } else {
       throw new Error("Unsupported SCM type");
     }
@@ -53,20 +50,20 @@ class ContributingDeveloperAuditService {
     contributorAudit: IContributorAuditModel,
   ): Promise<void> {
     soosLogger.info(`Uploading Contributor Audit to SOOS.`);
-    await this.soosHooksApiClient.postContributorAudits(clientHash, contributorAudit);
+    await this.hooksApiClient.postContributorAudits(clientHash, contributorAudit);
     soosLogger.info(`Results uploaded successfully.`);
   }
 
   public async saveResults(results: IContributorAuditModel) {
     soosLogger.info(`Saving results.`);
     FileSystem.writeFileSync(
-      Path.join(process.cwd(), SOOS_CONSTANTS.Files.ContributingDevelopersOutput),
+      Path.join(process.cwd(), SOOS_CONSTANTS.Files.ContributorAuditOutput),
       JSON.stringify(results, null, 2),
     );
     soosLogger.info(
       `Results saved successfully ${Path.join(
         process.cwd(),
-        SOOS_CONSTANTS.Files.ContributingDevelopersOutput,
+        SOOS_CONSTANTS.Files.ContributorAuditOutput,
       )}`,
     );
   }

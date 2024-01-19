@@ -208,15 +208,15 @@ class GitHubApiClient {
         isPrivate: repository.private,
       };
 
-      let existingContributor = acc.find((contributor) => contributor.username === username);
+      let contributor = acc.find((contributor) => contributor.username === username);
 
-      if (!existingContributor) {
-        existingContributor = { username, repositories: [repo] };
-        acc.push(existingContributor);
+      if (!contributor) {
+        contributor = { username, repositories: [repo] };
+        acc.push(contributor);
       } else {
-        const existingRepository = existingContributor.repositories.find((r) => r.id === repo.id);
+        const existingRepository = contributor.repositories.find((r) => r.id === repo.id);
         if (!existingRepository) {
-          existingContributor.repositories.push(repo);
+          contributor.repositories.push(repo);
         } else {
           if (new Date(existingRepository.lastCommit) < new Date(commitDate)) {
             existingRepository.lastCommit = commitDate;

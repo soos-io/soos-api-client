@@ -10,12 +10,14 @@ import {
 } from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
-import { CONTRIBUTING_DEVELOPER_CONSTANTS } from "./ContributingDeveloperAuditService/constants";
+import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributingDeveloperAuditService/constants";
 
-const getIntegrateUrl = (scanType: ScanType) =>
-  `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
-    scanType == ScanType.CSA ? "containers" : scanType.toLowerCase()
-  }`;
+const getIntegrateUrl = (scanType?: ScanType): string => {
+  const baseMessage = `${SOOS_CONSTANTS.Urls.App.Home}integrate/`;
+  if (!scanType) return `${baseMessage}${ScanType.SCA.toLowerCase()}`;
+
+  return `${baseMessage}${scanType == ScanType.CSA ? "containers" : scanType.toLowerCase()}`;
+};
 
 interface IBaseScanArguments extends ICommonArguments {
   appVersion: string;
@@ -44,17 +46,17 @@ interface ICommonArguments {
 }
 
 class AnalysisArgumentParser {
-  public scanType: ScanType;
+  public scanType?: ScanType;
   public argumentParser: ArgumentParser;
 
-  constructor(scanType: ScanType, argumentParser: ArgumentParser) {
+  constructor(argumentParser: ArgumentParser, scanType?: ScanType) {
     this.scanType = scanType;
     this.argumentParser = argumentParser;
   }
 
-  static create(scanType: ScanType): AnalysisArgumentParser {
+  static create(scanType?: ScanType): AnalysisArgumentParser {
     const parser = new ArgumentParser({ description: `SOOS ${scanType}` });
-    return new AnalysisArgumentParser(scanType, parser);
+    return new AnalysisArgumentParser(parser, scanType);
   }
 
   addBaseScanArguments(
@@ -194,7 +196,7 @@ class AnalysisArgumentParser {
 
     this.argumentParser.add_argument("--days", {
       help: "Number of days to look back for commits.",
-      default: CONTRIBUTING_DEVELOPER_CONSTANTS.Parameters.DefaultDaysAgo,
+      default: SOOS_CONTRIBUTOR_AUDIT_CONSTANTS.Parameters.DefaultDaysAgo,
       required: false,
       type: Number,
     });

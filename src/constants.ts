@@ -8,7 +8,7 @@ export const SOOS_CONSTANTS = {
     MaxManifests: 50,
   },
   Files: {
-    ContributingDevelopersOutput: "soos_contributing_developers.json",
+    ContributorAuditOutput: "soos_contributor_audit.json",
     SoosDirectoryExclusionGlobPattern: "**/soos/**",
     SarifOutput: "results.sarif",
   },

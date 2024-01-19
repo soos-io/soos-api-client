@@ -1,12 +1,15 @@
-import { IContributorAuditModel } from "../../../../api/SOOSHooksApiClient";
+import {
+  IContributorAuditModel,
+  IContributorAuditRepositories,
+} from "../../../../api/SOOSHooksApiClient";
 import { soosLogger } from "../../../../logging";
-import { IContributingDeveloperAuditProvider } from "../../ContributingDeveloperAuditService";
+import { IContributorAuditProvider } from "../../ContributingDeveloperAuditService";
 import { ParamUtilities } from "../../utilities";
-import GitHubApiClient from "./api/GitHubApiClient";
+import GitHubApiClient, { GitHubRepository } from "./api/GitHubApiClient";
 import { SOOS_CONTRIBUTOR_GITHUB_CONSTANTS } from "./constants";
 import { mergeContributors } from "./utilities";
 
-class GitHubAudit implements IContributingDeveloperAuditProvider {
+class GitHubAuditProvider implements IContributorAuditProvider {
   public async audit(
     implementationParams: Record<string, string | number>,
   ): Promise<IContributorAuditModel> {
@@ -16,21 +19,20 @@ class GitHubAudit implements IContributingDeveloperAuditProvider {
       "organizationName",
     );
     const days = ParamUtilities.getParamAsNumber(implementationParams, "days");
-    const githubService = new GitHubApiClient(days, githubPAT, organizationName);
-    const organizations = await githubService.getGithubOrgs();
+    const githubApiClient = new GitHubApiClient(days, githubPAT, organizationName);
+    const organizations = await githubApiClient.getGithubOrgs();
     soosLogger.verboseDebug("Fetching GitHub repositories");
     const repositories = await Promise.all(
-      organizations.map((org) => githubService.getGitHubOrgRepos(org)),
+      organizations.map((org) => githubApiClient.getGitHubOrgRepos(org)),
     );
 
     soosLogger.verboseDebug("Fetching commits for each repository");
-    const contributors = await Promise.all(
-      repositories.flatMap((repoArray) =>
-        repoArray.map(async (repo) => {
-          const contributors = await githubService.getContributorsForRepo(repo);
-          return contributors;
-        }),
-      ),
+    const contributors = await this.processInBatches(
+      githubApiClient,
+      repositories.flatMap((repoArray) => {
+        return repoArray;
+      }),
+      10,
     );
 
     const scriptVersion = ParamUtilities.getParamAsString(implementationParams, "scriptVersion");
@@ -41,7 +43,7 @@ class GitHubAudit implements IContributingDeveloperAuditProvider {
         days: days,
       },
       organizationName: organizationName,
-      contributors: mergeContributors(contributors),
+      contributors: contributors,
     };
 
     return finalContributors;
@@ -54,6 +56,24 @@ class GitHubAudit implements IContributingDeveloperAuditProvider {
       );
     }
   }
+
+  private async processInBatches(
+    githubApiClient: GitHubApiClient,
+    repositories: GitHubRepository[],
+    batchSize: number,
+  ): Promise<IContributorAuditRepositories[]> {
+    const contributorsArray: IContributorAuditRepositories[][] = [];
+
+    for (let i = 0; i < repositories.length; i += batchSize) {
+      const batch = repositories.slice(i, i + batchSize);
+      const results = await Promise.all(
+        batch.map((repo) => githubApiClient.getContributorsForRepo(repo)),
+      );
+      contributorsArray.push(...results);
+    }
+
+    return mergeContributors(contributorsArray);
+  }
 }
 
-export default GitHubAudit;
+export default GitHubAuditProvider;

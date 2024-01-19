@@ -89,7 +89,6 @@ export enum ScanType {
   SAST = "Sast",
   SBOM = "Sbom",
   SCA = "Sca",
-  SCM = "Scm",
 }
 
 export enum ScmType {
