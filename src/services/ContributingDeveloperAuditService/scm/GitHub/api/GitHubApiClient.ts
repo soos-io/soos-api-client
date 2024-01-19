@@ -50,10 +50,10 @@ class GitHubApiClient {
   private readonly dateToFilter: string;
 
   constructor(
-    baseUri: string = SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.API.Base,
     days: number,
     githubPAT: string,
     organizationName: string,
+    baseUri: string = SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.API.Base,
   ) {
     this.client = GitHubApiClient.createHttpClient({
       baseUri,
@@ -145,7 +145,6 @@ class GitHubApiClient {
     let data = response.data;
     let nextUrl = GitHubApiClient.getNextPageUrl(response);
     while (nextUrl) {
-      soosLogger.verboseDebug("Handling pagination for ", response.config.url);
       soosLogger.verboseDebug("Next url being fetched for pagination", nextUrl);
       const nextPageResponse = await client.get(nextUrl);
       data = data.concat(nextPageResponse.data);

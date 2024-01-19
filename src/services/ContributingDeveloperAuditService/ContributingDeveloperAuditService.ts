@@ -52,7 +52,7 @@ class ContributingDeveloperAuditService {
     clientHash: string,
     contributorAudit: IContributorAuditModel,
   ): Promise<void> {
-    soosLogger.info(`Uploading Contributor Audit.`);
+    soosLogger.info(`Uploading Contributor Audit to SOOS.`);
     await this.soosHooksApiClient.postContributorAudits(clientHash, contributorAudit);
     soosLogger.info(`Results uploaded successfully.`);
   }
@@ -64,9 +64,10 @@ class ContributingDeveloperAuditService {
       JSON.stringify(results, null, 2),
     );
     soosLogger.info(
-      `Results saved successfully ${process.cwd()}/${
-        SOOS_CONSTANTS.Files.ContributingDevelopersOutput
-      }`,
+      `Results saved successfully ${Path.join(
+        process.cwd(),
+        SOOS_CONSTANTS.Files.ContributingDevelopersOutput,
+      )}`,
     );
   }
 

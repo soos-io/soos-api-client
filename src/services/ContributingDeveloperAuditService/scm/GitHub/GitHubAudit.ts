@@ -2,7 +2,7 @@ import { IContributorAuditModel } from "../../../../api/SOOSHooksApiClient";
 import { soosLogger } from "../../../../logging";
 import { IContributingDeveloperAuditProvider } from "../../ContributingDeveloperAuditService";
 import { ParamUtilities } from "../../utilities";
-import GitHubService from "./GitHubService";
+import GitHubApiClient from "./api/GitHubApiClient";
 import { SOOS_CONTRIBUTOR_GITHUB_CONSTANTS } from "./constants";
 import { mergeContributors } from "./utilities";
 
@@ -16,8 +16,8 @@ class GitHubAudit implements IContributingDeveloperAuditProvider {
       "organizationName",
     );
     const days = ParamUtilities.getParamAsNumber(implementationParams, "days");
-    const githubService = new GitHubService(days, githubPAT, organizationName);
-    const organizations = await githubService.getGitHubOrgs();
+    const githubService = new GitHubApiClient(days, githubPAT, organizationName);
+    const organizations = await githubService.getGithubOrgs();
     soosLogger.verboseDebug("Fetching GitHub repositories");
     const repositories = await Promise.all(
       organizations.map((org) => githubService.getGitHubOrgRepos(org)),
