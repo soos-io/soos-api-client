@@ -12,13 +12,10 @@ import { SOOS_CONSTANTS } from "../constants";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
 import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 
-const getIntegrateUrl = (scanType?: ScanType): string => {
-  const baseMessage = `${SOOS_CONSTANTS.Urls.App.Home}integrate/`;
-
-  return `${baseMessage}${
+const getIntegrateUrl = (scanType?: ScanType): string =>
+  `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
     scanType == ScanType.CSA ? "containers" : (scanType ?? ScanType.SCA).toLowerCase()
   }`;
-};
 
 interface IBaseScanArguments extends ICommonArguments {
   appVersion: string;

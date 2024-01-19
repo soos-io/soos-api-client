@@ -1,4 +1,4 @@
-export const SOOS_CONTRIBUTOR_GITHUB_CONSTANTS = {
+export const SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS = {
   Urls: {
     API: {
       Base: "https://api.github.com/",
@@ -7,4 +7,5 @@ export const SOOS_CONTRIBUTOR_GITHUB_CONSTANTS = {
       PAT: "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens",
     },
   },
+  RequestBatchSize: 10,
 };

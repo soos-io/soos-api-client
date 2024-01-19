@@ -1,11 +1,11 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { soosLogger } from "../../../../../logging/SOOSLogger";
-import { DateUtilities, sleep } from "../../../../../utilities";
-import { SOOS_CONTRIBUTOR_GITHUB_CONSTANTS } from "../constants";
+import { soosLogger } from "../../../../logging/SOOSLogger";
+import { DateUtilities, sleep } from "../../../../utilities";
+import { SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
 import {
   IContributorAuditRepositories,
   IContributorAuditRepository,
-} from "../../../../../api/SOOSHooksApiClient";
+} from "../../../../api/SOOSHooksApiClient";
 
 interface IHttpRequestParameters {
   baseUri: string;
@@ -16,7 +16,7 @@ interface IHttpClientParameters extends IHttpRequestParameters {
   apiClientName: string;
 }
 
-// NOTE - GitHub related interfaces do not represent the full response from GitHub, only the fields we care about
+// NOTE: GitHub related interfaces do not represent the full response from GitHub, only the fields we care about
 export interface GitHubOrganization {
   login: string;
 }
@@ -52,7 +52,7 @@ class GitHubApiClient {
     days: number,
     gitHubPAT: string,
     organizationName: string,
-    baseUri: string = SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.API.Base,
+    baseUri: string = SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS.Urls.API.Base,
   ) {
     this.client = GitHubApiClient.createHttpClient({
       baseUri,

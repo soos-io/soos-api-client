@@ -1,2 +1,2 @@
-export * from "./scm";
+export * from "./providers";
 export * from "./ContributorAuditService";

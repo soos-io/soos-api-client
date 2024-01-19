@@ -5,20 +5,17 @@ import {
 import { soosLogger } from "../../../../logging";
 import { IContributorAuditProvider } from "../../ContributorAuditService";
 import { ParamUtilities } from "../../utilities";
-import GitHubApiClient, { GitHubRepository } from "./api/GitHubApiClient";
-import { SOOS_CONTRIBUTOR_GITHUB_CONSTANTS } from "./constants";
+import GitHubApiClient, { GitHubRepository } from "./GitHubApiClient";
+import { SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
 import { mergeContributors } from "./utilities";
 
-class GitHubAuditProvider implements IContributorAuditProvider {
+class GitHubContributorAuditProvider implements IContributorAuditProvider {
   public async audit(
     implementationParams: Record<string, string | number>,
   ): Promise<IContributorAuditModel> {
-    const gitHubPAT = ParamUtilities.getParamAsString(implementationParams, "secret");
-    const organizationName = ParamUtilities.getParamAsString(
-      implementationParams,
-      "organizationName",
-    );
-    const days = ParamUtilities.getParamAsNumber(implementationParams, "days");
+    const gitHubPAT = ParamUtilities.getAsString(implementationParams, "secret");
+    const organizationName = ParamUtilities.getAsString(implementationParams, "organizationName");
+    const days = ParamUtilities.getAsNumber(implementationParams, "days");
     const gitHubApiClient = new GitHubApiClient(days, gitHubPAT, organizationName);
     const organizations = await gitHubApiClient.getGitHubOrganizations();
     soosLogger.verboseDebug("Fetching GitHub repositories");
@@ -27,15 +24,15 @@ class GitHubAuditProvider implements IContributorAuditProvider {
     );
 
     soosLogger.verboseDebug("Fetching commits for each repository");
-    const contributors = await this.processInBatches(
+    const contributors = await this.getGitHubRepositoryContributors(
       gitHubApiClient,
       repositories.flatMap((repoArray) => {
         return repoArray;
       }),
-      10,
+      SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS.RequestBatchSize,
     );
 
-    const scriptVersion = ParamUtilities.getParamAsString(implementationParams, "scriptVersion");
+    const scriptVersion = ParamUtilities.getAsString(implementationParams, "scriptVersion");
 
     const finalContributors: IContributorAuditModel = {
       metadata: {
@@ -52,12 +49,12 @@ class GitHubAuditProvider implements IContributorAuditProvider {
   public validateParams(implementationParams: Record<string, string | number>): void {
     if (!implementationParams["secret"]) {
       throw new Error(
-        `A GitHub personal access token (PAT) is required as the '--secret', learn more at ${SOOS_CONTRIBUTOR_GITHUB_CONSTANTS.Urls.Docs.PAT}`,
+        `A GitHub personal access token (PAT) is required as the '--secret', learn more at ${SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS.Urls.Docs.PAT}`,
       );
     }
   }
 
-  private async processInBatches(
+  private async getGitHubRepositoryContributors(
     gitHubApiClient: GitHubApiClient,
     repositories: GitHubRepository[],
     batchSize: number,
@@ -76,4 +73,4 @@ class GitHubAuditProvider implements IContributorAuditProvider {
   }
 }
 
-export default GitHubAuditProvider;
+export default GitHubContributorAuditProvider;

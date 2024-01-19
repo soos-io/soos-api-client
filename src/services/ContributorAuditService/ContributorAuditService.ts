@@ -2,10 +2,10 @@ import SOOSHooksApiClient, { IContributorAuditModel } from "../../api/SOOSHooksA
 import { SOOS_CONSTANTS } from "../../constants";
 import { ScmType } from "../../enums";
 import { soosLogger } from "../../logging";
-import GitHubAuditProvider from "./scm/GitHub/GitHubAudit";
 import FileSystem from "fs";
 import * as Path from "path";
 import { ParamUtilities } from "./utilities";
+import GitHubContributorAuditProvider from "./providers/GitHub/GitHubContributorAuditProvider";
 
 export interface IContributorAuditProvider {
   audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
@@ -25,7 +25,7 @@ class ContributorAuditService {
     let auditProvider: IContributorAuditProvider;
 
     if (scmType === ScmType.GitHub) {
-      auditProvider = new GitHubAuditProvider();
+      auditProvider = new GitHubContributorAuditProvider();
     } else {
       throw new Error("Unsupported SCM type");
     }
@@ -71,7 +71,7 @@ class ContributorAuditService {
     if (!implementationParams["days"]) {
       throw new Error("Days is required");
     }
-    if (ParamUtilities.getParamAsNumber(implementationParams, "days") < 0) {
+    if (ParamUtilities.getAsNumber(implementationParams, "days") < 0) {
       throw new Error("Days must be greater than 0");
     }
   }
