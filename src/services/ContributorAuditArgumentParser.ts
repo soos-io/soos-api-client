@@ -3,6 +3,14 @@ import { ScmType } from "../enums";
 import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
 
+interface IContributorAuditArguments extends ICommonArguments {
+  days: number;
+  secret: string;
+  saveResults: boolean;
+  scmType: ScmType;
+  organizationName: string;
+}
+
 class ContributorAuditArgumentParser extends ArgumentParserBase {
   constructor(argumentParser: ArgumentParser) {
     super(argumentParser);
@@ -50,4 +58,4 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
 
 export default ContributorAuditArgumentParser;
 
-export { ICommonArguments };
+export { IContributorAuditArguments };

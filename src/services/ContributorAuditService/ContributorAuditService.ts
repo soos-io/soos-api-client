@@ -38,7 +38,11 @@ class ContributorAuditService {
   public async audit(implementationParams: Record<string, string | number>) {
     this.validateCommonParams(implementationParams);
     this.auditProvider.validateParams(implementationParams);
-    return this.auditProvider.audit(implementationParams);
+    const contributors = await this.auditProvider.audit(implementationParams);
+    soosLogger.verboseDebug(
+      `Contributing Developers found: ${JSON.stringify(contributors, null, 2)}`,
+    );
+    return contributors;
   }
 
   public async uploadContributorAudits(
