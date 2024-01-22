@@ -5,8 +5,8 @@ import {
   IntegrationType,
   OnFailure,
   ScanType,
-} from "../../enums";
-import { ensureNonEmptyValue } from "../../utilities";
+} from "../enums";
+import { ensureNonEmptyValue } from "../utilities";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
 
 interface IBaseScanArguments extends ICommonArguments {
@@ -27,18 +27,42 @@ interface IBaseScanArguments extends ICommonArguments {
 }
 
 class AnalysisArgumentParser extends ArgumentParserBase {
-  public scanType?: ScanType;
+  public scanType: ScanType;
+  public scriptVersion: string;
+  public integrationName: IntegrationName;
+  public integrationType: IntegrationType;
 
-  constructor(argumentParser: ArgumentParser, scanType?: ScanType) {
+  constructor(
+    argumentParser: ArgumentParser,
+    integrationName: IntegrationName,
+    integrationType: IntegrationType,
+    scanType: ScanType,
+    scriptVersion: string,
+  ) {
     super(argumentParser);
+    this.integrationName = integrationName;
+    this.integrationType = integrationType;
     this.scanType = scanType;
+    this.scriptVersion = scriptVersion;
   }
 
-  static create(argumentParser: ArgumentParser, scanType?: ScanType): AnalysisArgumentParser {
-    return new AnalysisArgumentParser(argumentParser, scanType);
+  static create(
+    integrationName: IntegrationName,
+    integrationType: IntegrationType,
+    scanType: ScanType,
+    scriptVersion: string,
+  ): AnalysisArgumentParser {
+    const parser = new ArgumentParser({ description: `SOOS ${scanType}` });
+    return new AnalysisArgumentParser(
+      parser,
+      integrationName,
+      integrationType,
+      scanType,
+      scriptVersion,
+    );
   }
 
-  addSpecificArguments() {
+  addBaseScanArguments() {
     this.argumentParser.add_argument("--appVersion", {
       help: "App Version - Intended for internal use only.",
       required: false,

@@ -1,24 +1,19 @@
 import { ArgumentParser } from "argparse";
-import { ScanType, ScmType } from "../../enums";
-import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "../ContributorAuditService/constants";
+import { ScmType } from "../enums";
+import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
 
 class ContributorAuditArgumentParser extends ArgumentParserBase {
-  public scanType?: ScanType;
-
-  constructor(argumentParser: ArgumentParser, scanType?: ScanType) {
+  constructor(argumentParser: ArgumentParser) {
     super(argumentParser);
-    this.scanType = scanType;
   }
 
-  static create(
-    argumentParser: ArgumentParser,
-    scanType?: ScanType,
-  ): ContributorAuditArgumentParser {
-    return new ContributorAuditArgumentParser(argumentParser, scanType);
+  static create(): ContributorAuditArgumentParser {
+    const parser = new ArgumentParser({ description: `SOOS SCM Audit` });
+    return new ContributorAuditArgumentParser(parser);
   }
 
-  addSpecificArguments() {
+  addBaseContributorArguments() {
     this.argumentParser.add_argument("--days", {
       help: "Number of days to look back for commits.",
       default: SOOS_CONTRIBUTOR_AUDIT_CONSTANTS.Parameters.DefaultDaysAgo,

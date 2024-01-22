@@ -1,8 +1,8 @@
-import { IntegrationType } from "./../../enums";
+import { IntegrationType } from "../enums";
 import { ArgumentParser } from "argparse";
-import { SOOS_CONSTANTS } from "../../constants";
-import { IntegrationName, LogLevel, ScanType } from "../../enums";
-import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../../utilities";
+import { SOOS_CONSTANTS } from "../constants";
+import { IntegrationName, LogLevel, ScanType } from "../enums";
+import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -38,8 +38,6 @@ abstract class ArgumentParserBase {
     this.integrationName = integrationName;
     this.integrationType = integrationType;
   }
-
-  protected abstract addSpecificArguments(): void;
 
   protected addCommonArguments(
     scriptVersion: string,
@@ -124,7 +122,6 @@ abstract class ArgumentParserBase {
 
   parseArguments() {
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
-    this.addSpecificArguments();
     const args = this.argumentParser.parse_args();
     this.ensureRequiredArguments(args);
     return args;

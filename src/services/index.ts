@@ -1,3 +1,5 @@
 export * from "./AnalysisService";
-export * from "./ArgumentParserService";
+export * from "./AnalysisArgumentParser";
+export * from "./ArgumentParserBase";
 export * from "./ContributorAuditService";
+export * from "./ContributorAuditArgumentParser";
