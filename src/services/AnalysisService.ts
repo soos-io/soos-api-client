@@ -20,6 +20,7 @@ import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
+import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
 
 interface IGenerateFormattedOutputParams {
   clientId: string;
@@ -101,15 +102,18 @@ class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
   public projectsApiClient: SOOSProjectsApiClient;
   public userApiClient: SOOSUserApiClient;
+  public hooksApiClient: SOOSHooksApiClient;
 
   constructor(
     analysisApiClient: SOOSAnalysisApiClient,
     projectsApiClient: SOOSProjectsApiClient,
     userApiClient: SOOSUserApiClient,
+    hooksApiClient: SOOSHooksApiClient,
   ) {
     this.analysisApiClient = analysisApiClient;
     this.projectsApiClient = projectsApiClient;
     this.userApiClient = userApiClient;
+    this.hooksApiClient = hooksApiClient;
   }
 
   static create(apiKey: string, apiURL: string): AnalysisService {
@@ -119,8 +123,9 @@ class AnalysisService {
       apiURL.replace("api.", "api-projects."),
     );
     const userApiClient = new SOOSUserApiClient(apiKey, apiURL.replace("api.", "api-user."));
+    const hooksApiClient = new SOOSHooksApiClient(apiKey, apiURL.replace("api.", "api-hooks."));
 
-    return new AnalysisService(analysisApiClient, projectsApiClient, userApiClient);
+    return new AnalysisService(analysisApiClient, projectsApiClient, userApiClient, hooksApiClient);
   }
 
   private logStatusMessage(message: IApplicationStatusMessage | null): void {

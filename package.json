@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "0.2.29",
+  "version": "0.2.30",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.",
   "main": "dist/index.js",
   "scripts": {
@@ -14,7 +14,8 @@
     "format:fix": "prettier ./src --write",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "check": "npm run format && npm run typecheck && npm run test && npm outdated"
+    "check": "npm run format && npm run typecheck && npm run test && npm outdated",
+    "build:link": "npm run build && npm link"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

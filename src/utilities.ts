@@ -145,6 +145,17 @@ const getAnalysisExitCodeWithMessage = (
   };
 };
 
+const DateUtilities = {
+  getDate: (daysAgo: number = 0): Date => {
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date;
+  },
+  getDateFromUnixUTC: (unixUTC: number): Date => {
+    return new Date(unixUTC * 1000);
+  },
+};
+
 const StringUtilities = {
   pluralizeWord: (
     count: number | null | undefined,
@@ -187,5 +198,6 @@ export {
   getEnvVariable,
   formatBytes,
   getAnalysisExitCodeWithMessage,
+  DateUtilities,
   StringUtilities,
 };

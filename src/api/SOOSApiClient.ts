@@ -76,9 +76,11 @@ class SOOSApiClient {
           }
 
           throw new Error(
-            `${apiClientName} ${rejectedResponse.request?.method?.toLocaleUpperCase()} ${rejectedResponse
-              .config?.url}: ${rejectedResponse.response?.data?.message} (${rejectedResponse
-              .response?.data?.code})`,
+            `${apiClientName} ${rejectedResponse.request?.method?.toLocaleUpperCase()} ${
+              rejectedResponse.config?.url
+            }: ${rejectedResponse.response?.data?.message} (${
+              rejectedResponse.response?.data?.code
+            })`,
           );
         }
         return Promise.reject(rejectedResponse);

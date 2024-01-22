@@ -3,75 +3,66 @@ import {
   ContributingDeveloperSource,
   IntegrationName,
   IntegrationType,
-  LogLevel,
   OnFailure,
   ScanType,
 } from "../enums";
-import { SOOS_CONSTANTS } from "../constants";
-import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
+import { ensureNonEmptyValue } from "../utilities";
+import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
 
-const getIntegrateUrl = (scanType: ScanType) =>
-  `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
-    scanType == ScanType.CSA ? "containers" : scanType.toLowerCase()
-  }`;
-
-interface IBaseScanArguments {
-  apiKey: string;
-  apiURL: string;
+interface IBaseScanArguments extends ICommonArguments {
   appVersion: string;
   branchName: string;
   branchURI: string;
   buildURI: string;
   buildVersion: string;
-  clientId: string;
   commitHash: string;
   contributingDeveloperId: string;
   contributingDeveloperSource: ContributingDeveloperSource;
   contributingDeveloperSourceName: string;
   integrationName: IntegrationName;
   integrationType: IntegrationType;
-  logLevel: LogLevel;
   onFailure: OnFailure;
   operatingEnvironment: string;
   projectName: string;
-  scriptVersion: string;
-  verbose: boolean;
 }
 
-class AnalysisArgumentParser {
+class AnalysisArgumentParser extends ArgumentParserBase {
   public scanType: ScanType;
-  public argumentParser: ArgumentParser;
+  public scriptVersion: string;
+  public integrationName: IntegrationName;
+  public integrationType: IntegrationType;
 
-  constructor(scanType: ScanType, argumentParser: ArgumentParser) {
-    this.scanType = scanType;
-    this.argumentParser = argumentParser;
-  }
-
-  static create(scanType: ScanType): AnalysisArgumentParser {
-    const parser = new ArgumentParser({ description: `SOOS ${scanType}` });
-    return new AnalysisArgumentParser(scanType, parser);
-  }
-
-  addBaseScanArguments(
+  constructor(
+    argumentParser: ArgumentParser,
     integrationName: IntegrationName,
     integrationType: IntegrationType,
+    scanType: ScanType,
     scriptVersion: string,
   ) {
-    this.argumentParser.add_argument("--apiKey", {
-      help: `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`,
-      default: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey),
-      required: false,
-    });
+    super(argumentParser);
+    this.integrationName = integrationName;
+    this.integrationType = integrationType;
+    this.scanType = scanType;
+    this.scriptVersion = scriptVersion;
+  }
 
-    this.argumentParser.add_argument("--apiURL", {
-      help: "SOOS API URL - Intended for internal use only, do not modify.",
-      default: SOOS_CONSTANTS.Urls.API.Analysis,
-      required: false,
-      type: (value: string) => {
-        return ensureNonEmptyValue(value, "apiURL");
-      },
-    });
+  static create(
+    integrationName: IntegrationName,
+    integrationType: IntegrationType,
+    scanType: ScanType,
+    scriptVersion: string,
+  ): AnalysisArgumentParser {
+    const parser = new ArgumentParser({ description: `SOOS ${scanType}` });
+    return new AnalysisArgumentParser(
+      parser,
+      integrationName,
+      integrationType,
+      scanType,
+      scriptVersion,
+    );
+  }
 
+  addBaseScanArguments() {
     this.argumentParser.add_argument("--appVersion", {
       help: "App Version - Intended for internal use only.",
       required: false,
@@ -94,12 +85,6 @@ class AnalysisArgumentParser {
 
     this.argumentParser.add_argument("--buildVersion", {
       help: "Version of application build artifacts.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--clientId", {
-      help: `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
-      default: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId),
       required: false,
     });
 
@@ -129,24 +114,6 @@ class AnalysisArgumentParser {
       required: false,
     });
 
-    this.addEnumArgument(this.argumentParser, "--integrationName", IntegrationName, {
-      help: "Integration Name - Intended for internal use only.",
-      required: false,
-      default: integrationName,
-    });
-
-    this.addEnumArgument(this.argumentParser, "--integrationType", IntegrationType, {
-      help: "Integration Type - Intended for internal use only.",
-      required: false,
-      default: integrationType,
-    });
-
-    this.addEnumArgument(this.argumentParser, "--logLevel", LogLevel, {
-      help: "Minimum level to show logs: PASS, IGNORE, INFO, WARN or FAIL.",
-      default: LogLevel.INFO,
-      required: false,
-    });
-
     this.addEnumArgument(this.argumentParser, "--onFailure", OnFailure, {
       help: "Action to perform when the scan fails. Options: fail_the_build, continue_on_failure.",
       default: OnFailure.Continue,
@@ -165,57 +132,9 @@ class AnalysisArgumentParser {
         return ensureNonEmptyValue(value, "projectName");
       },
     });
-
-    this.argumentParser.add_argument("--scriptVersion", {
-      help: "Script Version - Intended for internal use only.",
-      required: false,
-      default: scriptVersion,
-    });
-
-    this.argumentParser.add_argument("--verbose", {
-      help: "Enable verbose logging.",
-      action: "store_true",
-      default: false,
-      required: false,
-    });
-  }
-
-  addEnumArgument(
-    parser: ArgumentParser,
-    argName: string,
-    enumObject: Record<string, unknown>,
-    options = {},
-    allowMultipleValues = false,
-  ) {
-    parser.add_argument(argName, {
-      ...options,
-      type: (value: string) => {
-        if (allowMultipleValues) {
-          return value
-            .split(",")
-            .map((v) => v.trim())
-            .filter((v) => v !== "")
-            .map((v) => ensureEnumValue(enumObject, v, argName));
-        }
-
-        return ensureEnumValue(enumObject, value, argName);
-      },
-    });
-  }
-
-  parseArguments() {
-    const args = this.argumentParser.parse_args();
-    this.ensureRequiredArguments(args);
-    return args;
-  }
-
-  ensureRequiredArguments(args: any) {
-    ensureNonEmptyValue(args.clientId, "clientId");
-    ensureNonEmptyValue(args.apiKey, "apiKey");
-    ensureNonEmptyValue(args.projectName, "projectName");
   }
 }
 
 export default AnalysisArgumentParser;
 
-export { IBaseScanArguments };
+export { IBaseScanArguments, ICommonArguments };
