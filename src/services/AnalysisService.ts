@@ -45,7 +45,7 @@ interface IWaitForScanToFinishParams {
   scanStatusUrl: string;
   scanUrl: string;
   scanType: ScanType;
-  isFirstCompleteCheck?: boolean;
+  isFirstCheckComplete?: boolean;
 }
 
 interface ISetupScanParams {
@@ -243,7 +243,7 @@ class AnalysisService {
     scanStatusUrl,
     scanUrl,
     scanType,
-    isFirstCompleteCheck = false,
+    isFirstCheckComplete = false,
   }: IWaitForScanToFinishParams): Promise<ScanStatus> {
     const scanStatus = await this.analysisApiClient.getScanStatus({
       scanStatusUrl: scanStatusUrl,
@@ -256,13 +256,13 @@ class AnalysisService {
     }
 
     // TODO - remove this once we fix main issue on PA-12747
-    if (!isFirstCompleteCheck) {
+    if (!isFirstCheckComplete) {
       await sleep(SOOS_CONSTANTS.Status.DelayTime);
       return await this.waitForScanToFinish({
         scanStatusUrl,
         scanUrl,
         scanType,
-        isFirstCompleteCheck: true,
+        isFirstCheckComplete: true,
       });
     }
 
