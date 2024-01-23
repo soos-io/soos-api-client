@@ -45,6 +45,7 @@ interface IWaitForScanToFinishParams {
   scanStatusUrl: string;
   scanUrl: string;
   scanType: ScanType;
+  isFirstCheckComplete?: boolean;
 }
 
 interface ISetupScanParams {
@@ -242,6 +243,7 @@ class AnalysisService {
     scanStatusUrl,
     scanUrl,
     scanType,
+    isFirstCheckComplete = false,
   }: IWaitForScanToFinishParams): Promise<ScanStatus> {
     const scanStatus = await this.analysisApiClient.getScanStatus({
       scanStatusUrl: scanStatusUrl,
@@ -251,6 +253,17 @@ class AnalysisService {
       soosLogger.info(`${StringUtilities.fromCamelToTitleCase(scanStatus.status)}...`);
       await sleep(SOOS_CONSTANTS.Status.DelayTime);
       return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType });
+    }
+
+    // TODO - ensure stats via PA-12747
+    if (!isFirstCheckComplete) {
+      await sleep(SOOS_CONSTANTS.Status.DelayTime);
+      return await this.waitForScanToFinish({
+        scanStatusUrl,
+        scanUrl,
+        scanType,
+        isFirstCheckComplete: true,
+      });
     }
 
     if (scanStatus.errors.length > 0) {
