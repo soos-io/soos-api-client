@@ -97,7 +97,7 @@ abstract class ArgumentParserBase {
     });
   }
 
-  protected addEnumArgument(
+  addEnumArgument(
     parser: ArgumentParser,
     argName: string,
     enumObject: Record<string, unknown>,
