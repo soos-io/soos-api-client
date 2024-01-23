@@ -255,7 +255,7 @@ class AnalysisService {
       return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType });
     }
 
-    // TODO - remove this once we fix main issue on PA-12747
+    // TODO - ensure stats via PA-12747
     if (!isFirstCheckComplete) {
       await sleep(SOOS_CONSTANTS.Status.DelayTime);
       return await this.waitForScanToFinish({
