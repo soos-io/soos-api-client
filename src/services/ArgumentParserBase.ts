@@ -19,9 +19,9 @@ interface ICommonArguments {
 }
 
 abstract class ArgumentParserBase {
+  public argumentParser: ArgumentParser;
   protected scanType?: ScanType;
   protected scriptVersion: string = "0.0.0";
-  protected argumentParser: ArgumentParser;
   protected integrationName?: IntegrationName;
   protected integrationType?: IntegrationType;
 
