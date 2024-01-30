@@ -617,7 +617,6 @@ class AnalysisService {
   }
 
   async addManifestFilesToScan({
-    analysisService,
     clientId,
     projectHash,
     branchHash,
@@ -666,7 +665,6 @@ class AnalysisService {
     for (const [packageManager, files] of Object.entries(manifestsByPackageManager)) {
       try {
         const manifestUploadResponse = await this.uploadManifestFiles({
-          analysisService,
           clientId: clientId,
           projectHash,
           branchHash,
@@ -694,7 +692,6 @@ class AnalysisService {
   }
 
   private async uploadManifestFiles({
-    analysisService,
     clientId,
     projectHash,
     branchHash,
@@ -702,7 +699,6 @@ class AnalysisService {
     manifestFiles,
     hasMoreThanMaximumManifests,
   }: {
-    analysisService: AnalysisService;
     clientId: string;
     projectHash: string;
     branchHash: string;
@@ -710,9 +706,9 @@ class AnalysisService {
     manifestFiles: Array<string>;
     hasMoreThanMaximumManifests: boolean;
   }): Promise<IUploadManifestFilesResponse> {
-    const formData = await analysisService.getAnalysisFilesAsFormData(manifestFiles, process.cwd());
+    const formData = await this.getAnalysisFilesAsFormData(manifestFiles, process.cwd());
 
-    const response = await analysisService.analysisApiClient.uploadManifestFiles({
+    const response = await this.analysisApiClient.uploadManifestFiles({
       clientId,
       projectHash,
       branchHash,
