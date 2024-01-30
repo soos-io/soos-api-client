@@ -628,7 +628,6 @@ class AnalysisService {
     branchHash: string;
     analysisId: string;
     manifestFiles: Array<IManifestFile>;
-    hasMoreThanMaximumManifests: boolean;
   }): Promise<boolean> {
     const filesToUpload = manifestFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
     const hasMoreThanMaximumManifests =
