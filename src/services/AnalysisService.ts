@@ -623,7 +623,6 @@ class AnalysisService {
     analysisId,
     manifestFiles,
   }: {
-    analysisService: AnalysisService;
     clientId: string;
     projectHash: string;
     branchHash: string;
