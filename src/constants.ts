@@ -11,6 +11,7 @@ export const SOOS_CONSTANTS = {
     ContributorAuditOutput: "soos_contributor_audit.json",
     SoosDirectoryExclusionGlobPattern: "**/soos/**",
     SarifOutput: "results.sarif",
+    MaxManifests: 50,
   },
   Urls: {
     API: {
@@ -22,6 +23,9 @@ export const SOOS_CONSTANTS = {
     App: {
       Home: "https://app.soos.io/",
     },
+  },
+  SCA: {
+    SoosPackageDirToExclude: "**/soos/**",
   },
   Status: {
     DelayTime: 5000,
