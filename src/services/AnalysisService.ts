@@ -58,20 +58,20 @@ interface IWaitForScanToFinishParams {
 interface ISetupScanParams {
   clientId: string;
   projectName: string;
-  branchName: string;
-  commitHash: string;
-  buildVersion: string;
-  buildUri: string;
-  branchUri: string;
+  branchName: string | null;
+  commitHash: string | null;
+  buildVersion: string | null;
+  buildUri: string | null;
+  branchUri: string | null;
   integrationType: IntegrationType;
   operatingEnvironment: string;
   integrationName: IntegrationName;
-  appVersion: string;
-  scriptVersion: string;
-  contributingDeveloperAudit: ICreateScanRequestContributingDeveloperAudit[];
+  appVersion: string | null;
+  scriptVersion: string | null;
+  contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
   scanType: ScanType;
-  toolName?: string;
-  toolVersion?: string;
+  toolName?: string | null;
+  toolVersion?: string | null;
 }
 
 interface IUpdateScanStatusParams {
@@ -102,6 +102,8 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
   [IntegrationName.SoosSbom]: "SOOS_CONTRIBUTING_DEVELOPER",
   [IntegrationName.TeamCity]: "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
   [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
+  [IntegrationName.VisualStudio]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.VisualStudioCode]: "SOOS_CONTRIBUTING_DEVELOPER",
 };
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
@@ -188,7 +190,7 @@ class AnalysisService {
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
 
-    if (contributingDeveloperAudit.length === 0) {
+    if (contributingDeveloperAudit?.length === 0) {
       soosLogger.info(`Integration Name: ${integrationName}`);
       const envVariableName = integrationNameToEnvVariable[integrationName];
       if (envVariableName) {
@@ -466,22 +468,24 @@ class AnalysisService {
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
+    packageManagers,
   }: {
     clientId: string;
     projectHash: string;
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
+    packageManagers: string[];
   }): Promise<IManifestFile[]> {
     const supportedManifestsResponse = await this.analysisApiClient.getSupportedManifests({
       clientId: clientId,
     });
 
     const filteredPackageManagers =
-      isNil(null) || [].length === 0
+      isNil(packageManagers) || packageManagers.length === 0
         ? supportedManifestsResponse
         : supportedManifestsResponse.filter((packageManagerManifests) =>
-            [].some((pm) =>
+            packageManagers.some((pm) =>
               StringUtilities.areEqual(pm, packageManagerManifests.packageManager, {
                 sensitivity: "base",
               }),
