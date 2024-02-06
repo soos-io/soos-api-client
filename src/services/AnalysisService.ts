@@ -463,7 +463,7 @@ class AnalysisService {
     return { filePaths: filesToUpload, hasMoreThanMaximumFiles };
   }
 
-  async searchManifestFiles({
+  async findManifestFiles({
     clientId,
     projectHash,
     filesToExclude,
