@@ -22,6 +22,8 @@ export enum IntegrationName {
   SoosSbom = "SoosSbom",
   TeamCity = "TeamCity",
   TravisCI = "TravisCI",
+  VisualStudio = "VisualStudio",
+  VisualStudioCode = "VisualStudioCode",
 }
 
 export enum IntegrationType {

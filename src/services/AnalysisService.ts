@@ -1,6 +1,7 @@
 import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
+  IUploadManifestFilesResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
 import SOOSUserApiClient, { IApplicationStatusMessage } from "../api/SOOSUserApiClient";
@@ -10,6 +11,7 @@ import {
   IntegrationName,
   IntegrationType,
   OutputFormat,
+  PackageManagerType,
   ScanStatus,
   ScanType,
   SeverityEnum,
@@ -33,6 +35,12 @@ interface IGenerateFormattedOutputParams {
   workingDirectory: string;
 }
 
+interface IManifestFile {
+  packageManager: PackageManagerType;
+  name: string;
+  path: string;
+}
+
 interface IStartScanParams {
   clientId: string;
   projectHash: string;
@@ -51,20 +59,20 @@ interface IWaitForScanToFinishParams {
 interface ISetupScanParams {
   clientId: string;
   projectName: string;
-  branchName: string;
-  commitHash: string;
-  buildVersion: string;
-  buildUri: string;
-  branchUri: string;
+  branchName: string | null;
+  commitHash: string | null;
+  buildVersion: string | null;
+  buildUri: string | null;
+  branchUri: string | null;
   integrationType: IntegrationType;
   operatingEnvironment: string;
   integrationName: IntegrationName;
-  appVersion: string;
-  scriptVersion: string;
-  contributingDeveloperAudit: ICreateScanRequestContributingDeveloperAudit[];
+  appVersion: string | null;
+  scriptVersion: string | null;
+  contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
   scanType: ScanType;
-  toolName?: string;
-  toolVersion?: string;
+  toolName?: string | null;
+  toolVersion?: string | null;
 }
 
 interface IUpdateScanStatusParams {
@@ -95,6 +103,8 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
   [IntegrationName.SoosSbom]: "SOOS_CONTRIBUTING_DEVELOPER",
   [IntegrationName.TeamCity]: "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
   [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
+  [IntegrationName.VisualStudio]: "SOOS_CONTRIBUTING_DEVELOPER",
+  [IntegrationName.VisualStudioCode]: "SOOS_CONTRIBUTING_DEVELOPER",
 };
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
@@ -181,7 +191,7 @@ class AnalysisService {
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
 
-    if (contributingDeveloperAudit.length === 0) {
+    if (contributingDeveloperAudit?.length === 0) {
       soosLogger.info(`Integration Name: ${integrationName}`);
       const envVariableName = integrationNameToEnvVariable[integrationName];
       if (envVariableName) {
@@ -453,6 +463,137 @@ class AnalysisService {
     return { filePaths: filesToUpload, hasMoreThanMaximumFiles };
   }
 
+  async findManifestFiles({
+    clientId,
+    projectHash,
+    filesToExclude,
+    directoriesToExclude,
+    sourceCodePath,
+    packageManagers,
+  }: {
+    clientId: string;
+    projectHash: string;
+    filesToExclude: string[];
+    directoriesToExclude: string[];
+    sourceCodePath: string;
+    packageManagers: string[];
+  }): Promise<IManifestFile[]> {
+    const supportedManifestsResponse = await this.analysisApiClient.getSupportedManifests({
+      clientId: clientId,
+    });
+
+    const filteredPackageManagers =
+      isNil(packageManagers) || packageManagers.length === 0
+        ? supportedManifestsResponse
+        : supportedManifestsResponse.filter((packageManagerManifests) =>
+            packageManagers.some((pm) =>
+              StringUtilities.areEqual(pm, packageManagerManifests.packageManager, {
+                sensitivity: "base",
+              }),
+            ),
+          );
+
+    const settings = await this.projectsApiClient.getProjectSettings({
+      clientId: clientId,
+      projectHash,
+    });
+
+    const manifestFiles = this.searchForManifestFiles({
+      packageManagerManifests: filteredPackageManagers,
+      useLockFile: settings.useLockFile ?? false,
+      filesToExclude,
+      directoriesToExclude,
+      sourceCodePath,
+    });
+
+    return manifestFiles;
+  }
+
+  private searchForManifestFiles({
+    packageManagerManifests,
+    useLockFile,
+    filesToExclude,
+    directoriesToExclude,
+    sourceCodePath,
+  }: {
+    packageManagerManifests: Array<{
+      packageManager: PackageManagerType;
+      manifests: Array<{
+        pattern: string;
+        isLockFile: boolean;
+      }>;
+    }>;
+    useLockFile: boolean;
+    filesToExclude: string[];
+    directoriesToExclude: string[];
+    sourceCodePath: string;
+  }): Array<IManifestFile> {
+    const currentDirectory = process.cwd();
+    soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
+    process.chdir(sourceCodePath);
+    soosLogger.info(
+      `Lock file setting is ${
+        useLockFile ? "on, ignoring non-lock files" : "off, ignoring lock files"
+      }.`,
+    );
+    const manifestFiles = packageManagerManifests.reduce<Array<IManifestFile>>(
+      (accumulator, packageManagerManifests) => {
+        const matches = packageManagerManifests.manifests
+          .filter((manifest) => useLockFile === manifest.isLockFile)
+          .map((manifest) => {
+            const manifestGlobPattern = manifest.pattern.startsWith(".")
+              ? `*${manifest.pattern}` // ends with
+              : manifest.pattern; // wildcard match
+
+            const pattern = `**/${manifestGlobPattern}`;
+            const files = Glob.sync(pattern, {
+              ignore: [
+                ...(filesToExclude || []),
+                ...directoriesToExclude,
+                SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
+              ],
+              nocase: true,
+            });
+
+            // This is needed to resolve the path as an absolute opposed to trying to open the file at current directory.
+            const absolutePathFiles = files.map((x) => Path.resolve(x));
+
+            const matchingFilesMessage = `${absolutePathFiles.length} files found matching pattern '${pattern}'.`;
+            if (absolutePathFiles.length > 0) {
+              soosLogger.info(matchingFilesMessage);
+            } else {
+              soosLogger.verboseInfo(matchingFilesMessage);
+            }
+
+            return absolutePathFiles;
+          });
+
+        return accumulator.concat(
+          matches.flat().map((filePath): IManifestFile => {
+            const filename = Path.basename(filePath);
+            const fileStats = FileSystem.statSync(filePath);
+            const fileSize = formatBytes(fileStats.size);
+            soosLogger.info(
+              `Found manifest file '${filename}' (${fileSize}) at location '${filePath}'.`,
+            );
+            return {
+              packageManager: packageManagerManifests.packageManager,
+              name: filename,
+              path: filePath,
+            };
+          }),
+        );
+      },
+      [],
+    );
+
+    process.chdir(currentDirectory);
+    soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
+    soosLogger.info(`${manifestFiles.length} manifest files found.`);
+
+    return manifestFiles;
+  }
+
   async getAnalysisFilesAsFormData(
     analysisFilePaths: string[],
     workingDirectory: string,
@@ -478,6 +619,108 @@ class AnalysisService {
     }, new FormData());
 
     return formData;
+  }
+
+  async addManifestFilesToScan({
+    clientId,
+    projectHash,
+    branchHash,
+    analysisId,
+    manifestFiles,
+  }: {
+    clientId: string;
+    projectHash: string;
+    branchHash: string;
+    analysisId: string;
+    manifestFiles: Array<IManifestFile>;
+  }): Promise<boolean> {
+    const filesToUpload = manifestFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
+    const hasMoreThanMaximumManifests =
+      manifestFiles.length > SOOS_CONSTANTS.FileUploads.MaxManifests;
+    if (hasMoreThanMaximumManifests) {
+      const filesToSkip = manifestFiles.slice(SOOS_CONSTANTS.FileUploads.MaxManifests);
+      const filesDetectedString = StringUtilities.pluralizeTemplate(
+        manifestFiles.length,
+        "file was",
+        "files were",
+      );
+      const filesSkippedString = StringUtilities.pluralizeTemplate(filesToSkip.length, "file");
+      soosLogger.info(
+        `The maximum number of manifest per scan is ${SOOS_CONSTANTS.FileUploads.MaxManifests}. ${filesDetectedString} detected, and ${filesSkippedString} will be not be uploaded. \n`,
+        `The following manifests will not be included in the scan: \n`,
+        filesToSkip.map((file) => `  "${file.name}": "${file.path}"`).join("\n"),
+      );
+    }
+
+    const manifestsByPackageManager = filesToUpload.reduce<Record<string, Array<IManifestFile>>>(
+      (accumulator, file) => {
+        const packageManagerFiles =
+          (accumulator[file.packageManager] as Array<IManifestFile> | undefined) ?? [];
+        return {
+          ...accumulator,
+          [file.packageManager]: packageManagerFiles.concat(file),
+        };
+      },
+      {},
+    );
+
+    let allUploadsFailed = true;
+    for (const [packageManager, files] of Object.entries(manifestsByPackageManager)) {
+      try {
+        const manifestUploadResponse = await this.uploadManifestFiles({
+          clientId: clientId,
+          projectHash,
+          branchHash,
+          analysisId,
+          manifestFiles: files.map((f) => f.path),
+          hasMoreThanMaximumManifests,
+        });
+
+        soosLogger.info(
+          `${packageManager} Manifest Files: \n`,
+          `  ${manifestUploadResponse.message} \n`,
+          manifestUploadResponse.manifests
+            ?.map((m) => `  ${m.name}: ${m.statusMessage}`)
+            .join("\n"),
+        );
+
+        allUploadsFailed = false;
+      } catch (e: unknown) {
+        // NOTE: we continue on to the other package managers
+        soosLogger.warn(e instanceof Error ? e.message : (e as string));
+      }
+    }
+
+    return allUploadsFailed;
+  }
+
+  private async uploadManifestFiles({
+    clientId,
+    projectHash,
+    branchHash,
+    analysisId,
+    manifestFiles,
+    hasMoreThanMaximumManifests,
+  }: {
+    clientId: string;
+    projectHash: string;
+    branchHash: string;
+    analysisId: string;
+    manifestFiles: Array<string>;
+    hasMoreThanMaximumManifests: boolean;
+  }): Promise<IUploadManifestFilesResponse> {
+    const formData = await this.getAnalysisFilesAsFormData(manifestFiles, process.cwd());
+
+    const response = await this.analysisApiClient.uploadManifestFiles({
+      clientId,
+      projectHash,
+      branchHash,
+      analysisId,
+      manifestFiles: formData,
+      hasMoreThanMaximumManifests,
+    });
+
+    return response;
   }
 }
 

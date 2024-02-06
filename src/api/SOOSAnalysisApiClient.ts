@@ -62,7 +62,7 @@ interface IGetSupportedManifestsRequest {
 }
 
 interface IGetSupportedManifestsResponsePackageManagerManifestPatterns {
-  packageManager: string;
+  packageManager: PackageManagerType;
   manifests: Array<{
     pattern: string;
     isLockFile: boolean;
