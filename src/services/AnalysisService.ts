@@ -11,6 +11,7 @@ import {
   IntegrationName,
   IntegrationType,
   OutputFormat,
+  PackageManagerType,
   ScanStatus,
   ScanType,
   SeverityEnum,
@@ -35,7 +36,7 @@ interface IGenerateFormattedOutputParams {
 }
 
 interface IManifestFile {
-  packageManager: string;
+  packageManager: PackageManagerType;
   name: string;
   path: string;
 }
@@ -516,7 +517,7 @@ class AnalysisService {
     sourceCodePath,
   }: {
     packageManagerManifests: Array<{
-      packageManager: string;
+      packageManager: PackageManagerType;
       manifests: Array<{
         pattern: string;
         isLockFile: boolean;
