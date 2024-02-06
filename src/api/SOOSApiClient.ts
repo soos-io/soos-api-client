@@ -66,7 +66,7 @@ class SOOSApiClient {
                 );
               case 503:
                 throw new Error(
-                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: We are down for maintenance. Please tyy again in a few minutes. (Service Unavailable)`,
+                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: We are down for maintenance. Please try again in a few minutes. (Service Unavailable)`,
                 );
               default:
                 throw new Error(
