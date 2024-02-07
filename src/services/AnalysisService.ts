@@ -330,10 +330,17 @@ class AnalysisService {
         )}) `
       : "";
 
+    const unknownPackages = isGeneratedScanType
+      ? `(${StringUtilities.pluralizeTemplate(
+          scanStatus.issues?.UnknownPackage?.count ?? 0,
+          "unknown package",
+        )}) `
+      : "";
+
     soosLogger.always(
       `Scan ${scanStatus.isSuccess ? "passed" : "failed"}${
         scanStatus.isSuccess ? ", with" : " because of"
-      } ${vulnerabilities}${codeIssues}${webVulnerabilities}${violations}${substitutions}${typos}`,
+      } ${vulnerabilities}${codeIssues}${webVulnerabilities}${violations}${substitutions}${typos}${unknownPackages}`,
     );
     soosLogger.info(`View the results here: ${scanUrl}`);
     return scanStatus.status;
