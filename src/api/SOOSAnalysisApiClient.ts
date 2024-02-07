@@ -104,6 +104,7 @@ interface IIssuesModel {
   DependencySubstitution: { count: number; maxSeverity: string } | null;
   Dast: { count: number; maxSeverity: string } | null;
   Sast: { count: number; maxSeverity: string } | null;
+  UnknownPackage: { count: number; maxSeverity: string } | null;
 }
 
 interface IStartScanRequest {
