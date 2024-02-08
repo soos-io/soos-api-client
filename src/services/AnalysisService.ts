@@ -473,6 +473,10 @@ class AnalysisService {
   async findManifestFiles({
     clientId,
     projectHash,
+    branchHash,
+    scanType,
+    analysisId,
+    scanStatusUrl,
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
@@ -480,6 +484,10 @@ class AnalysisService {
   }: {
     clientId: string;
     projectHash: string;
+    branchHash: string;
+    scanType: ScanType;
+    analysisId: string;
+    scanStatusUrl: string;
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
@@ -506,6 +514,12 @@ class AnalysisService {
     });
 
     const manifestFiles = this.searchForManifestFiles({
+      clientId,
+      projectHash,
+      branchHash,
+      scanType,
+      analysisId,
+      scanStatusUrl,
       packageManagerManifests: filteredPackageManagers,
       useLockFile: settings.useLockFile ?? false,
       filesToExclude,
@@ -516,13 +530,25 @@ class AnalysisService {
     return manifestFiles;
   }
 
-  private searchForManifestFiles({
+  private async searchForManifestFiles({
+    clientId,
+    projectHash,
+    branchHash,
+    scanType,
+    analysisId,
+    scanStatusUrl,
     packageManagerManifests,
     useLockFile,
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
   }: {
+    clientId: string;
+    projectHash: string;
+    branchHash: string;
+    scanType: ScanType;
+    analysisId: string;
+    scanStatusUrl: string;
     packageManagerManifests: Array<{
       packageManager: PackageManagerType;
       manifests: Array<{
@@ -534,7 +560,7 @@ class AnalysisService {
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
-  }): Array<IManifestFile> {
+  }): Promise<Array<IManifestFile>> {
     const currentDirectory = process.cwd();
     soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
     process.chdir(sourceCodePath);
@@ -598,6 +624,22 @@ class AnalysisService {
     soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
     soosLogger.info(`${manifestFiles.length} manifest files found.`);
 
+    if (manifestFiles.length === 0) {
+      const errorMessage =
+        "No valid manifests found, cannot continue. For more help, please visit https://kb.soos.io/help/error-no-valid-manifests-found";
+      await this.updateScanStatus({
+        clientId: clientId,
+        projectHash,
+        branchHash,
+        scanType,
+        analysisId: analysisId,
+        status: ScanStatus.Incomplete,
+        message: errorMessage,
+        scanStatusUrl,
+      });
+      throw new Error(errorMessage);
+    }
+
     return manifestFiles;
   }
 
@@ -633,14 +675,18 @@ class AnalysisService {
     projectHash,
     branchHash,
     analysisId,
+    scanType,
+    scanStatusUrl,
     manifestFiles,
   }: {
     clientId: string;
     projectHash: string;
     branchHash: string;
     analysisId: string;
+    scanType: ScanType;
+    scanStatusUrl: string;
     manifestFiles: Array<IManifestFile>;
-  }): Promise<boolean> {
+  }): Promise<void> {
     const filesToUpload = manifestFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
     const hasMoreThanMaximumManifests =
       manifestFiles.length > SOOS_CONSTANTS.FileUploads.MaxManifests;
@@ -698,7 +744,19 @@ class AnalysisService {
       }
     }
 
-    return allUploadsFailed;
+    if (allUploadsFailed) {
+      await this.updateScanStatus({
+        clientId,
+        projectHash,
+        branchHash,
+        scanType,
+        analysisId: analysisId,
+        status: ScanStatus.Incomplete,
+        message: `Error uploading manifests.`,
+        scanStatusUrl,
+      });
+      throw new Error("Error uploading manifests.");
+    }
   }
 
   private async uploadManifestFiles({
