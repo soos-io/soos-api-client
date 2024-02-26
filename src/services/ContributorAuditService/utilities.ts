@@ -15,4 +15,28 @@ const ParamUtilities = {
   },
 };
 
-export { ParamUtilities };
+const DataMappingUtilities = {
+  mergeContributors(contributorsArray: any[][]): any[] {
+    const flattenedContributors = contributorsArray.flat();
+
+    const mergedContributors = new Map<string, any>();
+
+    flattenedContributors.forEach((contributor) => {
+      const existingContributor = mergedContributors.get(contributor.username);
+
+      if (existingContributor) {
+        contributor.repositories.forEach((repo: any) => {
+          if (!existingContributor.repositories.find((r: any) => r.id === repo.id)) {
+            existingContributor.repositories.push(repo);
+          }
+        });
+      } else {
+        mergedContributors.set(contributor.username, contributor);
+      }
+    });
+
+    return Array.from(mergedContributors.values());
+  },
+};
+
+export { ParamUtilities, DataMappingUtilities };

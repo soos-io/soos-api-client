@@ -19,7 +19,7 @@ interface IContributorAuditRepositories {
 }
 
 interface IContributorAuditRepository {
-  id: number;
+  id: string;
   name: string;
   lastCommit: string;
   isPrivate: boolean;

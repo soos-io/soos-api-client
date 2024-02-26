@@ -9,6 +9,7 @@ interface IContributorAuditArguments extends ICommonArguments {
   saveResults: boolean;
   scmType: ScmType;
   organizationName: string;
+  userName: string;
 }
 
 class ContributorAuditArgumentParser extends ArgumentParserBase {
@@ -29,8 +30,14 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
       type: Number,
     });
 
+    this.argumentParser.add_argument("--organizationName", {
+      help: "Organization name to use for the audit.",
+      default: false,
+      required: false,
+    });
+
     this.argumentParser.add_argument("--secret", {
-      help: "Secret to use for api calls, for example when --scmType=GitHub this needs to have the value of a GPAT.",
+      help: "Secret to use for api calls, for example for GitHub this needs to have the value of a GPAT and for Bitbucket it should be an app password.",
       default: false,
       required: false,
     });
@@ -43,13 +50,13 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
     });
 
     this.addEnumArgument(this.argumentParser, "--scmType", ScmType, {
-      help: "Scm Type to use for the audit. Options: GitHub.",
+      help: "Scm Type to use for the audit. Options: GitHub, Bitbucket.",
       default: ScmType.GitHub,
       required: false,
     });
 
-    this.argumentParser.add_argument("--organizationName", {
-      help: "Organization name to use for the audit.",
+    this.argumentParser.add_argument("--userName", {
+      help: "Username for Bitbucket audit.",
       default: false,
       required: false,
     });

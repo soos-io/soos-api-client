@@ -6,6 +6,7 @@ import FileSystem from "fs";
 import * as Path from "path";
 import { ParamUtilities } from "./utilities";
 import GitHubContributorAuditProvider from "./providers/GitHub/GitHubContributorAuditProvider";
+import BitbucketContributorAuditProvider from "./providers/Bitbucket/BitbucketContributorAuditProvider";
 
 export interface IContributorAuditProvider {
   audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
@@ -24,10 +25,18 @@ class ContributorAuditService {
   static create(apiKey: string, apiURL: string, scmType: ScmType): ContributorAuditService {
     let auditProvider: IContributorAuditProvider;
 
-    if (scmType === ScmType.GitHub) {
-      auditProvider = new GitHubContributorAuditProvider();
-    } else {
-      throw new Error("Unsupported SCM type");
+    switch (scmType) {
+      case ScmType.GitHub: {
+        auditProvider = new GitHubContributorAuditProvider();
+        break;
+      }
+      case ScmType.Bitbucket: {
+        auditProvider = new BitbucketContributorAuditProvider();
+        break;
+      }
+      default: {
+        throw new Error("Unsupported SCM type");
+      }
     }
 
     const hooksApiClient = new SOOSHooksApiClient(apiKey, apiURL.replace("api.", "api-hooks."));

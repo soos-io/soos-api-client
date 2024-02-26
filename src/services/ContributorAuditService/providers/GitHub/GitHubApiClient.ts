@@ -7,12 +7,12 @@ import {
   IContributorAuditRepository,
 } from "../../../../api/SOOSHooksApiClient";
 
-interface IHttpRequestParameters {
+interface IGitHubHttpRequestParameters {
   baseUri: string;
   gitHubPAT: string;
 }
 
-interface IHttpClientParameters extends IHttpRequestParameters {
+interface IHttpClientParameters extends IGitHubHttpRequestParameters {
   apiClientName: string;
 }
 
@@ -30,13 +30,13 @@ export interface GitHubRepository {
   pushed_at: string;
 }
 
-export interface Commits {
+export interface GitHubCommits {
   commit: {
-    author: Author;
+    author: GitHubAuthor;
   };
 }
 
-export interface Author {
+export interface GitHubAuthor {
   name: string;
   email: string;
   date: string;
@@ -169,7 +169,7 @@ class GitHubApiClient {
     const response = await this.client.get<GitHubOrganization[]>(`user/orgs?per_page=100`);
 
     const orgs: GitHubOrganization[] = response.data.filter(
-      (org) => org.login === this.organizationName,
+      (org) => org.login.toLowerCase() === this.organizationName.toLowerCase(),
     );
 
     if (orgs.length === 0) {
@@ -196,18 +196,18 @@ class GitHubApiClient {
   async getGitHubRepositoryContributors(
     repository: GitHubRepository,
   ): Promise<IContributorAuditRepositories[]> {
-    const response = await this.client.get<Commits[]>(
+    const response = await this.client.get<GitHubCommits[]>(
       `repos/${repository.owner.login}/${repository.name}/commits?per_page=100&since=${this.dateToFilter}`,
     );
 
-    const commits: Commits[] = await response.data;
+    const commits: GitHubCommits[] = await response.data;
 
     const contributors = commits.reduce<IContributorAuditRepositories[]>((acc, commit) => {
       const username = commit.commit.author.name;
       const commitDate = commit.commit.author.date;
 
       const repo: IContributorAuditRepository = {
-        id: repository.id,
+        id: repository.id.toString(),
         name: repository.name,
         lastCommit: commitDate,
         isPrivate: repository.private,
