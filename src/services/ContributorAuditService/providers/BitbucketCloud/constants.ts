@@ -1,4 +1,4 @@
-export const SOOS_BITBUCKET_CONTRIBUTOR_AUDIT_CONSTANTS = {
+export const SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS = {
   Urls: {
     API: {
       Base: "https://api.bitbucket.org/2.0/",

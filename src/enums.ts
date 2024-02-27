@@ -95,7 +95,7 @@ export enum ScanType {
 
 export enum ScmType {
   GitHub = "GitHub",
-  Bitbucket = "Bitbucket",
+  BitbucketCloud = "BitbucketCloud",
 }
 
 export enum SeverityEnum {

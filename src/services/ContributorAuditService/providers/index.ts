@@ -1,2 +1,2 @@
 export * from "./GitHub";
-export * from "./Bitbucket";
+export * from "./BitbucketCloud";

@@ -1,81 +1,81 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { soosLogger } from "../../../../logging/SOOSLogger";
 import { DateUtilities, sleep } from "../../../../utilities";
-import { SOOS_BITBUCKET_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
+import { SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
 import {
   IContributorAuditRepositories,
   IContributorAuditRepository,
 } from "../../../../api/SOOSHooksApiClient";
 
-interface IBitbucketHttpRequestParameters {
+interface IBitbucketCloudHttpRequestParameters {
   baseUri: string;
   username: string;
   password: string;
 }
 
-interface IHttpClientParameters extends IBitbucketHttpRequestParameters {
+interface IHttpClientParameters extends IBitbucketCloudHttpRequestParameters {
   apiClientName: string;
   dateToFilter: string;
 }
 
 export interface BaseBitBucketApiResponse {
-  type: (typeof BitbucketResponseTypes)[keyof typeof BitbucketResponseTypes];
-  values: BitbucketRepository[] | BitbucketCommit[];
+  type: (typeof BitbucketCloudResponseTypes)[keyof typeof BitbucketCloudResponseTypes];
+  values: BitbucketCloudRepository[] | BitbucketCloudCommit[];
   next?: string;
 }
 
-export const BitbucketResponseTypes = {
+export const BitbucketCloudResponseTypes = {
   Commit: "commit",
   Repository: "repository",
 } as const;
 
-// NOTE: Bitbucket related interfaces do not represent the full response from Bitbucket, only the fields we care about
+// NOTE: BitbucketCloud related interfaces do not represent the full response from BitbucketCloud, only the fields we care about
 export interface BitBucketRepositoryApiResponse extends BaseBitBucketApiResponse {
-  type: typeof BitbucketResponseTypes.Repository;
-  values: BitbucketRepository[];
+  type: typeof BitbucketCloudResponseTypes.Repository;
+  values: BitbucketCloudRepository[];
 }
 
-export interface BitbucketRepository {
+export interface BitbucketCloudRepository {
   uuid: string;
   full_name: string;
   name: string;
   is_private: boolean;
   updated_on: string;
-  workspace: BitbucketWorkspace;
+  workspace: BitbucketCloudWorkspace;
 }
 
-export interface BitbucketWorkspace {
+export interface BitbucketCloudWorkspace {
   type: string;
   uuid: string;
   name: string;
   slug: string;
 }
 
-export interface BitbucketCommitsApiResponse extends BaseBitBucketApiResponse {
-  type: typeof BitbucketResponseTypes.Commit;
-  values: BitbucketCommit[];
+export interface BitbucketCloudCommitsApiResponse extends BaseBitBucketApiResponse {
+  type: typeof BitbucketCloudResponseTypes.Commit;
+  values: BitbucketCloudCommit[];
 }
 
-export interface BitbucketCommit {
-  author: BitbucketAuthor;
+export interface BitbucketCloudCommit {
+  author: BitbucketCloudAuthor;
   date: string;
 }
 
-export interface BitbucketAuthor {
+export interface BitbucketCloudAuthor {
   raw: string;
   name: string;
   emailAddress: string;
   displayName: string;
-  user: BitbucketUser;
+  user: BitbucketCloudUser;
 }
 
-interface BitbucketUser {
+interface BitbucketCloudUser {
   display_name: string;
   type: string;
   nickname: string;
 }
 
-class BitbucketApiClient {
+class BitbucketCloudApiClient {
   private readonly client: AxiosInstance;
   private readonly workspace: string;
   private readonly days: number;
@@ -86,16 +86,16 @@ class BitbucketApiClient {
     username: string,
     password: string,
     workspace: string,
-    baseUri: string = SOOS_BITBUCKET_CONTRIBUTOR_AUDIT_CONSTANTS.Urls.API.Base,
+    baseUri: string = SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS.Urls.API.Base,
   ) {
     this.workspace = workspace;
     this.days = days;
     this.dateToFilter = DateUtilities.getDate(this.days).toISOString();
-    this.client = BitbucketApiClient.createHttpClient({
+    this.client = BitbucketCloudApiClient.createHttpClient({
       baseUri,
       username: username,
       password: password,
-      apiClientName: "Bitbucket API",
+      apiClientName: "BitbucketCloud API",
       dateToFilter: this.dateToFilter,
     });
   }
@@ -131,11 +131,11 @@ class BitbucketApiClient {
         if (response?.status === 429 && config.retryCount < maxRetries) {
           soosLogger.verboseDebug(
             apiClientName,
-            `Rate limit exceeded on the Bitbucket API. Waiting ${SOOS_BITBUCKET_CONTRIBUTOR_AUDIT_CONSTANTS.RetrySeconds} seconds before retrying. Retry count: ${config.retryCount}`,
+            `Rate limit exceeded on the BitbucketCloud API. Waiting ${SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS.RetrySeconds} seconds before retrying. Retry count: ${config.retryCount}`,
           );
 
           config.retryCount += 1;
-          await sleep(SOOS_BITBUCKET_CONTRIBUTOR_AUDIT_CONSTANTS.RetrySeconds * 1000);
+          await sleep(SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS.RetrySeconds * 1000);
           return client(config);
         }
 
@@ -149,24 +149,24 @@ class BitbucketApiClient {
     return client;
   }
 
-  async getBitbucketRepositories(): Promise<BitbucketRepository[]> {
+  async getBitbucketCloudRepositories(): Promise<BitbucketCloudRepository[]> {
     const response = await this.client.get<BitBucketRepositoryApiResponse>(
       `repositories/${this.workspace}`,
     );
 
     const repoResponse: BitBucketRepositoryApiResponse = response.data;
 
-    const repos: BitbucketRepository[] = repoResponse.values.filter(
+    const repos: BitbucketCloudRepository[] = repoResponse.values.filter(
       (repo) => new Date(repo.updated_on) >= new Date(this.dateToFilter),
     );
 
     return repos;
   }
 
-  async getBitbucketRepositoryContributors(
-    repository: BitbucketRepository,
+  async getBitbucketCloudRepositoryContributors(
+    repository: BitbucketCloudRepository,
   ): Promise<IContributorAuditRepositories[]> {
-    const response = await this.client.get<BitbucketCommitsApiResponse>(
+    const response = await this.client.get<BitbucketCloudCommitsApiResponse>(
       `repositories/${this.workspace}/${repository.name}/commits`,
     );
 
@@ -174,7 +174,7 @@ class BitbucketApiClient {
       (commit) => new Date(commit.date) >= new Date(this.dateToFilter),
     );
 
-    const commits: BitbucketCommitsApiResponse = response.data;
+    const commits: BitbucketCloudCommitsApiResponse = response.data;
 
     const contributors = commits.values.reduce<IContributorAuditRepositories[]>((acc, commit) => {
       const username = commit.author.user ? commit.author.user.display_name : "Unknown Author";
@@ -222,18 +222,18 @@ class BitbucketApiClient {
       soosLogger.verboseDebug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get<T>(nextUrl);
 
-      if (data.type === BitbucketResponseTypes.Commit) {
-        data.values = (data.values as BitbucketCommit[]).concat(
-          nextPageResponse.data.values as BitbucketCommit[],
+      if (data.type === BitbucketCloudResponseTypes.Commit) {
+        data.values = (data.values as BitbucketCloudCommit[]).concat(
+          nextPageResponse.data.values as BitbucketCloudCommit[],
         );
-        notOnDateRange = (data.values as BitbucketCommit[]).some(
+        notOnDateRange = (data.values as BitbucketCloudCommit[]).some(
           (commit) => new Date(commit.date) < new Date(dateToFilter),
         );
-      } else if (data.type === BitbucketResponseTypes.Repository) {
-        data.values = (data.values as BitbucketRepository[]).concat(
-          nextPageResponse.data.values as BitbucketRepository[],
+      } else if (data.type === BitbucketCloudResponseTypes.Repository) {
+        data.values = (data.values as BitbucketCloudRepository[]).concat(
+          nextPageResponse.data.values as BitbucketCloudRepository[],
         );
-        notOnDateRange = (data.values as BitbucketRepository[]).some(
+        notOnDateRange = (data.values as BitbucketCloudRepository[]).some(
           (repo) => new Date(repo.updated_on) < new Date(dateToFilter),
         );
       }
@@ -245,4 +245,4 @@ class BitbucketApiClient {
   }
 }
 
-export default BitbucketApiClient;
+export default BitbucketCloudApiClient;

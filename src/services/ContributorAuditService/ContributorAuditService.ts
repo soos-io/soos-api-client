@@ -6,7 +6,7 @@ import FileSystem from "fs";
 import * as Path from "path";
 import { ParamUtilities } from "./utilities";
 import GitHubContributorAuditProvider from "./providers/GitHub/GitHubContributorAuditProvider";
-import BitbucketContributorAuditProvider from "./providers/Bitbucket/BitbucketContributorAuditProvider";
+import BitbucketContributorAuditProvider from "./providers/BitbucketCloud/BitbucketCloudContributorAuditProvider";
 
 export interface IContributorAuditProvider {
   audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
@@ -30,7 +30,7 @@ class ContributorAuditService {
         auditProvider = new GitHubContributorAuditProvider();
         break;
       }
-      case ScmType.Bitbucket: {
+      case ScmType.BitbucketCloud: {
         auditProvider = new BitbucketContributorAuditProvider();
         break;
       }
