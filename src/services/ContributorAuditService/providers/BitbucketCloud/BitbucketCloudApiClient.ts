@@ -18,21 +18,10 @@ interface IHttpClientParameters extends IBitbucketCloudHttpRequestParameters {
   dateToFilter: string;
 }
 
-export interface BaseBitBucketApiResponse {
-  type: (typeof BitbucketCloudResponseTypes)[keyof typeof BitbucketCloudResponseTypes];
-  values: BitbucketCloudRepository[] | BitbucketCloudCommit[];
-  next?: string;
-}
-
-export const BitbucketCloudResponseTypes = {
-  Commit: "commit",
-  Repository: "repository",
-} as const;
-
 // NOTE: BitbucketCloud related interfaces do not represent the full response from BitbucketCloud, only the fields we care about
-export interface BitBucketRepositoryApiResponse extends BaseBitBucketApiResponse {
-  type: typeof BitbucketCloudResponseTypes.Repository;
+export interface BitbucketRepositoryApiResponse {
   values: BitbucketCloudRepository[];
+  next?: string;
 }
 
 export interface BitbucketCloudRepository {
@@ -51,9 +40,9 @@ export interface BitbucketCloudWorkspace {
   slug: string;
 }
 
-export interface BitbucketCloudCommitsApiResponse extends BaseBitBucketApiResponse {
-  type: typeof BitbucketCloudResponseTypes.Commit;
+export interface BitbucketCloudCommitsApiResponse {
   values: BitbucketCloudCommit[];
+  next?: string;
 }
 
 export interface BitbucketCloudCommit {
@@ -100,13 +89,7 @@ class BitbucketCloudApiClient {
     });
   }
 
-  private static createHttpClient({
-    baseUri,
-    username,
-    password,
-    apiClientName,
-    dateToFilter,
-  }: IHttpClientParameters) {
+  private static createHttpClient({ baseUri, username, password }: IHttpClientParameters) {
     const client = axios.create({
       baseURL: baseUri,
       auth: {
@@ -115,11 +98,99 @@ class BitbucketCloudApiClient {
       },
     });
 
+    return client;
+  }
+
+  async getBitbucketCloudRepositories(): Promise<BitbucketCloudRepository[]> {
+    this.client.interceptors.response.use((response) => {
+      if (response.data.next) {
+        return BitbucketCloudApiClient.handleRepositoryPagination(
+          response,
+          this.client,
+          this.dateToFilter,
+        );
+      }
+      return response;
+    });
+    const response = await this.client.get<BitbucketRepositoryApiResponse>(
+      `repositories/${this.workspace}`,
+    );
+
+    const repoResponse: BitbucketRepositoryApiResponse = response.data;
+
+    const repos: BitbucketCloudRepository[] = repoResponse.values.filter(
+      (repo) => new Date(repo.updated_on) >= new Date(this.dateToFilter),
+    );
+
+    return repos;
+  }
+
+  async getBitbucketCloudRepositoryContributors(
+    repository: BitbucketCloudRepository,
+  ): Promise<IContributorAuditRepositories[]> {
+    await this.setupInterceptor(
+      this.client,
+      "BitbucketCloud API",
+      this.dateToFilter,
+      this.handleCommitPagination,
+    );
+    const response = await this.client.get<BitbucketCloudCommitsApiResponse>(
+      `repositories/${this.workspace}/${repository.name}/commits`,
+    );
+
+    response.data.values = response.data.values.filter(
+      (commit) => new Date(commit.date) >= new Date(this.dateToFilter),
+    );
+
+    const commits: BitbucketCloudCommitsApiResponse = response.data;
+
+    const contributors = commits.values.reduce<IContributorAuditRepositories[]>((acc, commit) => {
+      const username = commit.author.user ? commit.author.user.display_name : "Unknown Author";
+      const commitDate = commit.date;
+
+      const repo: IContributorAuditRepository = {
+        id: repository.uuid,
+        name: repository.name,
+        lastCommit: commitDate,
+        isPrivate: repository.is_private,
+      };
+
+      const contributor = acc.find((c) => c.username === username);
+      if (contributor === undefined) {
+        acc.push({ username, repositories: [repo] });
+      } else {
+        const existingRepository = contributor.repositories.find((r) => r.id === repo.id);
+        if (!existingRepository) {
+          contributor.repositories.push(repo);
+        } else {
+          if (new Date(existingRepository.lastCommit) < new Date(commitDate)) {
+            existingRepository.lastCommit = commitDate;
+          }
+        }
+      }
+
+      return acc;
+    }, []);
+
+    return contributors;
+  }
+
+  private async setupInterceptor(
+    client: AxiosInstance,
+    apiClientName: string,
+    dateToFilter: string,
+    paginationFunction: (
+      response: AxiosResponse,
+      client: AxiosInstance,
+      dateToFilter: string,
+    ) => Promise<AxiosResponse>,
+  ): Promise<void> {
+    client.interceptors.response.clear();
     client.interceptors.response.use(
       async (response) => {
         soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         if (response.data.next) {
-          return await this.handlePagination(response, client, dateToFilter);
+          return await paginationFunction(response, client, dateToFilter);
         }
         return response;
       },
@@ -145,99 +216,53 @@ class BitbucketCloudApiClient {
         return Promise.reject(error);
       },
     );
-
-    return client;
   }
 
-  async getBitbucketCloudRepositories(): Promise<BitbucketCloudRepository[]> {
-    const response = await this.client.get<BitBucketRepositoryApiResponse>(
-      `repositories/${this.workspace}`,
-    );
-
-    const repoResponse: BitBucketRepositoryApiResponse = response.data;
-
-    const repos: BitbucketCloudRepository[] = repoResponse.values.filter(
-      (repo) => new Date(repo.updated_on) >= new Date(this.dateToFilter),
-    );
-
-    return repos;
-  }
-
-  async getBitbucketCloudRepositoryContributors(
-    repository: BitbucketCloudRepository,
-  ): Promise<IContributorAuditRepositories[]> {
-    const response = await this.client.get<BitbucketCloudCommitsApiResponse>(
-      `repositories/${this.workspace}/${repository.name}/commits`,
-    );
-
-    response.data.values = response.data.values.filter(
-      (commit) => new Date(commit.date) >= new Date(this.dateToFilter),
-    );
-
-    const commits: BitbucketCloudCommitsApiResponse = response.data;
-
-    const contributors = commits.values.reduce<IContributorAuditRepositories[]>((acc, commit) => {
-      const username = commit.author.user ? commit.author.user.display_name : "Unknown Author";
-      const commitDate = commit.date;
-
-      const repo: IContributorAuditRepository = {
-        id: repository.uuid,
-        name: repository.name,
-        lastCommit: commitDate,
-        isPrivate: repository.is_private,
-      };
-
-      let contributor = acc.find((c) => c.username === username);
-
-      if (!contributor) {
-        contributor = { username, repositories: [repo] };
-        acc.push(contributor);
-      } else {
-        const existingRepository = contributor.repositories.find((r) => r.id === repo.id);
-        if (!existingRepository) {
-          contributor.repositories.push(repo);
-        } else {
-          if (new Date(existingRepository.lastCommit) < new Date(commitDate)) {
-            existingRepository.lastCommit = commitDate;
-          }
-        }
-      }
-
-      return acc;
-    }, []);
-
-    return contributors;
-  }
-
-  private static async handlePagination<T extends BaseBitBucketApiResponse>(
-    response: AxiosResponse<T>,
+  private static async handleRepositoryPagination(
+    response: AxiosResponse<BitbucketRepositoryApiResponse>,
     client: AxiosInstance,
     dateToFilter: string,
-  ): Promise<AxiosResponse<T>> {
+  ): Promise<AxiosResponse> {
     let data = response.data;
     let nextUrl = data.next;
-    let notOnDateRange = false;
+    let isWithinDateRange = data.values.every((repo) =>
+      DateUtilities.isWithinDateRange(new Date(repo.updated_on), new Date(dateToFilter)),
+    );
 
-    while (nextUrl && !notOnDateRange) {
+    while (nextUrl && isWithinDateRange) {
       soosLogger.verboseDebug("Fetching next page", nextUrl);
-      const nextPageResponse = await client.get<T>(nextUrl);
+      const nextPageResponse = await client.get<BitbucketRepositoryApiResponse>(nextUrl);
+      data.values = data.values.concat(nextPageResponse.data.values);
+      nextUrl = nextPageResponse.data.next ?? undefined;
+      isWithinDateRange = nextPageResponse.data.values.every((repo) =>
+        DateUtilities.isWithinDateRange(new Date(repo.updated_on), new Date(dateToFilter)),
+      );
+    }
 
-      if (data.type === BitbucketCloudResponseTypes.Commit) {
-        data.values = (data.values as BitbucketCloudCommit[]).concat(
-          nextPageResponse.data.values as BitbucketCloudCommit[],
-        );
-        notOnDateRange = (data.values as BitbucketCloudCommit[]).some(
-          (commit) => new Date(commit.date) < new Date(dateToFilter),
-        );
-      } else if (data.type === BitbucketCloudResponseTypes.Repository) {
-        data.values = (data.values as BitbucketCloudRepository[]).concat(
-          nextPageResponse.data.values as BitbucketCloudRepository[],
-        );
-        notOnDateRange = (data.values as BitbucketCloudRepository[]).some(
-          (repo) => new Date(repo.updated_on) < new Date(dateToFilter),
-        );
-      }
+    return { ...response, data };
+  }
 
+  private async handleCommitPagination(
+    response: AxiosResponse<BitbucketCloudCommitsApiResponse>,
+    client: AxiosInstance,
+    dateToFilter: string,
+  ): Promise<AxiosResponse> {
+    let data = response.data;
+    let nextUrl = data.next;
+    let lastCommitDate = new Date(data.values[data.values.length - 1].date);
+    let isWithinDateRange = DateUtilities.isWithinDateRange(lastCommitDate, new Date(dateToFilter));
+
+    while (nextUrl && isWithinDateRange) {
+      soosLogger.verboseDebug("Fetching next page", nextUrl);
+      const nextPageResponse = await client.get<BitbucketCloudCommitsApiResponse>(nextUrl);
+      data.values = data.values.concat(nextPageResponse.data.values);
+      soosLogger.verboseDebug(
+        `Checking if commits are within date range min date ${new Date(dateToFilter)}`,
+      );
+      lastCommitDate = new Date(
+        nextPageResponse.data.values[nextPageResponse.data.values.length - 1].date,
+      );
+      isWithinDateRange = DateUtilities.isWithinDateRange(lastCommitDate, new Date(dateToFilter));
       nextUrl = nextPageResponse.data.next ?? undefined;
     }
 

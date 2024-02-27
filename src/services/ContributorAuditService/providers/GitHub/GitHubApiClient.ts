@@ -213,11 +213,9 @@ class GitHubApiClient {
         isPrivate: repository.private,
       };
 
-      let contributor = acc.find((contributor) => contributor.username === username);
-
-      if (!contributor) {
-        contributor = { username, repositories: [repo] };
-        acc.push(contributor);
+      const contributor = acc.find((c) => c.username === username);
+      if (contributor === undefined) {
+        acc.push({ username, repositories: [repo] });
       } else {
         const existingRepository = contributor.repositories.find((r) => r.id === repo.id);
         if (!existingRepository) {

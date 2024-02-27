@@ -35,7 +35,7 @@ class ContributorAuditService {
         break;
       }
       default: {
-        throw new Error("Unsupported SCM type");
+        throw new Error(`Unsupported SCM type: ${scmType}`);
       }
     }
 
