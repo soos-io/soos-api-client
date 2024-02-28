@@ -6,6 +6,7 @@ import {
   IContributorAuditRepositories,
   IContributorAuditRepository,
 } from "../../../../api/SOOSHooksApiClient";
+import { DataMappingUtilities } from "../../utilities";
 
 interface IBitbucketCloudHttpRequestParameters {
   baseUri: string;
@@ -118,8 +119,8 @@ class BitbucketCloudApiClient {
 
     const repoResponse: BitbucketRepositoryApiResponse = response.data;
 
-    const repos: BitbucketCloudRepository[] = repoResponse.values.filter(
-      (repo) => new Date(repo.updated_on) >= new Date(this.dateToFilter),
+    const repos: BitbucketCloudRepository[] = repoResponse.values.filter((repo) =>
+      DateUtilities.isWithinDateRange(new Date(repo.updated_on), new Date(this.dateToFilter)),
     );
 
     return repos;
@@ -138,8 +139,8 @@ class BitbucketCloudApiClient {
       `repositories/${this.workspace}/${repository.name}/commits`,
     );
 
-    response.data.values = response.data.values.filter(
-      (commit) => new Date(commit.date) >= new Date(this.dateToFilter),
+    response.data.values = response.data.values.filter((commit) =>
+      DateUtilities.isWithinDateRange(new Date(commit.date), new Date(this.dateToFilter)),
     );
 
     const commits: BitbucketCloudCommitsApiResponse = response.data;
@@ -155,21 +156,7 @@ class BitbucketCloudApiClient {
         isPrivate: repository.is_private,
       };
 
-      const contributor = acc.find((c) => c.username === username);
-      if (contributor === undefined) {
-        acc.push({ username, repositories: [repo] });
-      } else {
-        const existingRepository = contributor.repositories.find((r) => r.id === repo.id);
-        if (!existingRepository) {
-          contributor.repositories.push(repo);
-        } else {
-          if (new Date(existingRepository.lastCommit) < new Date(commitDate)) {
-            existingRepository.lastCommit = commitDate;
-          }
-        }
-      }
-
-      return acc;
+      return DataMappingUtilities.updateContributors(acc, repo, username, commitDate);
     }, []);
 
     return contributors;

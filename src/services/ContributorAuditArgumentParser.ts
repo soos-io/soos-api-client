@@ -9,7 +9,7 @@ interface IContributorAuditArguments extends ICommonArguments {
   saveResults: boolean;
   scmType: ScmType;
   organizationName: string;
-  userName: string;
+  username: string;
 }
 
 class ContributorAuditArgumentParser extends ArgumentParserBase {
@@ -55,7 +55,7 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
       required: false,
     });
 
-    this.argumentParser.add_argument("--userName", {
+    this.argumentParser.add_argument("--username", {
       help: "Username for Bitbucket audit.",
       default: false,
       required: false,

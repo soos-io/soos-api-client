@@ -6,6 +6,7 @@ import {
   IContributorAuditRepositories,
   IContributorAuditRepository,
 } from "../../../../api/SOOSHooksApiClient";
+import { DataMappingUtilities } from "../../utilities";
 
 interface IGitHubHttpRequestParameters {
   baseUri: string;
@@ -186,8 +187,8 @@ class GitHubApiClient {
       `orgs/${organization.login}/repos?per_page=50`,
     );
 
-    const repos: GitHubRepository[] = response.data.filter(
-      (repo) => new Date(repo.pushed_at) >= new Date(this.dateToFilter),
+    const repos: GitHubRepository[] = response.data.filter((repo) =>
+      DateUtilities.isWithinDateRange(new Date(repo.pushed_at), new Date(this.dateToFilter)),
     );
 
     return repos;
@@ -213,21 +214,7 @@ class GitHubApiClient {
         isPrivate: repository.private,
       };
 
-      const contributor = acc.find((c) => c.username === username);
-      if (contributor === undefined) {
-        acc.push({ username, repositories: [repo] });
-      } else {
-        const existingRepository = contributor.repositories.find((r) => r.id === repo.id);
-        if (!existingRepository) {
-          contributor.repositories.push(repo);
-        } else {
-          if (new Date(existingRepository.lastCommit) < new Date(commitDate)) {
-            existingRepository.lastCommit = commitDate;
-          }
-        }
-      }
-
-      return acc;
+      return DataMappingUtilities.updateContributors(acc, repo, username, commitDate);
     }, []);
 
     return contributors;

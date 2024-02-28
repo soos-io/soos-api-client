@@ -15,10 +15,10 @@ class BitbucketCloudContributorAuditProvider implements IContributorAuditProvide
     const bitbucketPAT = ParamUtilities.getAsString(implementationParams, "secret");
     const organizationName = ParamUtilities.getAsString(implementationParams, "organizationName");
     const days = ParamUtilities.getAsNumber(implementationParams, "days");
-    const userName = ParamUtilities.getAsString(implementationParams, "userName");
+    const username = ParamUtilities.getAsString(implementationParams, "username");
     const bitbucketApiClient = new BitbucketCloudApiClient(
       days,
-      userName,
+      username,
       bitbucketPAT,
       organizationName,
     );
@@ -49,8 +49,8 @@ class BitbucketCloudContributorAuditProvider implements IContributorAuditProvide
         `A BitbucketCloud App passsword is required as the '--secret', learn more at ${SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS.Urls.Docs.AppPassword}`,
       );
     }
-    if (!implementationParams["userName"]) {
-      throw new Error(`A BitbucketCloud username is required as the '--userName'`);
+    if (!implementationParams["username"]) {
+      throw new Error(`A BitbucketCloud username is required as the '--username'`);
     }
   }
 
