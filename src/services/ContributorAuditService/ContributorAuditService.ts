@@ -10,7 +10,6 @@ import BitbucketContributorAuditProvider from "./providers/BitbucketCloud/Bitbuc
 
 export interface IContributorAuditProvider {
   audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
-  validateParams(implementationParams: Record<string, string | number>): void;
 }
 
 class ContributorAuditService {
@@ -46,7 +45,6 @@ class ContributorAuditService {
 
   public async audit(implementationParams: Record<string, string | number>) {
     this.validateCommonParams(implementationParams);
-    this.auditProvider.validateParams(implementationParams);
     const contributors = await this.auditProvider.audit(implementationParams);
     soosLogger.verboseDebug(
       `Contributing Developers found: ${JSON.stringify(contributors, null, 2)}`,
@@ -78,9 +76,6 @@ class ContributorAuditService {
   }
 
   private validateCommonParams(implementationParams: Record<string, string | number>) {
-    if (!implementationParams["organizationName"]) {
-      throw new Error("Organization name is required");
-    }
     if (!implementationParams["days"]) {
       throw new Error("Days is required");
     }

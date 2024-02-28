@@ -40,7 +40,7 @@ abstract class ArgumentParserBase {
   }
 
   protected addCommonArguments(
-    scriptVersion: string,
+    scriptVersion?: string,
     integrationName?: IntegrationName,
     integrationType?: IntegrationType,
   ): void {

@@ -1,3 +1,4 @@
+import { ArgumentParser } from "argparse";
 import {
   IContributorAuditModel,
   IContributorAuditRepositories,
@@ -45,12 +46,18 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
     return finalContributors;
   }
 
-  public validateParams(implementationParams: Record<string, string | number>): void {
-    if (!implementationParams["secret"]) {
-      throw new Error(
-        `A GitHub personal access token (PAT) is required as the '--secret', learn more at ${SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS.Urls.Docs.PAT}`,
-      );
-    }
+  public static addProviderArgs(argumentParser: ArgumentParser): void {
+    argumentParser.add_argument("--organizationName", {
+      help: "Organization name to use for the audit.",
+      default: false,
+      required: true,
+    });
+
+    argumentParser.add_argument("--secret", {
+      help: "Secret to use for api calls, it should be a GPAT.",
+      default: false,
+      required: true,
+    });
   }
 
   private async getGitHubRepositoryContributors(

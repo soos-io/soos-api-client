@@ -2,6 +2,8 @@ import { ArgumentParser } from "argparse";
 import { ScmType } from "../enums";
 import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
+import GitHubContributorAuditProvider from "./ContributorAuditService/providers/GitHub/GitHubContributorAuditProvider";
+import BitbucketCloudContributorAuditProvider from "./ContributorAuditService/providers/BitbucketCloud/BitbucketCloudContributorAuditProvider";
 
 interface IContributorAuditArguments extends ICommonArguments {
   days: number;
@@ -10,6 +12,7 @@ interface IContributorAuditArguments extends ICommonArguments {
   scmType: ScmType;
   organizationName: string;
   username: string;
+  workspace: string;
 }
 
 class ContributorAuditArgumentParser extends ArgumentParserBase {
@@ -30,18 +33,6 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
       type: Number,
     });
 
-    this.argumentParser.add_argument("--organizationName", {
-      help: "Organization name to use for the audit.",
-      default: false,
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--secret", {
-      help: "Secret to use for api calls, for example for GitHub this needs to have the value of a GPAT and for Bitbucket it should be an app password.",
-      default: false,
-      required: false,
-    });
-
     this.argumentParser.add_argument("--saveResults", {
       help: "Save results to file.",
       action: "store_true",
@@ -54,12 +45,27 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
       default: ScmType.GitHub,
       required: false,
     });
+  }
 
-    this.argumentParser.add_argument("--username", {
-      help: "Username for Bitbucket audit.",
-      default: false,
-      required: false,
-    });
+  parseArguments(): IContributorAuditArguments {
+    this.addCommonArguments();
+    this.addBaseContributorArguments();
+    const args = this.argumentParser.parse_known_args()[0] as IContributorAuditArguments;
+
+    switch (args.scmType) {
+      case ScmType.GitHub: {
+        GitHubContributorAuditProvider.addProviderArgs(this.argumentParser);
+        break;
+      }
+      case ScmType.BitbucketCloud: {
+        BitbucketCloudContributorAuditProvider.addProviderArgs(this.argumentParser);
+        break;
+      }
+      default:
+        throw new Error("Invalid scmType");
+    }
+
+    return this.argumentParser.parse_args();
   }
 }
 
