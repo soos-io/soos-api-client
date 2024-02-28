@@ -6,10 +6,10 @@ import FileSystem from "fs";
 import * as Path from "path";
 import { ParamUtilities } from "./utilities";
 import GitHubContributorAuditProvider from "./providers/GitHub/GitHubContributorAuditProvider";
+import BitbucketContributorAuditProvider from "./providers/BitbucketCloud/BitbucketCloudContributorAuditProvider";
 
 export interface IContributorAuditProvider {
   audit(implementationParams: Record<string, string | number>): Promise<IContributorAuditModel>;
-  validateParams(implementationParams: Record<string, string | number>): void;
 }
 
 class ContributorAuditService {
@@ -24,10 +24,18 @@ class ContributorAuditService {
   static create(apiKey: string, apiURL: string, scmType: ScmType): ContributorAuditService {
     let auditProvider: IContributorAuditProvider;
 
-    if (scmType === ScmType.GitHub) {
-      auditProvider = new GitHubContributorAuditProvider();
-    } else {
-      throw new Error("Unsupported SCM type");
+    switch (scmType) {
+      case ScmType.GitHub: {
+        auditProvider = new GitHubContributorAuditProvider();
+        break;
+      }
+      case ScmType.BitbucketCloud: {
+        auditProvider = new BitbucketContributorAuditProvider();
+        break;
+      }
+      default: {
+        throw new Error(`Unsupported SCM type: ${scmType}`);
+      }
     }
 
     const hooksApiClient = new SOOSHooksApiClient(apiKey, apiURL.replace("api.", "api-hooks."));
@@ -37,7 +45,6 @@ class ContributorAuditService {
 
   public async audit(implementationParams: Record<string, string | number>) {
     this.validateCommonParams(implementationParams);
-    this.auditProvider.validateParams(implementationParams);
     const contributors = await this.auditProvider.audit(implementationParams);
     soosLogger.verboseDebug(
       `Contributing Developers found: ${JSON.stringify(contributors, null, 2)}`,
@@ -69,9 +76,6 @@ class ContributorAuditService {
   }
 
   private validateCommonParams(implementationParams: Record<string, string | number>) {
-    if (!implementationParams["organizationName"]) {
-      throw new Error("Organization name is required");
-    }
     if (!implementationParams["days"]) {
       throw new Error("Days is required");
     }

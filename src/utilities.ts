@@ -154,6 +154,9 @@ const DateUtilities = {
   getDateFromUnixUTC: (unixUTC: number): Date => {
     return new Date(unixUTC * 1000);
   },
+  isWithinDateRange(date: Date, minDate: Date): boolean {
+    return date >= minDate;
+  },
 };
 
 const StringUtilities = {

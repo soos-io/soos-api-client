@@ -6,13 +6,14 @@ import {
   IContributorAuditRepositories,
   IContributorAuditRepository,
 } from "../../../../api/SOOSHooksApiClient";
+import { DataMappingUtilities } from "../../utilities";
 
-interface IHttpRequestParameters {
+interface IGitHubHttpRequestParameters {
   baseUri: string;
   gitHubPAT: string;
 }
 
-interface IHttpClientParameters extends IHttpRequestParameters {
+interface IHttpClientParameters extends IGitHubHttpRequestParameters {
   apiClientName: string;
 }
 
@@ -30,13 +31,13 @@ export interface GitHubRepository {
   pushed_at: string;
 }
 
-export interface Commits {
+export interface GitHubCommits {
   commit: {
-    author: Author;
+    author: GitHubAuthor;
   };
 }
 
-export interface Author {
+export interface GitHubAuthor {
   name: string;
   email: string;
   date: string;
@@ -134,6 +135,9 @@ class GitHubApiClient {
         if (response?.status) {
           soosLogger.verboseDebug(apiClientName, `Response Status: ${response.status}`);
         }
+        if (response?.message) {
+          soosLogger.verboseDebug(apiClientName, `Response Message: ${response.message}`);
+        }
         return Promise.reject(error);
       },
     );
@@ -169,7 +173,7 @@ class GitHubApiClient {
     const response = await this.client.get<GitHubOrganization[]>(`user/orgs?per_page=100`);
 
     const orgs: GitHubOrganization[] = response.data.filter(
-      (org) => org.login === this.organizationName,
+      (org) => org.login.toLowerCase() === this.organizationName.toLowerCase(),
     );
 
     if (orgs.length === 0) {
@@ -186,8 +190,8 @@ class GitHubApiClient {
       `orgs/${organization.login}/repos?per_page=50`,
     );
 
-    const repos: GitHubRepository[] = response.data.filter(
-      (repo) => new Date(repo.pushed_at) >= new Date(this.dateToFilter),
+    const repos: GitHubRepository[] = response.data.filter((repo) =>
+      DateUtilities.isWithinDateRange(new Date(repo.pushed_at), new Date(this.dateToFilter)),
     );
 
     return repos;
@@ -196,40 +200,24 @@ class GitHubApiClient {
   async getGitHubRepositoryContributors(
     repository: GitHubRepository,
   ): Promise<IContributorAuditRepositories[]> {
-    const response = await this.client.get<Commits[]>(
+    const response = await this.client.get<GitHubCommits[]>(
       `repos/${repository.owner.login}/${repository.name}/commits?per_page=100&since=${this.dateToFilter}`,
     );
 
-    const commits: Commits[] = await response.data;
+    const commits: GitHubCommits[] = await response.data;
 
     const contributors = commits.reduce<IContributorAuditRepositories[]>((acc, commit) => {
       const username = commit.commit.author.name;
       const commitDate = commit.commit.author.date;
 
       const repo: IContributorAuditRepository = {
-        id: repository.id,
+        id: repository.id.toString(),
         name: repository.name,
         lastCommit: commitDate,
         isPrivate: repository.private,
       };
 
-      let contributor = acc.find((contributor) => contributor.username === username);
-
-      if (!contributor) {
-        contributor = { username, repositories: [repo] };
-        acc.push(contributor);
-      } else {
-        const existingRepository = contributor.repositories.find((r) => r.id === repo.id);
-        if (!existingRepository) {
-          contributor.repositories.push(repo);
-        } else {
-          if (new Date(existingRepository.lastCommit) < new Date(commitDate)) {
-            existingRepository.lastCommit = commitDate;
-          }
-        }
-      }
-
-      return acc;
+      return DataMappingUtilities.updateContributors(acc, repo, username, commitDate);
     }, []);
 
     return contributors;

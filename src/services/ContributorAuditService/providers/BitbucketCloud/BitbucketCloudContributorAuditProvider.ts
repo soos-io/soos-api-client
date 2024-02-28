@@ -6,37 +6,31 @@ import {
 import { soosLogger } from "../../../../logging";
 import { IContributorAuditProvider } from "../../ContributorAuditService";
 import { DataMappingUtilities, ParamUtilities } from "../../utilities";
-import GitHubApiClient, { GitHubRepository } from "./GitHubApiClient";
-import { SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
+import BitbucketCloudApiClient, { BitbucketCloudRepository } from "./BitbucketCloudApiClient";
+import { SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
 import { IContributorAuditArguments } from "../../../ContributorAuditArgumentParser";
 
-interface IGitHubContributorAuditArguments extends IContributorAuditArguments {
-  organizationName: string;
+interface IBitBucketContributorAuditArguments extends IContributorAuditArguments {
+  username: string;
+  workspace: string;
 }
 
-class GitHubContributorAuditProvider implements IContributorAuditProvider {
+class BitbucketCloudContributorAuditProvider implements IContributorAuditProvider {
   public async audit(
     implementationParams: Record<string, string | number>,
   ): Promise<IContributorAuditModel> {
-    const gitHubPAT = ParamUtilities.getAsString(implementationParams, "secret");
-    const organizationName = ParamUtilities.getAsString(implementationParams, "organizationName");
+    const bitbucketPAT = ParamUtilities.getAsString(implementationParams, "secret");
+    const workspace = ParamUtilities.getAsString(implementationParams, "workspace");
     const days = ParamUtilities.getAsNumber(implementationParams, "days");
-    const gitHubApiClient = new GitHubApiClient(days, gitHubPAT, organizationName);
-    const organizations = await gitHubApiClient.getGitHubOrganizations();
-    soosLogger.verboseDebug("Fetching GitHub repositories");
-    const repositories = await Promise.all(
-      organizations.map((org) => gitHubApiClient.getGitHubOrganizationRepositories(org)),
-    );
-
+    const username = ParamUtilities.getAsString(implementationParams, "username");
+    const bitbucketApiClient = new BitbucketCloudApiClient(days, username, bitbucketPAT, workspace);
+    const repositories = await bitbucketApiClient.getBitbucketCloudRepositories();
     soosLogger.verboseDebug("Fetching commits for each repository");
-    const contributors = await this.getGitHubRepositoryContributors(
-      gitHubApiClient,
-      repositories.flatMap((repoArray) => {
-        return repoArray;
-      }),
-      SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS.RequestBatchSize,
+    const contributors = await this.getBitbucketCloudRepositoryContributors(
+      bitbucketApiClient,
+      repositories,
+      SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS.RequestBatchSize,
     );
-
     const scriptVersion = ParamUtilities.getAsString(implementationParams, "scriptVersion");
 
     const finalContributors: IContributorAuditModel = {
@@ -44,7 +38,7 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
         scriptVersion: scriptVersion,
         days: days,
       },
-      organizationName: organizationName,
+      organizationName: workspace,
       contributors: contributors,
     };
 
@@ -52,22 +46,28 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
   }
 
   public static addProviderArgs(argumentParser: ArgumentParser): void {
-    argumentParser.add_argument("--organizationName", {
+    argumentParser.add_argument("--workspace", {
       help: "Organization name to use for the audit.",
       default: false,
       required: true,
     });
 
     argumentParser.add_argument("--secret", {
-      help: "Secret to use for api calls, it should be a GPAT.",
+      help: "Secret to use for api calls, it should be an app password.",
+      default: false,
+      required: true,
+    });
+
+    argumentParser.add_argument("--username", {
+      help: "Username for audit.",
       default: false,
       required: true,
     });
   }
 
-  private async getGitHubRepositoryContributors(
-    gitHubApiClient: GitHubApiClient,
-    repositories: GitHubRepository[],
+  private async getBitbucketCloudRepositoryContributors(
+    bitbucketApiClient: BitbucketCloudApiClient,
+    repositories: BitbucketCloudRepository[],
     batchSize: number,
   ): Promise<IContributorAuditRepositories[]> {
     const contributorsArray: IContributorAuditRepositories[][] = [];
@@ -75,7 +75,7 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
     for (let i = 0; i < repositories.length; i += batchSize) {
       const batch = repositories.slice(i, i + batchSize);
       const results = await Promise.all(
-        batch.map((repo) => gitHubApiClient.getGitHubRepositoryContributors(repo)),
+        batch.map((repo) => bitbucketApiClient.getBitbucketCloudRepositoryContributors(repo)),
       );
       contributorsArray.push(...results);
     }
@@ -84,6 +84,6 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
   }
 }
 
-export default GitHubContributorAuditProvider;
+export default BitbucketCloudContributorAuditProvider;
 
-export { IGitHubContributorAuditArguments };
+export { IBitBucketContributorAuditArguments };
