@@ -8,6 +8,11 @@ import { IContributorAuditProvider } from "../../ContributorAuditService";
 import { DataMappingUtilities, ParamUtilities } from "../../utilities";
 import GitHubApiClient, { GitHubRepository } from "./GitHubApiClient";
 import { SOOS_GITHUB_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
+import { IContributorAuditArguments } from "../../../ContributorAuditArgumentParser";
+
+interface IGitHubContributorAuditArguments extends IContributorAuditArguments {
+  organizationName: string;
+}
 
 class GitHubContributorAuditProvider implements IContributorAuditProvider {
   public async audit(
@@ -80,3 +85,5 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
 }
 
 export default GitHubContributorAuditProvider;
+
+export { IGitHubContributorAuditArguments };

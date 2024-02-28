@@ -2,17 +2,18 @@ import { ArgumentParser } from "argparse";
 import { ScmType } from "../enums";
 import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
-import GitHubContributorAuditProvider from "./ContributorAuditService/providers/GitHub/GitHubContributorAuditProvider";
-import BitbucketCloudContributorAuditProvider from "./ContributorAuditService/providers/BitbucketCloud/BitbucketCloudContributorAuditProvider";
+import GitHubContributorAuditProvider, {
+  IGitHubContributorAuditArguments,
+} from "./ContributorAuditService/providers/GitHub/GitHubContributorAuditProvider";
+import BitbucketCloudContributorAuditProvider, {
+  IBitBucketContributorAuditArguments,
+} from "./ContributorAuditService/providers/BitbucketCloud/BitbucketCloudContributorAuditProvider";
 
 interface IContributorAuditArguments extends ICommonArguments {
   days: number;
   secret: string;
   saveResults: boolean;
   scmType: ScmType;
-  organizationName: string;
-  username: string;
-  workspace: string;
 }
 
 class ContributorAuditArgumentParser extends ArgumentParserBase {
@@ -47,7 +48,7 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
     });
   }
 
-  parseArguments(): IContributorAuditArguments {
+  parseArguments(): IGitHubContributorAuditArguments | IBitBucketContributorAuditArguments {
     this.addCommonArguments();
     this.addBaseContributorArguments();
     const args = this.argumentParser.parse_known_args()[0] as IContributorAuditArguments;
@@ -55,17 +56,15 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
     switch (args.scmType) {
       case ScmType.GitHub: {
         GitHubContributorAuditProvider.addProviderArgs(this.argumentParser);
-        break;
+        return this.argumentParser.parse_args() as IGitHubContributorAuditArguments;
       }
       case ScmType.BitbucketCloud: {
         BitbucketCloudContributorAuditProvider.addProviderArgs(this.argumentParser);
-        break;
+        return this.argumentParser.parse_args() as IBitBucketContributorAuditArguments;
       }
       default:
         throw new Error("Invalid scmType");
     }
-
-    return this.argumentParser.parse_args();
   }
 }
 

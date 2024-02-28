@@ -8,6 +8,12 @@ import { IContributorAuditProvider } from "../../ContributorAuditService";
 import { DataMappingUtilities, ParamUtilities } from "../../utilities";
 import BitbucketCloudApiClient, { BitbucketCloudRepository } from "./BitbucketCloudApiClient";
 import { SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS } from "./constants";
+import { IContributorAuditArguments } from "../../../ContributorAuditArgumentParser";
+
+interface IBitBucketContributorAuditArguments extends IContributorAuditArguments {
+  username: string;
+  workspace: string;
+}
 
 class BitbucketCloudContributorAuditProvider implements IContributorAuditProvider {
   public async audit(
@@ -79,3 +85,5 @@ class BitbucketCloudContributorAuditProvider implements IContributorAuditProvide
 }
 
 export default BitbucketCloudContributorAuditProvider;
+
+export { IBitBucketContributorAuditArguments };
