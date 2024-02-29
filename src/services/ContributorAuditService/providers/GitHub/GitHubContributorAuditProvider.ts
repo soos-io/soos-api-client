@@ -65,6 +65,11 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
     });
   }
 
+  public static parseArgs(argumentParser: ArgumentParser): IGitHubContributorAuditArguments {
+    this.addProviderArgs(argumentParser);
+    return argumentParser.parse_args() as IGitHubContributorAuditArguments;
+  }
+
   private async getGitHubRepositoryContributors(
     gitHubApiClient: GitHubApiClient,
     repositories: GitHubRepository[],

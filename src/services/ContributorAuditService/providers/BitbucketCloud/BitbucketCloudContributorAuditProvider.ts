@@ -65,6 +65,11 @@ class BitbucketCloudContributorAuditProvider implements IContributorAuditProvide
     });
   }
 
+  public static parseArgs(argumentParser: ArgumentParser): IBitBucketContributorAuditArguments {
+    this.addProviderArgs(argumentParser);
+    return argumentParser.parse_args() as IBitBucketContributorAuditArguments;
+  }
+
   private async getBitbucketCloudRepositoryContributors(
     bitbucketApiClient: BitbucketCloudApiClient,
     repositories: BitbucketCloudRepository[],

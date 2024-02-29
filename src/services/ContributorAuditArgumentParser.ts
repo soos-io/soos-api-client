@@ -2,12 +2,8 @@ import { ArgumentParser } from "argparse";
 import { ScmType } from "../enums";
 import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
-import GitHubContributorAuditProvider, {
-  IGitHubContributorAuditArguments,
-} from "./ContributorAuditService/providers/GitHub/GitHubContributorAuditProvider";
-import BitbucketCloudContributorAuditProvider, {
-  IBitBucketContributorAuditArguments,
-} from "./ContributorAuditService/providers/BitbucketCloud/BitbucketCloudContributorAuditProvider";
+import GitHubContributorAuditProvider from "./ContributorAuditService/providers/GitHub/GitHubContributorAuditProvider";
+import BitbucketCloudContributorAuditProvider from "./ContributorAuditService/providers/BitbucketCloud/BitbucketCloudContributorAuditProvider";
 
 interface IContributorAuditArguments extends ICommonArguments {
   days: number;
@@ -48,19 +44,17 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
     });
   }
 
-  parseArguments(): IGitHubContributorAuditArguments | IBitBucketContributorAuditArguments {
+  parseArguments() {
     this.addCommonArguments();
     this.addBaseContributorArguments();
     const args = this.argumentParser.parse_known_args()[0] as IContributorAuditArguments;
 
     switch (args.scmType) {
       case ScmType.GitHub: {
-        GitHubContributorAuditProvider.addProviderArgs(this.argumentParser);
-        return this.argumentParser.parse_args() as IGitHubContributorAuditArguments;
+        return GitHubContributorAuditProvider.parseArgs(this.argumentParser);
       }
       case ScmType.BitbucketCloud: {
-        BitbucketCloudContributorAuditProvider.addProviderArgs(this.argumentParser);
-        return this.argumentParser.parse_args() as IBitBucketContributorAuditArguments;
+        return BitbucketCloudContributorAuditProvider.parseArgs(this.argumentParser);
       }
       default:
         throw new Error("Invalid scmType");
