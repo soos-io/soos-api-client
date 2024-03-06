@@ -131,6 +131,7 @@ class GitHubApiClient {
           }
           return client(config);
         }
+
         if (response?.status) {
           soosLogger.verboseDebug(apiClientName, `Response Status: ${response.status}`);
         }
