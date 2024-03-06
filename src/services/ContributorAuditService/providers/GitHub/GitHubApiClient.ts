@@ -135,8 +135,8 @@ class GitHubApiClient {
         if (response?.status) {
           soosLogger.verboseDebug(apiClientName, `Response Status: ${response.status}`);
         }
-        if (response?.message) {
-          soosLogger.verboseDebug(apiClientName, `Response Message: ${response.message}`);
+        if (response?.data?.message) {
+          soosLogger.verboseDebug(apiClientName, `Response Message: ${response.data.message}`);
         }
         return Promise.reject(error);
       },
