@@ -51,7 +51,6 @@ class SOOSLogger {
 
   setMinLogLevel(minLogLevel: LogLevel) {
     this.minLogLevel = minLogLevel;
-    if (this.minLogLevel === LogLevel.DEBUG) this.setVerbose(true);
   }
 
   debug(message?: any, ...optionalParams: any[]): void {

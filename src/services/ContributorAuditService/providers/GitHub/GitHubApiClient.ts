@@ -151,11 +151,10 @@ class GitHubApiClient {
   ): Promise<AxiosResponse> {
     let data = response.data;
     let nextUrl = GitHubApiClient.getNextPageUrl(response);
-    while (nextUrl) {
+    if (nextUrl) {
       soosLogger.verboseDebug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get(nextUrl);
       data = data.concat(nextPageResponse.data);
-      nextUrl = GitHubApiClient.getNextPageUrl(nextPageResponse);
     }
 
     return { ...response, data };
