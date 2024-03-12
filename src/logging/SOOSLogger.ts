@@ -45,7 +45,8 @@ class SOOSLogger {
   }
 
   setVerbose(verbose: boolean) {
-    this.verbose = verbose;
+    // TODO - PA-13294 - Consolidate verbose and log level to avoid overriding log level
+    this.verbose = this.verbose ? this.verbose : verbose;
     if (this.verbose) this.minLogLevel = LogLevel.DEBUG;
   }
 
