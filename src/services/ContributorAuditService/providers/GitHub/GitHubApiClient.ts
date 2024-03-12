@@ -104,7 +104,7 @@ class GitHubApiClient {
       async (response) => {
         soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         if (response.config.url?.includes("per_page")) {
-          return await GitHubApiClient.handlePagination(response, client);
+          return await GitHubApiClient.handleNextPage(response, client);
         }
         return response;
       },
@@ -112,7 +112,7 @@ class GitHubApiClient {
         const { config, response } = error;
         const maxRetries = 3;
         config.retryCount = config.retryCount || 0;
-
+        // NOTE - You can get 403 or 249 https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api?apiVersion=2022-11-28#rate-limit-errors
         if (
           (response?.status === 429 || response?.status === 403) &&
           config.retryCount < maxRetries
@@ -145,17 +145,16 @@ class GitHubApiClient {
     return client;
   }
 
-  private static async handlePagination(
+  private static async handleNextPage(
     response: AxiosResponse,
     client: AxiosInstance,
   ): Promise<AxiosResponse> {
     let data = response.data;
     let nextUrl = GitHubApiClient.getNextPageUrl(response);
-    while (nextUrl) {
+    if (nextUrl) {
       soosLogger.verboseDebug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get(nextUrl);
       data = data.concat(nextPageResponse.data);
-      nextUrl = GitHubApiClient.getNextPageUrl(nextPageResponse);
     }
 
     return { ...response, data };
