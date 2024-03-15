@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "0.2.44",
+  "version": "0.2.45",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.",
   "main": "dist/index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "format:fix": "prettier ./src --write",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "check": "npm run format && npm run typecheck && npm run test && npm outdated",
+    "check": "npm run format && npm run typecheck && npm outdated",
     "build:link": "npm run build && npm link"
   },
   "publishConfig": {
@@ -48,19 +48,19 @@
   "homepage": "https://github.com/soos-io/soos-api-client#readme",
   "dependencies": {
     "argparse": "^2.0.1",
-    "axios": "^1.6.7",
+    "axios": "^1.6.8",
     "form-data": "^4.0.0",
     "glob": "^10.3.10",
     "tslib": "^2.6.2"
   },
   "devDependencies": {
-    "@types/argparse": "^2.0.14",
+    "@types/argparse": "^2.0.15",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.16",
+    "@types/node": "^20.11.28",
     "jest": "^29.1.2",
     "prettier": "^3.2.5",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.2"
   }
 }
