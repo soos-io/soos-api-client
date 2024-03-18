@@ -33,6 +33,7 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
     this.addEnumArgument(this.argumentParser, "--saveResults", ScmResultsFormat, {
       help: "Save results to file, options available: JSON, TXT.",
       required: false,
+      default: ScmResultsFormat.TXT,
     });
 
     this.addEnumArgument(this.argumentParser, "--scmType", ScmType, {
