@@ -1,6 +1,6 @@
 import SOOSHooksApiClient, { IContributorAuditModel } from "../../api/SOOSHooksApiClient";
 import { SOOS_CONSTANTS } from "../../constants";
-import { ScmType } from "../../enums";
+import { ScmResultsFormat, ScmType } from "../../enums";
 import { soosLogger } from "../../logging";
 import FileSystem from "fs";
 import * as Path from "path";
@@ -61,16 +61,52 @@ class ContributorAuditService {
     soosLogger.info(`Results uploaded successfully.`);
   }
 
-  public async saveResults(results: IContributorAuditModel) {
+  public async saveResults(results: IContributorAuditModel, format: ScmResultsFormat) {
     soosLogger.info(`Saving results.`);
+    switch (format) {
+      case ScmResultsFormat.JSON: {
+        await this.saveResultsAsJSON(results);
+        break;
+      }
+      case ScmResultsFormat.TXT: {
+        await this.saveResultsAsTXT(results);
+        break;
+      }
+      default: {
+        throw new Error(`Unsupported format: ${format}`);
+      }
+    }
+  }
+
+  private async saveResultsAsJSON(results: IContributorAuditModel) {
     FileSystem.writeFileSync(
-      Path.join(process.cwd(), SOOS_CONSTANTS.Files.ContributorAuditOutput),
+      Path.join(process.cwd(), `${SOOS_CONSTANTS.Files.ContributorAuditResults}.json`),
       JSON.stringify(results, null, 2),
     );
     soosLogger.info(
       `Results saved successfully ${Path.join(
         process.cwd(),
-        SOOS_CONSTANTS.Files.ContributorAuditOutput,
+        `${SOOS_CONSTANTS.Files.ContributorAuditResults}.json`,
+      )}`,
+    );
+  }
+
+  private async saveResultsAsTXT(results: IContributorAuditModel) {
+    const uniqueContributors = new Set<string>();
+    results.contributors
+      .sort((a, b) => a.username.localeCompare(b.username))
+      .forEach((contributor) => {
+        uniqueContributors.add(contributor.username);
+      });
+
+    FileSystem.writeFileSync(
+      Path.join(process.cwd(), `${SOOS_CONSTANTS.Files.ContributorAuditResults}.txt`),
+      Array.from(uniqueContributors).join("\n"),
+    );
+    soosLogger.info(
+      `Results saved successfully ${Path.join(
+        process.cwd(),
+        `${SOOS_CONSTANTS.Files.ContributorAuditResults}.txt`,
       )}`,
     );
   }

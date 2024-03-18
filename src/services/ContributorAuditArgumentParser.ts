@@ -1,5 +1,5 @@
 import { ArgumentParser } from "argparse";
-import { ScmType } from "../enums";
+import { ScmResultsFormat, ScmType } from "../enums";
 import { SOOS_CONTRIBUTOR_AUDIT_CONSTANTS } from "./ContributorAuditService/constants";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
 import GitHubContributorAuditProvider from "./ContributorAuditService/providers/GitHub/GitHubContributorAuditProvider";
@@ -8,7 +8,7 @@ import BitbucketCloudContributorAuditProvider from "./ContributorAuditService/pr
 interface IContributorAuditArguments extends ICommonArguments {
   days: number;
   secret: string;
-  saveResults: boolean;
+  saveResults: ScmResultsFormat;
   scmType: ScmType;
 }
 
@@ -30,10 +30,8 @@ class ContributorAuditArgumentParser extends ArgumentParserBase {
       type: Number,
     });
 
-    this.argumentParser.add_argument("--saveResults", {
-      help: "Save results to file.",
-      action: "store_true",
-      default: false,
+    this.addEnumArgument(this.argumentParser, "--saveResults", ScmResultsFormat, {
+      help: "Save results to file, options available: JSON, TXT.",
       required: false,
     });
 
