@@ -4,7 +4,7 @@ import SOOSAnalysisApiClient, {
   IUploadManifestFilesResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
-import SOOSUserApiClient, { IApplicationStatusMessage } from "../api/SOOSUserApiClient";
+import SOOSUserApiClient from "../api/SOOSUserApiClient";
 import { SOOS_CONSTANTS } from "../constants";
 import {
   ContributingDeveloperSource,
@@ -14,7 +14,6 @@ import {
   PackageManagerType,
   ScanStatus,
   ScanType,
-  SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
 import { StringUtilities, formatBytes, isNil, sleep } from "../utilities";
@@ -139,31 +138,6 @@ class AnalysisService {
     return new AnalysisService(analysisApiClient, projectsApiClient, userApiClient, hooksApiClient);
   }
 
-  private logStatusMessage(message: IApplicationStatusMessage | null): void {
-    if (message) {
-      switch (message.severity) {
-        case SeverityEnum.Unknown:
-        case SeverityEnum.None:
-        case SeverityEnum.Info:
-        case SeverityEnum.Low:
-          soosLogger.info(message.message);
-          break;
-        case SeverityEnum.Medium:
-        case SeverityEnum.High:
-          soosLogger.warn(message.message);
-          break;
-        case SeverityEnum.Critical:
-          soosLogger.error(message.message);
-          break;
-      }
-
-      if (message.url) {
-        const linkText = message.linkText ? `[${message.linkText}]` : "";
-        soosLogger.info(`${linkText}(${message.url})`);
-      }
-    }
-  }
-
   async setupScan({
     clientId,
     projectName,
@@ -182,10 +156,10 @@ class AnalysisService {
     toolName,
     toolVersion,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
-    soosLogger.info("Checking status...");
+    /*soosLogger.info("Checking status...");
     const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
     this.logStatusMessage(applicationStatus.statusMessage);
-    this.logStatusMessage(applicationStatus.clientMessage);
+    this.logStatusMessage(applicationStatus.clientMessage);*/
     soosLogger.logLineSeparator();
     soosLogger.info(`Starting SOOS ${scanType} Analysis`);
     soosLogger.info(`Creating scan for project '${projectName}'...`);
