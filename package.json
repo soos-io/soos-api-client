@@ -57,6 +57,9 @@
     "glob": "^10.4.1",
     "tslib": "^2.6.2"
   },
+  "overrides": {
+    "glob": "^10.4.1"
+  },
   "devDependencies": {
     "@types/argparse": "^2.0.16",
     "@types/jest": "^29.5.12",
