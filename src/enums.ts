@@ -129,3 +129,17 @@ export enum OnFailure {
   Continue = "continue_on_failure",
   Fail = "fail_the_build",
 }
+
+export enum HashAlgorithmEnum {
+  Unknown = "Unknown",
+  Md5 = "Md5",
+  Sha1 = "Sha1",
+  Sha256 = "Sha256",
+  Sha512 = "Sha512",
+}
+
+export enum FileMatchTypeEnum {
+  Manifest = "Manifest",
+  FileHash = "FileHash",
+  ManifestAndFileHash = "ManifestAndFileHash",
+}

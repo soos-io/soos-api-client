@@ -1,6 +1,7 @@
 import { SOOS_CONSTANTS } from "../constants";
 import FormData from "form-data";
 import {
+  HashAlgorithmEnum,
   IntegrationName,
   IntegrationType,
   ManifestStatus,
@@ -57,20 +58,25 @@ interface ICreateScanResponse {
   errors: ICodedMessageModel[] | null;
 }
 
-interface IGetSupportedManifestsRequest {
+interface IGetSupportedScanFileFormatsRequest {
   clientId: string;
 }
 
-interface IGetSupportedManifestsResponsePackageManagerManifestPatterns {
+interface IGetSupportedScanFileFormatsResponsePackageManagerManifestAndHashableFiles {
   packageManager: PackageManagerType;
-  manifests: Array<{
+  supportedManifests: Array<{
     pattern: string;
     isLockFile: boolean;
   }>;
+  hashableFiles: Array<{
+    hashAlgorithm: HashAlgorithmEnum;
+    archiveFileExtensions: Array<string> | null;
+    archiveContentFileExtensions: Array<string> | null;
+  }> | null;
 }
 
-type IGetSupportedManifestsResponse =
-  Array<IGetSupportedManifestsResponsePackageManagerManifestPatterns>;
+type IGetSupportedScanFileFormatsResponse =
+  Array<IGetSupportedScanFileFormatsResponsePackageManagerManifestAndHashableFiles>;
 
 interface IScanStatusRequest {
   scanStatusUrl: string;
@@ -217,11 +223,11 @@ class SOOSAnalysisApiClient {
     return response.data;
   }
 
-  async getSupportedManifests({
+  async getSupportedScanFileFormats({
     clientId,
-  }: IGetSupportedManifestsRequest): Promise<IGetSupportedManifestsResponse> {
-    const response = await this.client.get<IGetSupportedManifestsResponse>(
-      `clients/${clientId}/manifests`,
+  }: IGetSupportedScanFileFormatsRequest): Promise<IGetSupportedScanFileFormatsResponse> {
+    const response = await this.client.get<IGetSupportedScanFileFormatsResponse>(
+      `clients/${clientId}/scan-file-formats`,
     );
     return response.data;
   }
@@ -324,9 +330,9 @@ export {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanRequest,
   ICreateScanResponse,
-  IGetSupportedManifestsRequest,
-  IGetSupportedManifestsResponsePackageManagerManifestPatterns,
-  IGetSupportedManifestsResponse,
+  IGetSupportedScanFileFormatsRequest,
+  IGetSupportedScanFileFormatsResponsePackageManagerManifestAndHashableFiles,
+  IGetSupportedScanFileFormatsResponse,
   IScanStatusRequest,
   IScanStatusResponse,
   IStartScanRequest,

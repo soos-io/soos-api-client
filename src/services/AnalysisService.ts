@@ -1,3 +1,4 @@
+import { FileMatchTypeEnum, HashAlgorithmEnum } from "./../enums";
 import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
@@ -23,6 +24,11 @@ import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
+import { hash } from "crypto";
+
+// TODO: why does require give us the correct file hash, but import does not?
+var fs = require("fs");
+var crypto = require("crypto");
 
 interface IGenerateFormattedOutputParams {
   clientId: string;
@@ -36,9 +42,21 @@ interface IGenerateFormattedOutputParams {
 }
 
 interface IManifestFile {
-  packageManager: PackageManagerType;
+  packageManager: string;
   name: string;
   path: string;
+}
+
+interface ISoosFileHash {
+  hashAlgorithm: string;
+  filename: string;
+  path: string;
+  digest: string;
+}
+
+interface ISoosHashesManifest {
+  packageManager: string;
+  fileHashes: Array<ISoosFileHash>;
 }
 
 interface IStartScanParams {
@@ -481,6 +499,7 @@ class AnalysisService {
     directoriesToExclude,
     sourceCodePath,
     packageManagers,
+    fileMatchType,
   }: {
     clientId: string;
     projectHash: string;
@@ -492,17 +511,18 @@ class AnalysisService {
     directoriesToExclude: string[];
     sourceCodePath: string;
     packageManagers: string[];
+    fileMatchType: FileMatchTypeEnum;
   }): Promise<IManifestFile[]> {
-    const supportedManifestsResponse = await this.analysisApiClient.getSupportedManifests({
+    const supportedScanFileFormats = await this.analysisApiClient.getSupportedScanFileFormats({
       clientId: clientId,
     });
 
     const filteredPackageManagers =
       isNil(packageManagers) || packageManagers.length === 0
-        ? supportedManifestsResponse
-        : supportedManifestsResponse.filter((packageManagerManifests) =>
+        ? supportedScanFileFormats
+        : supportedScanFileFormats.filter((packageManagerScanFileFormats) =>
             packageManagers.some((pm) =>
-              StringUtilities.areEqual(pm, packageManagerManifests.packageManager, {
+              StringUtilities.areEqual(pm, packageManagerScanFileFormats.packageManager, {
                 sensitivity: "base",
               }),
             ),
@@ -513,6 +533,19 @@ class AnalysisService {
       projectHash,
     });
 
+    var manifestFormats = filteredPackageManagers.flatMap((fpm) => {
+      return {
+        packageManager: fpm.packageManager,
+        manifests:
+          fpm.supportedManifests?.map((sm) => {
+            return {
+              isLockFile: sm.isLockFile,
+              pattern: sm.pattern,
+            };
+          }) ?? [],
+      };
+    });
+
     const manifestFiles = this.searchForManifestFiles({
       clientId,
       projectHash,
@@ -520,12 +553,54 @@ class AnalysisService {
       scanType,
       analysisId,
       scanStatusUrl,
-      packageManagerManifests: filteredPackageManagers,
+      packageManagerManifests: manifestFormats,
       useLockFile: settings.useLockFile ?? false,
       filesToExclude,
       directoriesToExclude,
       sourceCodePath,
     });
+
+    var archiveHashFormats = filteredPackageManagers.flatMap((fpm) => {
+      return {
+        packageManager: fpm.packageManager,
+        fileFormats:
+          fpm.hashableFiles?.map((hf) => {
+            return {
+              hashAlgorithm: hf.hashAlgorithm,
+              patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+            };
+          }) ?? [],
+      };
+    });
+
+    const archiveFileHashes = this.searchForHashableFiles({
+      hashableFileFormats: archiveHashFormats,
+      sourceCodePath,
+      filesToExclude,
+      directoriesToExclude,
+    });
+
+    var contentHashFormats = filteredPackageManagers.flatMap((fpm) => {
+      return {
+        packageManager: fpm.packageManager,
+        fileFormats:
+          fpm.hashableFiles?.map((hf) => {
+            return {
+              hashAlgorithm: hf.hashAlgorithm,
+              patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+            };
+          }) ?? [],
+      };
+    });
+
+    const contentFileHashes = this.searchForHashableFiles({
+      hashableFileFormats: contentHashFormats,
+      sourceCodePath,
+      filesToExclude,
+      directoriesToExclude,
+    });
+
+    // TODO: generate hash manifests for archiveFileHashes and contentFileHashes
 
     return manifestFiles;
   }
@@ -641,6 +716,88 @@ class AnalysisService {
     }
 
     return manifestFiles;
+  }
+
+  private searchForHashableFiles({
+    hashableFileFormats,
+    sourceCodePath,
+    filesToExclude,
+    directoriesToExclude,
+  }: {
+    hashableFileFormats: Array<{
+      packageManager: PackageManagerType;
+      fileFormats: Array<{
+        patterns: Array<string>;
+        hashAlgorithm: HashAlgorithmEnum;
+      }>;
+    }>;
+    sourceCodePath: string;
+    filesToExclude: string[];
+    directoriesToExclude: string[];
+  }): Array<ISoosHashesManifest> {
+    const currentDirectory = process.cwd();
+    soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
+
+    process.chdir(sourceCodePath);
+    const fileHashes = hashableFileFormats.reduce<Array<ISoosHashesManifest>>(
+      (accumulator, fileFormatToHash) => {
+        const matches = fileFormatToHash.fileFormats.flatMap((fileFormat) => {
+          return fileFormat.patterns.flatMap((matchPattern) => {
+            const manifestGlobPattern = matchPattern.startsWith(".")
+              ? `*${matchPattern}` // ends with
+              : matchPattern; // wildcard match
+
+            const pattern = `**/${manifestGlobPattern}`;
+            const files = Glob.sync(pattern, {
+              ignore: [
+                ...(filesToExclude || []),
+                ...directoriesToExclude,
+                SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
+              ],
+              nocase: true,
+            });
+
+            // This is needed to resolve the path as an absolute opposed to trying to open the file at current directory.
+            const absolutePathFiles = files.map((x) => Path.resolve(x));
+            const matchingFilesMessage = `${absolutePathFiles.length} files found matching pattern '${matchPattern}'.`;
+            if (absolutePathFiles.length > 0) {
+              soosLogger.info(matchingFilesMessage);
+            } else {
+              soosLogger.verboseInfo(matchingFilesMessage);
+            }
+
+            return absolutePathFiles.flat().map((filePath): ISoosFileHash => {
+              const filename = Path.basename(filePath);
+              const fileContent = fs.readFileSync(filePath);
+              const digest = crypto
+                .createHash(fileFormat.hashAlgorithm)
+                .update(fileContent, "utf8")
+                .digest("hex");
+
+              soosLogger.debug(`Found '${filePath}' (${digest})`);
+              return {
+                hashAlgorithm: fileFormat.hashAlgorithm,
+                filename: filename,
+                path: filePath,
+                digest: digest,
+              };
+            });
+          });
+        });
+
+        return accumulator.concat({
+          packageManager: fileFormatToHash.packageManager,
+          fileHashes: matches,
+        });
+      },
+      [],
+    );
+
+    process.chdir(currentDirectory);
+    soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
+    soosLogger.info(`Generated ${fileHashes.length} file hashes.`);
+
+    return fileHashes;
   }
 
   async getAnalysisFilesAsFormData(
