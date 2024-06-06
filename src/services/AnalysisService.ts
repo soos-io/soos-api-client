@@ -609,9 +609,7 @@ class AnalysisService {
           directoriesToExclude,
         });
 
-    // TODO: generate hash manifests for archiveFileHashes and contentFileHashes
     // TODO: PA-14211 we could probably just add this to the form files directly
-
     const hashManifests = (archiveFileHashManifests ?? []).concat(contentFileHashManifests ?? []);
 
     if (runFileHashing && hashManifests) {
