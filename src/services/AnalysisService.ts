@@ -24,7 +24,6 @@ import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
-import { hash } from "crypto";
 
 // TODO: why does require give us the correct file hash, but import does not?
 var fs = require("fs");
@@ -488,34 +487,38 @@ class AnalysisService {
     return { filePaths: filesToUpload, hasMoreThanMaximumFiles };
   }
 
-  async findManifestFiles({
+  async findManifestsAndHashableFiles({
     clientId,
     projectHash,
-    branchHash,
-    scanType,
-    analysisId,
-    scanStatusUrl,
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
+    workingDirectory,
     packageManagers,
     fileMatchType,
   }: {
     clientId: string;
     projectHash: string;
-    branchHash: string;
-    scanType: ScanType;
-    analysisId: string;
-    scanStatusUrl: string;
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
+    workingDirectory: string;
     packageManagers: string[];
     fileMatchType: FileMatchTypeEnum;
-  }): Promise<IManifestFile[]> {
+  }): Promise<{
+    manifestFiles: IManifestFile[] | null;
+    hashManifests: ISoosHashesManifest[] | null;
+  }> {
     const supportedScanFileFormats = await this.analysisApiClient.getSupportedScanFileFormats({
       clientId: clientId,
     });
+
+    const runFileHashing =
+      fileMatchType === FileMatchTypeEnum.FileHash ||
+      fileMatchType === FileMatchTypeEnum.ManifestAndFileHash;
+    const runManifestMatching =
+      fileMatchType === FileMatchTypeEnum.Manifest ||
+      fileMatchType === FileMatchTypeEnum.ManifestAndFileHash;
 
     const filteredPackageManagers =
       isNil(packageManagers) || packageManagers.length === 0
@@ -533,97 +536,108 @@ class AnalysisService {
       projectHash,
     });
 
-    var manifestFormats = filteredPackageManagers.flatMap((fpm) => {
-      return {
-        packageManager: fpm.packageManager,
-        manifests:
-          fpm.supportedManifests?.map((sm) => {
-            return {
-              isLockFile: sm.isLockFile,
-              pattern: sm.pattern,
-            };
-          }) ?? [],
-      };
-    });
+    var manifestFormats = !runManifestMatching
+      ? []
+      : filteredPackageManagers.flatMap((fpm) => {
+          return {
+            packageManager: fpm.packageManager,
+            manifests:
+              fpm.supportedManifests?.map((sm) => {
+                return {
+                  isLockFile: sm.isLockFile,
+                  pattern: sm.pattern,
+                };
+              }) ?? [],
+          };
+        });
 
-    const manifestFiles = this.searchForManifestFiles({
-      clientId,
-      projectHash,
-      branchHash,
-      scanType,
-      analysisId,
-      scanStatusUrl,
-      packageManagerManifests: manifestFormats,
-      useLockFile: settings.useLockFile ?? false,
-      filesToExclude,
-      directoriesToExclude,
-      sourceCodePath,
-    });
+    const manifestFiles = !runManifestMatching
+      ? null
+      : this.searchForManifestFiles({
+          packageManagerManifests: manifestFormats,
+          useLockFile: settings.useLockFile ?? false,
+          filesToExclude,
+          directoriesToExclude,
+          sourceCodePath,
+        });
 
-    var archiveHashFormats = filteredPackageManagers.flatMap((fpm) => {
-      return {
-        packageManager: fpm.packageManager,
-        fileFormats:
-          fpm.hashableFiles?.map((hf) => {
-            return {
-              hashAlgorithm: hf.hashAlgorithm,
-              patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-            };
-          }) ?? [],
-      };
-    });
+    var archiveHashFormats = !runFileHashing
+      ? []
+      : filteredPackageManagers.flatMap((fpm) => {
+          return {
+            packageManager: fpm.packageManager,
+            fileFormats:
+              fpm.hashableFiles?.map((hf) => {
+                return {
+                  hashAlgorithm: hf.hashAlgorithm,
+                  patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                };
+              }) ?? [],
+          };
+        });
 
-    const archiveFileHashes = this.searchForHashableFiles({
-      hashableFileFormats: archiveHashFormats,
-      sourceCodePath,
-      filesToExclude,
-      directoriesToExclude,
-    });
+    const archiveFileHashManifests = !runFileHashing
+      ? null
+      : this.searchForHashableFiles({
+          hashableFileFormats: archiveHashFormats,
+          sourceCodePath,
+          filesToExclude,
+          directoriesToExclude,
+        });
 
-    var contentHashFormats = filteredPackageManagers.flatMap((fpm) => {
-      return {
-        packageManager: fpm.packageManager,
-        fileFormats:
-          fpm.hashableFiles?.map((hf) => {
-            return {
-              hashAlgorithm: hf.hashAlgorithm,
-              patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-            };
-          }) ?? [],
-      };
-    });
+    var contentHashFormats = !runFileHashing
+      ? []
+      : filteredPackageManagers.flatMap((fpm) => {
+          return {
+            packageManager: fpm.packageManager,
+            fileFormats:
+              fpm.hashableFiles?.map((hf) => {
+                return {
+                  hashAlgorithm: hf.hashAlgorithm,
+                  patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                };
+              }) ?? [],
+          };
+        });
 
-    const contentFileHashes = this.searchForHashableFiles({
-      hashableFileFormats: contentHashFormats,
-      sourceCodePath,
-      filesToExclude,
-      directoriesToExclude,
-    });
+    const contentFileHashManifests = !runFileHashing
+      ? null
+      : this.searchForHashableFiles({
+          hashableFileFormats: contentHashFormats,
+          sourceCodePath,
+          filesToExclude,
+          directoriesToExclude,
+        });
 
     // TODO: generate hash manifests for archiveFileHashes and contentFileHashes
+    // TODO: PA-14211 we could probably just add this to the form files directly
 
-    return manifestFiles;
+    const hashManifests = (archiveFileHashManifests ?? []).concat(contentFileHashManifests ?? []);
+
+    if (runFileHashing && hashManifests) {
+      soosLogger.info(`Generating ${hashManifests.length} SOOS Hash Manifests`);
+
+      for (const soosHashesManifest of hashManifests) {
+        FileSystem.writeFileSync(
+          Path.join(
+            workingDirectory,
+            `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`,
+          ),
+          JSON.stringify(soosHashesManifest, null, 2),
+        );
+      }
+    }
+
+    return { manifestFiles, hashManifests };
   }
 
-  private async searchForManifestFiles({
-    clientId,
-    projectHash,
-    branchHash,
-    scanType,
-    analysisId,
-    scanStatusUrl,
+  private searchForManifestFiles({
     packageManagerManifests,
     useLockFile,
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
   }: {
-    clientId: string;
-    projectHash: string;
-    branchHash: string;
-    scanType: ScanType;
-    analysisId: string;
-    scanStatusUrl: string;
     packageManagerManifests: Array<{
       packageManager: PackageManagerType;
       manifests: Array<{
@@ -635,7 +649,7 @@ class AnalysisService {
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
-  }): Promise<Array<IManifestFile>> {
+  }): Array<IManifestFile> {
     const currentDirectory = process.cwd();
     soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
     process.chdir(sourceCodePath);
@@ -698,22 +712,6 @@ class AnalysisService {
     process.chdir(currentDirectory);
     soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
     soosLogger.info(`${manifestFiles.length} manifest files found.`);
-
-    if (manifestFiles.length === 0) {
-      const errorMessage =
-        "No valid manifests found, cannot continue. For more help, please visit https://kb.soos.io/help/error-no-valid-manifests-found";
-      await this.updateScanStatus({
-        clientId: clientId,
-        projectHash,
-        branchHash,
-        scanType,
-        analysisId: analysisId,
-        status: ScanStatus.Incomplete,
-        message: errorMessage,
-        scanStatusUrl,
-      });
-      throw new Error(errorMessage);
-    }
 
     return manifestFiles;
   }

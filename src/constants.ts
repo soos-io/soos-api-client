@@ -26,6 +26,7 @@ export const SOOS_CONSTANTS = {
   },
   SCA: {
     SoosPackageDirToExclude: "**/soos/**",
+    SoosFileHashesManifest: "_soos_hashes.json",
   },
   Status: {
     DelayTime: 5000,
