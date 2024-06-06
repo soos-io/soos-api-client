@@ -1,6 +1,9 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import { IntegrationName, OnFailure, ScanStatus } from "./enums";
+import fs from "fs";
+import crypto from "node:crypto";
+import { BinaryToTextEncoding } from "crypto";
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
 
@@ -114,6 +117,16 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${count} ${unit}`;
 };
 
+const generateFileHash = (
+  hashAlgorithm: string,
+  encoding: BufferEncoding,
+  digestEncoding: BinaryToTextEncoding,
+  filePath: string,
+): string => {
+  const fileContent = fs.readFileSync(filePath, encoding);
+  return crypto.createHash(hashAlgorithm).update(fileContent, encoding).digest(digestEncoding);
+};
+
 const getAnalysisExitCodeWithMessage = (
   scanStatus: ScanStatus,
   integrationName: IntegrationName,
@@ -200,6 +213,7 @@ export {
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
+  generateFileHash,
   getAnalysisExitCodeWithMessage,
   DateUtilities,
   StringUtilities,

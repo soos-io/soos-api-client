@@ -13,6 +13,7 @@ import {
 import { AxiosInstance } from "axios";
 import { ICodedMessageModel } from "../models";
 import SOOSApiClient from "./SOOSApiClient";
+import { BinaryToTextEncoding } from "node:crypto";
 
 const CompletedScanStatuses = [
   ScanStatus.Error,
@@ -69,7 +70,11 @@ interface IGetSupportedScanFileFormatsResponsePackageManagerManifestAndHashableF
     isLockFile: boolean;
   }>;
   hashableFiles: Array<{
-    hashAlgorithm: HashAlgorithmEnum;
+    hashAlgorithms: Array<{
+      hashAlgorithm: HashAlgorithmEnum;
+      bufferEncoding: BufferEncoding; // TODO: should this be our own enum?
+      digestEncoding: BinaryToTextEncoding; // TODO: should this be our own enum?
+    }>;
     archiveFileExtensions: Array<string> | null;
     archiveContentFileExtensions: Array<string> | null;
   }> | null;

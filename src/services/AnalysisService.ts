@@ -18,16 +18,13 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { StringUtilities, formatBytes, isNil, sleep } from "../utilities";
+import { StringUtilities, formatBytes, generateFileHash, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
-
-// TODO: why does require give us the correct file hash, but import does not?
-var fs = require("fs");
-var crypto = require("crypto");
+import { BinaryToTextEncoding } from "node:crypto";
 
 interface IGenerateFormattedOutputParams {
   clientId: string;
@@ -47,9 +44,13 @@ interface IManifestFile {
 }
 
 interface ISoosFileHash {
-  hashAlgorithm: string;
   filename: string;
   path: string;
+  digests: Array<ISoosDigest>;
+}
+
+interface ISoosDigest {
+  hashAlgorithm: HashAlgorithmEnum;
   digest: string;
 }
 
@@ -569,7 +570,7 @@ class AnalysisService {
             fileFormats:
               fpm.hashableFiles?.map((hf) => {
                 return {
-                  hashAlgorithm: hf.hashAlgorithm,
+                  hashAlgorithms: hf.hashAlgorithms,
                   patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
                 };
               }) ?? [],
@@ -593,7 +594,7 @@ class AnalysisService {
             fileFormats:
               fpm.hashableFiles?.map((hf) => {
                 return {
-                  hashAlgorithm: hf.hashAlgorithm,
+                  hashAlgorithms: hf.hashAlgorithms,
                   patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
                 };
               }) ?? [],
@@ -724,7 +725,11 @@ class AnalysisService {
       packageManager: PackageManagerType;
       fileFormats: Array<{
         patterns: Array<string>;
-        hashAlgorithm: HashAlgorithmEnum;
+        hashAlgorithms: Array<{
+          hashAlgorithm: HashAlgorithmEnum;
+          bufferEncoding: BufferEncoding; // TODO: should this be our own enum?
+          digestEncoding: BinaryToTextEncoding; // TODO: should this be our own enum?
+        }>;
       }>;
     }>;
     sourceCodePath: string;
@@ -764,18 +769,32 @@ class AnalysisService {
 
             return absolutePathFiles.flat().map((filePath): ISoosFileHash => {
               const filename = Path.basename(filePath);
-              const fileContent = fs.readFileSync(filePath);
-              const digest = crypto
-                .createHash(fileFormat.hashAlgorithm)
-                .update(fileContent, "utf8")
-                .digest("hex");
 
-              soosLogger.debug(`Found '${filePath}' (${digest})`);
+              var fileDigests = fileFormat.hashAlgorithms.map((ha) => {
+                const digest = generateFileHash(
+                  ha.hashAlgorithm,
+                  ha.bufferEncoding,
+                  ha.digestEncoding,
+                  filePath,
+                );
+
+                soosLogger.debug(`Found '${filePath}' (${digest})`);
+
+                return {
+                  digest: digest,
+                  hashAlgorithm: ha.hashAlgorithm,
+                };
+              });
+
               return {
-                hashAlgorithm: fileFormat.hashAlgorithm,
+                digests: fileDigests.map((d) => {
+                  return {
+                    hashAlgorithm: d.hashAlgorithm,
+                    digest: d.digest,
+                  };
+                }),
                 filename: filename,
                 path: filePath,
-                digest: digest,
               };
             });
           });
