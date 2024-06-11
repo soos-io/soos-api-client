@@ -958,5 +958,5 @@ class AnalysisService {
   }
 }
 
-export { GeneratedScanTypes };
+export { GeneratedScanTypes, IManifestFile };
 export default AnalysisService;
