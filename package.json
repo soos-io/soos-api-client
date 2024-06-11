@@ -3,7 +3,6 @@
   "version": "0.2.49-pre.1",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform.",
   "main": "dist/index.js",
-  "type":"module",
   "scripts": {
     "setup:install": "npm install",
     "setup:clean-install": "npm ci",

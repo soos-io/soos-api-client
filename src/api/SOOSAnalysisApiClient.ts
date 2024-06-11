@@ -2,6 +2,7 @@ import { SOOS_CONSTANTS } from "../constants";
 import FormData from "form-data";
 import {
   HashAlgorithmEnum,
+  HashEncodingEnum,
   IntegrationName,
   IntegrationType,
   ManifestStatus,
@@ -13,7 +14,6 @@ import {
 import { AxiosInstance } from "axios";
 import { ICodedMessageModel } from "../models";
 import SOOSApiClient from "./SOOSApiClient";
-import { BinaryToTextEncoding } from "node:crypto";
 
 const CompletedScanStatuses = [
   ScanStatus.Error,
@@ -72,8 +72,8 @@ interface IGetSupportedScanFileFormatsResponsePackageManagerManifestAndHashableF
   hashableFiles: Array<{
     hashAlgorithms: Array<{
       hashAlgorithm: HashAlgorithmEnum;
-      bufferEncoding: BufferEncoding; // TODO: should this be our own enum?
-      digestEncoding: BinaryToTextEncoding; // TODO: should this be our own enum?
+      bufferEncoding: HashEncodingEnum;
+      digestEncoding: HashEncodingEnum;
     }>;
     archiveFileExtensions: Array<string> | null;
     archiveContentFileExtensions: Array<string> | null;

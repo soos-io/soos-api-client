@@ -138,6 +138,13 @@ export enum HashAlgorithmEnum {
   Sha512 = "Sha512",
 }
 
+export enum HashEncodingEnum {
+  Utf8 = "utf8",
+  Base64 = "base64",
+  Binary = "binary",
+  Hex = "hex",
+}
+
 export enum FileMatchTypeEnum {
   Manifest = "Manifest",
   FileHash = "FileHash",

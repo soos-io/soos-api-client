@@ -1,4 +1,4 @@
-import { FileMatchTypeEnum, HashAlgorithmEnum } from "./../enums";
+import { FileMatchTypeEnum, HashAlgorithmEnum, HashEncodingEnum } from "./../enums";
 import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
@@ -24,7 +24,6 @@ import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
-import { BinaryToTextEncoding } from "node:crypto";
 
 interface IGenerateFormattedOutputParams {
   clientId: string;
@@ -727,8 +726,8 @@ class AnalysisService {
         patterns: Array<string>;
         hashAlgorithms: Array<{
           hashAlgorithm: HashAlgorithmEnum;
-          bufferEncoding: BufferEncoding; // TODO: should this be our own enum?
-          digestEncoding: BinaryToTextEncoding; // TODO: should this be our own enum?
+          bufferEncoding: HashEncodingEnum;
+          digestEncoding: HashEncodingEnum;
         }>;
       }>;
     }>;
