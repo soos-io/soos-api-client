@@ -613,16 +613,14 @@ class AnalysisService {
     const hashManifests = (archiveFileHashManifests ?? []).concat(contentFileHashManifests ?? []);
 
     if (runFileHashing && hashManifests) {
-      soosLogger.info(`Generating ${hashManifests.length} SOOS Hash Manifests`);
-
       for (const soosHashesManifest of hashManifests) {
-        FileSystem.writeFileSync(
-          Path.join(
-            workingDirectory,
-            `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`,
-          ),
-          JSON.stringify(soosHashesManifest, null, 2),
+        const manifestPath = Path.join(
+          workingDirectory,
+          `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`,
         );
+
+        soosLogger.info(`Generating SOOS hashes manifest: ${manifestPath}`);
+        FileSystem.writeFileSync(manifestPath, JSON.stringify(soosHashesManifest, null, 2));
       }
     }
 

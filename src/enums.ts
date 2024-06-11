@@ -139,10 +139,10 @@ export enum HashAlgorithmEnum {
 }
 
 export enum HashEncodingEnum {
-  Utf8 = "utf8",
-  Base64 = "base64",
-  Binary = "binary",
-  Hex = "hex",
+  Utf8 = "Utf8",
+  Base64 = "Base64",
+  Binary = "Binary",
+  Hex = "Hex",
 }
 
 export enum FileMatchTypeEnum {

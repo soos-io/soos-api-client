@@ -123,8 +123,8 @@ const generateFileHash = (
   digestEncoding: HashEncodingEnum,
   filePath: string,
 ): string => {
-  const bufferEncoding = encoding as unknown as BufferEncoding;
-  const binaryToTextEncoding = digestEncoding as unknown as BinaryToTextEncoding;
+  const bufferEncoding = encoding.toLowerCase() as unknown as BufferEncoding;
+  const binaryToTextEncoding = digestEncoding.toLowerCase() as unknown as BinaryToTextEncoding;
   const fileContent = fs.readFileSync(filePath, bufferEncoding);
   return crypto
     .createHash(hashAlgorithm)
