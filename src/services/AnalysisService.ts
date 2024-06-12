@@ -552,14 +552,14 @@ class AnalysisService {
         });
 
     const manifestFiles = !runManifestMatching
-      ? null
+      ? []
       : this.searchForManifestFiles({
           packageManagerManifests: manifestFormats,
           useLockFile: settings.useLockFile ?? false,
           filesToExclude,
           directoriesToExclude,
           sourceCodePath,
-        });
+        }) ?? [];
 
     var archiveHashFormats = !runFileHashing
       ? []
@@ -617,13 +617,17 @@ class AnalysisService {
     if (runFileHashing && hashManifests) {
       for (const soosHashesManifest of hashManifests) {
         if (soosHashesManifest.fileHashes.length > 0) {
-          const manifestPath = Path.join(
-            workingDirectory,
-            `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`,
-          );
+          const hashManifestFileName = `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`;
+          const hashManifestPath = Path.join(workingDirectory, hashManifestFileName);
 
-          soosLogger.info(`Generating SOOS hashes manifest: ${manifestPath}`);
-          FileSystem.writeFileSync(manifestPath, JSON.stringify(soosHashesManifest, null, 2));
+          soosLogger.info(`Generating SOOS hashes manifest: ${hashManifestPath}`);
+          FileSystem.writeFileSync(hashManifestPath, JSON.stringify(soosHashesManifest, null, 2));
+
+          manifestFiles.push({
+            packageManager: soosHashesManifest.packageManager,
+            name: hashManifestFileName,
+            path: hashManifestPath,
+          });
         }
       }
     }
