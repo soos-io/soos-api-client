@@ -2,6 +2,7 @@ import { FileMatchTypeEnum, HashAlgorithmEnum, HashEncodingEnum } from "./../enu
 import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
+  IScanStatusResponse,
   IUploadManifestFilesResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
@@ -23,6 +24,7 @@ import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
+import { EOL } from "node:os";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
 
 interface IGenerateFormattedOutputParams {
@@ -299,10 +301,25 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
+    this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true);
 
-    soosLogger.always("".padEnd(25, "-"));
-    soosLogger.always(
+    return scanStatus.status;
+  }
+
+  getFinalScanStatusMessage(
+    scanType: ScanType,
+    scanStatus: IScanStatusResponse,
+    scanUrl: string,
+    formatForConsole: boolean,
+  ): string {
+    const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
+    const output: Array<string> = [];
+
+    if (formatForConsole) {
+      output.push("".padEnd(25, "-"));
+    }
+
+    output.push(
       `Scan ${scanStatus.isSuccess ? "passed" : "failed"}${
         scanStatus.isSuccess ? ", with:" : " because of:"
       }`,
@@ -313,7 +330,7 @@ class AnalysisService {
 
     if (isGeneratedScanType) {
       const vulnerabilityCount = scanStatus.issues?.Vulnerability?.count ?? 0;
-      soosLogger.always(
+      output.push(
         `${StringUtilities.pluralizeWord(
           vulnerabilityCount,
           "Vulnerability:",
@@ -323,7 +340,7 @@ class AnalysisService {
     }
 
     const violationCount = scanStatus.issues?.Violation?.count ?? 0;
-    soosLogger.always(
+    output.push(
       `${StringUtilities.pluralizeWord(violationCount, "Violation:", "Violations:").padEnd(
         maxLengthOfIssueText,
         padChar,
@@ -332,7 +349,7 @@ class AnalysisService {
 
     if (scanType === ScanType.DAST) {
       const dastCount = scanStatus.issues?.Dast?.count ?? 0;
-      soosLogger.always(
+      output.push(
         `${StringUtilities.pluralizeWord(
           dastCount,
           "Web Vulnerability:",
@@ -343,7 +360,7 @@ class AnalysisService {
 
     if (scanType === ScanType.SAST) {
       const sastCount = scanStatus.issues?.Sast?.count ?? 0;
-      soosLogger.always(
+      output.push(
         `${StringUtilities.pluralizeWord(sastCount, "Code Issue:", "Code Issues:").padEnd(
           maxLengthOfIssueText,
           padChar,
@@ -353,7 +370,7 @@ class AnalysisService {
 
     if (isGeneratedScanType) {
       const unknownPackageCount = scanStatus.issues?.UnknownPackage?.count ?? 0;
-      soosLogger.always(
+      output.push(
         `${StringUtilities.pluralizeWord(
           unknownPackageCount,
           "Unknown Package:",
@@ -362,7 +379,7 @@ class AnalysisService {
       );
 
       const dependencyTypoCount = scanStatus.issues?.DependencyTypo?.count ?? 0;
-      soosLogger.always(
+      output.push(
         `${StringUtilities.pluralizeWord(
           dependencyTypoCount,
           "Dependency Typo:",
@@ -371,7 +388,7 @@ class AnalysisService {
       );
 
       const dependencySubstitutionCount = scanStatus.issues?.DependencySubstitution?.count ?? 0;
-      soosLogger.always(
+      output.push(
         `${StringUtilities.pluralizeWord(
           dependencySubstitutionCount,
           "Dependency Substitution:",
@@ -380,9 +397,13 @@ class AnalysisService {
       );
     }
 
-    soosLogger.always("".padEnd(25, "-"));
-    soosLogger.always(`Scan Report: ${scanUrl}`);
-    return scanStatus.status;
+    if (formatForConsole) {
+      output.push("".padEnd(25, "-"));
+    }
+
+    output.push(`Scan Report: ${scanUrl}`);
+
+    return output.join(EOL);
   }
 
   async generateFormattedOutput({
