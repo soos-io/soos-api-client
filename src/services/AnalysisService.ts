@@ -614,13 +614,15 @@ class AnalysisService {
 
     if (runFileHashing && hashManifests) {
       for (const soosHashesManifest of hashManifests) {
-        const manifestPath = Path.join(
-          workingDirectory,
-          `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`,
-        );
+        if (soosHashesManifest.fileHashes.length > 0) {
+          const manifestPath = Path.join(
+            workingDirectory,
+            `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`,
+          );
 
-        soosLogger.info(`Generating SOOS hashes manifest: ${manifestPath}`);
-        FileSystem.writeFileSync(manifestPath, JSON.stringify(soosHashesManifest, null, 2));
+          soosLogger.info(`Generating SOOS hashes manifest: ${manifestPath}`);
+          FileSystem.writeFileSync(manifestPath, JSON.stringify(soosHashesManifest, null, 2));
+        }
       }
     }
 
@@ -775,7 +777,7 @@ class AnalysisService {
                   filePath,
                 );
 
-                soosLogger.debug(`Found '${filePath}' (${digest})`);
+                soosLogger.debug(`Found '${filePath}' (${ha.hashAlgorithm}:${digest})`);
 
                 return {
                   digest: digest,
