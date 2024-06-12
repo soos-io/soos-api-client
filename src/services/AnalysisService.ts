@@ -132,7 +132,7 @@ const InfoColor = "\x1b[34m";
 const LowColor = "\x1b[90m";
 const MediumColor = "\x1b[33m";
 const HighColor = "\x1b[31m";
-const CriticalColor = "\x1b[35m";
+const CriticalColor = "\x1b[31m";
 const ResetColor = "\x1b[0m";
 
 class AnalysisService {
@@ -357,9 +357,9 @@ class AnalysisService {
     }
 
     output.push(
-      `Scan ${scanStatus.isSuccess ? "passed" : "failed"}${
+      `Scan ${scanStatus.isSuccess ? `${this.getColorBySeverity("none", colorize)}passed` : `${this.getColorBySeverity("error", colorize)}failed`}${
         scanStatus.isSuccess ? ", with:" : " because of:"
-      }`,
+      }${this.getResetColor(colorize)}`,
     );
 
     const maxLengthOfIssueText = 26;
@@ -449,11 +449,11 @@ class AnalysisService {
       );
     }
 
+    output.push(`Scan Report: ${scanUrl}`);
+
     if (formatForConsole) {
       output.push("".padEnd(80, "-"));
     }
-
-    output.push(`Scan Report: ${scanUrl}`);
 
     return output;
   }
