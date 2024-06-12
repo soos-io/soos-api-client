@@ -1,6 +1,8 @@
+import { FileMatchTypeEnum, HashAlgorithmEnum, HashEncodingEnum } from "./../enums";
 import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
+  IScanStatusResponse,
   IUploadManifestFilesResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
@@ -17,7 +19,7 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { StringUtilities, formatBytes, isNil, sleep } from "../utilities";
+import { StringUtilities, formatBytes, generateFileHash, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
@@ -36,9 +38,25 @@ interface IGenerateFormattedOutputParams {
 }
 
 interface IManifestFile {
-  packageManager: PackageManagerType;
+  packageManager: string;
   name: string;
   path: string;
+}
+
+interface ISoosFileHash {
+  filename: string;
+  path: string;
+  digests: Array<ISoosDigest>;
+}
+
+interface ISoosDigest {
+  hashAlgorithm: HashAlgorithmEnum;
+  digest: string;
+}
+
+interface ISoosHashesManifest {
+  packageManager: string;
+  fileHashes: Array<ISoosFileHash>;
 }
 
 interface IStartScanParams {
@@ -108,6 +126,14 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
 };
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
+
+const NoneColor = "\x1b[32m";
+const InfoColor = "\x1b[34m";
+const LowColor = "\x1b[90m";
+const MediumColor = "\x1b[33m";
+const HighColor = "\x1b[31m";
+const CriticalColor = "\x1b[31m";
+const ResetColor = "\x1b[0m";
 
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
@@ -282,68 +308,148 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
+    const output = this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true);
 
-    const vulnerabilities = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.Vulnerability?.count ?? 0,
-          "vulnerability",
-          "vulnerabilities",
-        )}) `
-      : "";
+    soosLogger.logLineSeparator();
+    output.map((o) => soosLogger.always(o));
+    soosLogger.logLineSeparator();
 
-    const codeIssues =
-      scanType === ScanType.SAST
-        ? `(${StringUtilities.pluralizeTemplate(
-            scanStatus.issues?.Sast?.count ?? 0,
-            "code issue",
-          )}) `
-        : "";
-
-    const webVulnerabilities =
-      scanType === ScanType.DAST
-        ? `(${StringUtilities.pluralizeTemplate(
-            scanStatus.issues?.Dast?.count ?? 0,
-            "web vulnerability",
-            "web vulnerabilities",
-          )}) `
-        : "";
-
-    const violations = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.Violation?.count ?? 0,
-          "violation",
-        )}) `
-      : "";
-
-    const substitutions = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.DependencySubstitution?.count ?? 0,
-          "dependency substitution",
-        )}) `
-      : "";
-
-    const typos = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.DependencyTypo?.count ?? 0,
-          "dependency typo",
-        )}) `
-      : "";
-
-    const unknownPackages = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.UnknownPackage?.count ?? 0,
-          "unknown package",
-        )}) `
-      : "";
-
-    soosLogger.always(
-      `Scan ${scanStatus.isSuccess ? "passed" : "failed"}${
-        scanStatus.isSuccess ? ", with" : " because of"
-      } ${vulnerabilities}${codeIssues}${webVulnerabilities}${violations}${substitutions}${typos}${unknownPackages}`,
-    );
-    soosLogger.info(`View the results here: ${scanUrl}`);
     return scanStatus.status;
+  }
+
+  private getColorBySeverity(severity: string | undefined, colorize: boolean): string {
+    if (!severity) {
+      return "";
+    }
+
+    switch (severity.toLocaleLowerCase()) {
+      default:
+      case "unknown":
+        return "";
+      case "none":
+        return colorize ? NoneColor : "";
+      case "info":
+        return colorize ? InfoColor : "";
+      case "low":
+        return colorize ? LowColor : "";
+      case "medium":
+        return colorize ? MediumColor : "";
+      case "high":
+        return colorize ? HighColor : "";
+      case "critical":
+        return colorize ? CriticalColor : "";
+    }
+  }
+
+  private getResetColor(colorize: boolean): string {
+    return colorize ? ResetColor : "";
+  }
+
+  getFinalScanStatusMessage(
+    scanType: ScanType,
+    scanStatus: IScanStatusResponse,
+    scanUrl: string,
+    colorize: boolean | undefined = false,
+  ): Array<string> {
+    const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
+    const output: Array<string> = [];
+
+    output.push(
+      `Scan ${scanStatus.isSuccess ? `${this.getColorBySeverity("none", colorize)}passed${this.getResetColor(colorize)}` : `${this.getColorBySeverity("high", colorize)}failed${this.getResetColor(colorize)}`}${
+        scanStatus.isSuccess ? " with:" : " because of:"
+      }`,
+    );
+
+    const maxLengthOfIssueText = 26;
+    const padChar = " ";
+
+    if (isGeneratedScanType) {
+      const vulnerabilityCount = scanStatus.issues?.Vulnerability?.count ?? 0;
+      output.push(
+        `${StringUtilities.pluralizeWord(
+          vulnerabilityCount,
+          "Vulnerability:",
+          "Vulnerabilities:",
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.Vulnerability?.maxSeverity, colorize)}${vulnerabilityCount}${this.getResetColor(colorize)}`,
+      );
+    }
+
+    const violationCount = scanStatus.issues?.Violation?.count ?? 0;
+    output.push(
+      `${StringUtilities.pluralizeWord(violationCount, "Violation:", "Violations:").padEnd(
+        maxLengthOfIssueText,
+        padChar,
+      )}${this.getColorBySeverity(scanStatus.issues?.Violation?.maxSeverity, colorize)}${violationCount}${this.getResetColor(colorize)}`,
+    );
+
+    if (scanType === ScanType.DAST) {
+      const dastCount = scanStatus.issues?.Dast?.count ?? 0;
+      output.push(
+        `${StringUtilities.pluralizeWord(
+          dastCount,
+          "Web Vulnerability:",
+          "Web Vulnerabilities:",
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.Dast?.maxSeverity, colorize)}${dastCount}${this.getResetColor(colorize)}`,
+      );
+    }
+
+    if (scanType === ScanType.SAST) {
+      const sastCount = scanStatus.issues?.Sast?.count ?? 0;
+      output.push(
+        `${StringUtilities.pluralizeWord(sastCount, "Code Issue:", "Code Issues:").padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.Sast?.maxSeverity, colorize)}${sastCount}${this.getResetColor(colorize)}`,
+      );
+    }
+
+    if (isGeneratedScanType) {
+      const unknownPackageCount = scanStatus.issues?.UnknownPackage?.count ?? 0;
+      output.push(
+        `${StringUtilities.pluralizeWord(
+          unknownPackageCount,
+          "Unknown Package:",
+          "Unknown Packages:",
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.UnknownPackage?.maxSeverity, colorize)}${unknownPackageCount}${this.getResetColor(colorize)}`,
+      );
+
+      const dependencyTypoCount = scanStatus.issues?.DependencyTypo?.count ?? 0;
+      output.push(
+        `${StringUtilities.pluralizeWord(
+          dependencyTypoCount,
+          "Dependency Typo:",
+          "Dependency Typos:",
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.DependencyTypo?.maxSeverity, colorize)}${dependencyTypoCount}${this.getResetColor(colorize)}`,
+      );
+
+      const dependencySubstitutionCount = scanStatus.issues?.DependencySubstitution?.count ?? 0;
+      output.push(
+        `${StringUtilities.pluralizeWord(
+          dependencySubstitutionCount,
+          "Dependency Substitution:",
+          "Dependency Substitutions:",
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.DependencySubstitution?.maxSeverity, colorize)}${dependencySubstitutionCount}${this.getResetColor(colorize)}`,
+      );
+    }
+
+    output.push(`Scan Report: ${scanUrl}`);
+
+    return output;
   }
 
   async generateFormattedOutput({
@@ -470,39 +576,43 @@ class AnalysisService {
     return { filePaths: filesToUpload, hasMoreThanMaximumFiles };
   }
 
-  async findManifestFiles({
+  async findManifestsAndHashableFiles({
     clientId,
     projectHash,
-    branchHash,
-    scanType,
-    analysisId,
-    scanStatusUrl,
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
     packageManagers,
+    fileMatchType,
   }: {
     clientId: string;
     projectHash: string;
-    branchHash: string;
-    scanType: ScanType;
-    analysisId: string;
-    scanStatusUrl: string;
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
     packageManagers: string[];
-  }): Promise<IManifestFile[]> {
-    const supportedManifestsResponse = await this.analysisApiClient.getSupportedManifests({
+    fileMatchType: FileMatchTypeEnum;
+  }): Promise<{
+    manifestFiles: IManifestFile[] | null;
+    hashManifests: ISoosHashesManifest[] | null;
+  }> {
+    const supportedScanFileFormats = await this.analysisApiClient.getSupportedScanFileFormats({
       clientId: clientId,
     });
 
+    const runFileHashing =
+      fileMatchType === FileMatchTypeEnum.FileHash ||
+      fileMatchType === FileMatchTypeEnum.ManifestAndFileHash;
+    const runManifestMatching =
+      fileMatchType === FileMatchTypeEnum.Manifest ||
+      fileMatchType === FileMatchTypeEnum.ManifestAndFileHash;
+
     const filteredPackageManagers =
       isNil(packageManagers) || packageManagers.length === 0
-        ? supportedManifestsResponse
-        : supportedManifestsResponse.filter((packageManagerManifests) =>
+        ? supportedScanFileFormats
+        : supportedScanFileFormats.filter((packageManagerScanFileFormats) =>
             packageManagers.some((pm) =>
-              StringUtilities.areEqual(pm, packageManagerManifests.packageManager, {
+              StringUtilities.areEqual(pm, packageManagerScanFileFormats.packageManager, {
                 sensitivity: "base",
               }),
             ),
@@ -513,42 +623,118 @@ class AnalysisService {
       projectHash,
     });
 
-    const manifestFiles = this.searchForManifestFiles({
-      clientId,
-      projectHash,
-      branchHash,
-      scanType,
-      analysisId,
-      scanStatusUrl,
-      packageManagerManifests: filteredPackageManagers,
-      useLockFile: settings.useLockFile ?? false,
-      filesToExclude,
-      directoriesToExclude,
-      sourceCodePath,
-    });
+    var manifestFormats = !runManifestMatching
+      ? []
+      : filteredPackageManagers.flatMap((fpm) => {
+          return {
+            packageManager: fpm.packageManager,
+            manifests:
+              fpm.supportedManifests?.map((sm) => {
+                return {
+                  isLockFile: sm.isLockFile,
+                  pattern: sm.pattern,
+                };
+              }) ?? [],
+          };
+        });
 
-    return manifestFiles;
+    const manifestFiles = !runManifestMatching
+      ? []
+      : this.searchForManifestFiles({
+          packageManagerManifests: manifestFormats,
+          useLockFile: settings.useLockFile ?? false,
+          filesToExclude,
+          directoriesToExclude,
+          sourceCodePath,
+        }) ?? [];
+
+    var archiveHashFormats = !runFileHashing
+      ? []
+      : filteredPackageManagers.flatMap((fpm) => {
+          return !fpm.hashableFiles?.some((hf) => hf.archiveFileExtensions)
+            ? []
+            : {
+                packageManager: fpm.packageManager,
+                fileFormats:
+                  fpm.hashableFiles?.map((hf) => {
+                    return {
+                      hashAlgorithms: hf.hashAlgorithms,
+                      patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                    };
+                  }) ?? [],
+              };
+        });
+
+    const archiveFileHashManifests =
+      !runFileHashing || !archiveHashFormats.some((ahf) => ahf.fileFormats)
+        ? null
+        : this.searchForHashableFiles({
+            hashableFileFormats: archiveHashFormats.filter((ahf) => ahf.fileFormats),
+            sourceCodePath,
+            filesToExclude,
+            directoriesToExclude,
+          });
+
+    var contentHashFormats = !runFileHashing
+      ? []
+      : filteredPackageManagers.flatMap((fpm) => {
+          return !fpm.hashableFiles?.some((hf) => hf.archiveContentFileExtensions)
+            ? []
+            : {
+                packageManager: fpm.packageManager,
+                fileFormats:
+                  fpm.hashableFiles?.map((hf) => {
+                    return {
+                      hashAlgorithms: hf.hashAlgorithms,
+                      patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                    };
+                  }) ?? [],
+              };
+        });
+
+    const contentFileHashManifests =
+      !runFileHashing || !contentHashFormats.some((chf) => chf.fileFormats)
+        ? null
+        : this.searchForHashableFiles({
+            hashableFileFormats: contentHashFormats.filter((chf) => chf.fileFormats),
+            sourceCodePath,
+            filesToExclude,
+            directoriesToExclude,
+          });
+
+    // TODO: PA-14211 we could probably just add this to the form files directly
+    const hashManifests = (archiveFileHashManifests ?? [])
+      .concat(contentFileHashManifests ?? [])
+      .filter((hm) => hm.fileHashes.length > 0);
+
+    if (runFileHashing && hashManifests) {
+      for (const soosHashesManifest of hashManifests) {
+        if (soosHashesManifest.fileHashes.length > 0) {
+          const hashManifestFileName = `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`;
+          const hashManifestPath = Path.join(sourceCodePath, hashManifestFileName);
+
+          soosLogger.info(`Generating SOOS hashes manifest: ${hashManifestPath}`);
+          FileSystem.writeFileSync(hashManifestPath, JSON.stringify(soosHashesManifest, null, 2));
+
+          manifestFiles.push({
+            packageManager: soosHashesManifest.packageManager,
+            name: hashManifestFileName,
+            path: hashManifestPath,
+          });
+        }
+      }
+    }
+
+    return { manifestFiles, hashManifests };
   }
 
-  private async searchForManifestFiles({
-    clientId,
-    projectHash,
-    branchHash,
-    scanType,
-    analysisId,
-    scanStatusUrl,
+  private searchForManifestFiles({
     packageManagerManifests,
     useLockFile,
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
   }: {
-    clientId: string;
-    projectHash: string;
-    branchHash: string;
-    scanType: ScanType;
-    analysisId: string;
-    scanStatusUrl: string;
     packageManagerManifests: Array<{
       packageManager: PackageManagerType;
       manifests: Array<{
@@ -560,7 +746,7 @@ class AnalysisService {
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
-  }): Promise<Array<IManifestFile>> {
+  }): Array<IManifestFile> {
     const currentDirectory = process.cwd();
     soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
     process.chdir(sourceCodePath);
@@ -624,23 +810,106 @@ class AnalysisService {
     soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
     soosLogger.info(`${manifestFiles.length} manifest files found.`);
 
-    if (manifestFiles.length === 0) {
-      const errorMessage =
-        "No valid manifests found, cannot continue. For more help, please visit https://kb.soos.io/help/error-no-valid-manifests-found";
-      await this.updateScanStatus({
-        clientId: clientId,
-        projectHash,
-        branchHash,
-        scanType,
-        analysisId: analysisId,
-        status: ScanStatus.Incomplete,
-        message: errorMessage,
-        scanStatusUrl,
-      });
-      throw new Error(errorMessage);
-    }
-
     return manifestFiles;
+  }
+
+  private searchForHashableFiles({
+    hashableFileFormats,
+    sourceCodePath,
+    filesToExclude,
+    directoriesToExclude,
+  }: {
+    hashableFileFormats: Array<{
+      packageManager: PackageManagerType;
+      fileFormats: Array<{
+        patterns: Array<string>;
+        hashAlgorithms: Array<{
+          hashAlgorithm: HashAlgorithmEnum;
+          bufferEncoding: HashEncodingEnum;
+          digestEncoding: HashEncodingEnum;
+        }>;
+      }>;
+    }>;
+    sourceCodePath: string;
+    filesToExclude: string[];
+    directoriesToExclude: string[];
+  }): Array<ISoosHashesManifest> {
+    const currentDirectory = process.cwd();
+    soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
+
+    process.chdir(sourceCodePath);
+    const fileHashes = hashableFileFormats.reduce<Array<ISoosHashesManifest>>(
+      (accumulator, fileFormatToHash) => {
+        const matches = fileFormatToHash.fileFormats.flatMap((fileFormat) => {
+          return fileFormat.patterns.flatMap((matchPattern) => {
+            const manifestGlobPattern = matchPattern.startsWith(".")
+              ? `*${matchPattern}` // ends with
+              : matchPattern; // wildcard match
+
+            const pattern = `**/${manifestGlobPattern}`;
+            const files = Glob.sync(pattern, {
+              ignore: [
+                ...(filesToExclude || []),
+                ...directoriesToExclude,
+                SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
+              ],
+              nocase: true,
+            });
+
+            // This is needed to resolve the path as an absolute opposed to trying to open the file at current directory.
+            const absolutePathFiles = files.map((x) => Path.resolve(x));
+            const matchingFilesMessage = `${absolutePathFiles.length} files found matching pattern '${matchPattern}'.`;
+            if (absolutePathFiles.length > 0) {
+              soosLogger.info(matchingFilesMessage);
+            } else {
+              soosLogger.verboseInfo(matchingFilesMessage);
+            }
+
+            return absolutePathFiles.flat().map((filePath): ISoosFileHash => {
+              const filename = Path.basename(filePath);
+
+              var fileDigests = fileFormat.hashAlgorithms.map((ha) => {
+                const digest = generateFileHash(
+                  ha.hashAlgorithm,
+                  ha.bufferEncoding,
+                  ha.digestEncoding,
+                  filePath,
+                );
+
+                soosLogger.debug(`Found '${filePath}' (${ha.hashAlgorithm}:${digest})`);
+
+                return {
+                  digest: digest,
+                  hashAlgorithm: ha.hashAlgorithm,
+                };
+              });
+
+              return {
+                digests: fileDigests.map((d) => {
+                  return {
+                    hashAlgorithm: d.hashAlgorithm,
+                    digest: d.digest,
+                  };
+                }),
+                filename: filename,
+                path: filePath,
+              };
+            });
+          });
+        });
+
+        return accumulator.concat({
+          packageManager: fileFormatToHash.packageManager,
+          fileHashes: matches,
+        });
+      },
+      [],
+    );
+
+    process.chdir(currentDirectory);
+    soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
+
+    return fileHashes;
   }
 
   async getAnalysisFilesAsFormData(
@@ -789,5 +1058,5 @@ class AnalysisService {
   }
 }
 
-export { GeneratedScanTypes };
+export { GeneratedScanTypes, IManifestFile };
 export default AnalysisService;

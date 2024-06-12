@@ -1,4 +1,4 @@
-import { IntegrationName, OnFailure, ScanStatus } from "./enums";
+import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus } from "./enums";
 import {
   isNil,
   ensureValue,
@@ -6,6 +6,7 @@ import {
   ensureNonEmptyValue,
   getAnalysisExitCodeWithMessage,
   StringUtilities,
+  generateFileHash,
 } from "./utilities";
 
 describe("isNil", () => {
@@ -269,5 +270,52 @@ describe("StringUtilities.areEqual", () => {
     test("should return false for a non-empty string", () => {
       expect(StringUtilities.isEmptyString("value")).toBe(false);
     });
+  });
+});
+
+describe("generateFileDigest", () => {
+  test("should generate expected sha1 hash using binary file encoding and hex digest conversion", () => {
+    expect(
+      generateFileHash(
+        "sha1",
+        HashEncodingEnum.Binary,
+        HashEncodingEnum.Hex,
+        "./testassets/elasticsearch-grok-8.9.1.jar",
+      ),
+    ).toBe("499f313de5e097fe4db1b623cfb954f18776a88b");
+  });
+  test("should generate expected sha1 hash using hex file encoding and hex digest conversion", () => {
+    expect(
+      generateFileHash(
+        "sha1",
+        HashEncodingEnum.Hex,
+        HashEncodingEnum.Hex,
+        "./testassets/elasticsearch-grok-8.9.1.jar",
+      ),
+    ).toBe("499f313de5e097fe4db1b623cfb954f18776a88b");
+  });
+  test("should generate expected sha512 hash using binary file encoding and base64 digest conversion", () => {
+    expect(
+      generateFileHash(
+        "sha512",
+        HashEncodingEnum.Binary,
+        HashEncodingEnum.Base64,
+        "./testassets/jquery.1.4.2.nupkg",
+      ),
+    ).toBe(
+      "FEk/h76zlaEGtK2MPOgA4jfXGOG4DAMc6CI2OtgcL3F3Cp37Ds2VIlXnJXIQZSyURAS+4bVpvrx9r0d2FZCdQQ==",
+    );
+  });
+  test("should generate expected sha512 hash using base64 file encoding and base64 digest conversion", () => {
+    expect(
+      generateFileHash(
+        "sha512",
+        HashEncodingEnum.Base64,
+        HashEncodingEnum.Base64,
+        "./testassets/jquery.1.4.2.nupkg",
+      ),
+    ).toBe(
+      "FEk/h76zlaEGtK2MPOgA4jfXGOG4DAMc6CI2OtgcL3F3Cp37Ds2VIlXnJXIQZSyURAS+4bVpvrx9r0d2FZCdQQ==",
+    );
   });
 });
