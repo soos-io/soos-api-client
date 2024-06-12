@@ -610,7 +610,9 @@ class AnalysisService {
         });
 
     // TODO: PA-14211 we could probably just add this to the form files directly
-    const hashManifests = (archiveFileHashManifests ?? []).concat(contentFileHashManifests ?? []);
+    const hashManifests = (archiveFileHashManifests ?? [])
+      .concat(contentFileHashManifests ?? [])
+      .filter((hm) => hm.fileHashes.length > 0);
 
     if (runFileHashing && hashManifests) {
       for (const soosHashesManifest of hashManifests) {
