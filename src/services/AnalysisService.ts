@@ -493,7 +493,6 @@ class AnalysisService {
     filesToExclude,
     directoriesToExclude,
     sourceCodePath,
-    workingDirectory,
     packageManagers,
     fileMatchType,
   }: {
@@ -502,7 +501,6 @@ class AnalysisService {
     filesToExclude: string[];
     directoriesToExclude: string[];
     sourceCodePath: string;
-    workingDirectory: string;
     packageManagers: string[];
     fileMatchType: FileMatchTypeEnum;
   }): Promise<{
@@ -618,7 +616,7 @@ class AnalysisService {
       for (const soosHashesManifest of hashManifests) {
         if (soosHashesManifest.fileHashes.length > 0) {
           const hashManifestFileName = `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`;
-          const hashManifestPath = Path.join(workingDirectory, hashManifestFileName);
+          const hashManifestPath = Path.join(sourceCodePath, hashManifestFileName);
 
           soosLogger.info(`Generating SOOS hashes manifest: ${hashManifestPath}`);
           FileSystem.writeFileSync(hashManifestPath, JSON.stringify(soosHashesManifest, null, 2));
