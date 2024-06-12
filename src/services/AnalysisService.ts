@@ -309,7 +309,8 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    soosLogger.always(this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true, true));
+    const output = this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true, true);
+    output.map((o) => soosLogger.always(o));
 
     return scanStatus.status;
   }
@@ -348,12 +349,12 @@ class AnalysisService {
     scanUrl: string,
     formatForConsole: boolean | undefined = true,
     colorize: boolean | undefined = false,
-  ): string {
+  ): Array<string> {
     const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
     const output: Array<string> = [];
 
     if (formatForConsole) {
-      output.push("".padEnd(25, "-"));
+      output.push("".padEnd(80, "-"));
     }
 
     output.push(
@@ -450,12 +451,12 @@ class AnalysisService {
     }
 
     if (formatForConsole) {
-      output.push("".padEnd(25, "-"));
+      output.push("".padEnd(80, "-"));
     }
 
     output.push(`Scan Report: ${scanUrl}`);
 
-    return output.join(EOL);
+    return output;
   }
 
   async generateFormattedOutput({
