@@ -24,7 +24,6 @@ import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
-import { EOL } from "node:os";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
 
 interface IGenerateFormattedOutputParams {
