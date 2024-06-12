@@ -562,50 +562,56 @@ class AnalysisService {
     var archiveHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          return {
-            packageManager: fpm.packageManager,
-            fileFormats:
-              fpm.hashableFiles?.map((hf) => {
-                return {
-                  hashAlgorithms: hf.hashAlgorithms,
-                  patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                };
-              }) ?? [],
-          };
+          return !fpm.hashableFiles?.some((hf) => hf.archiveFileExtensions)
+            ? []
+            : {
+                packageManager: fpm.packageManager,
+                fileFormats:
+                  fpm.hashableFiles?.map((hf) => {
+                    return {
+                      hashAlgorithms: hf.hashAlgorithms,
+                      patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                    };
+                  }) ?? [],
+              };
         });
 
-    const archiveFileHashManifests = !runFileHashing
-      ? null
-      : this.searchForHashableFiles({
-          hashableFileFormats: archiveHashFormats,
-          sourceCodePath,
-          filesToExclude,
-          directoriesToExclude,
-        });
+    const archiveFileHashManifests =
+      !runFileHashing || !archiveHashFormats.some((ahf) => ahf.fileFormats)
+        ? null
+        : this.searchForHashableFiles({
+            hashableFileFormats: archiveHashFormats.filter((ahf) => ahf.fileFormats),
+            sourceCodePath,
+            filesToExclude,
+            directoriesToExclude,
+          });
 
     var contentHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          return {
-            packageManager: fpm.packageManager,
-            fileFormats:
-              fpm.hashableFiles?.map((hf) => {
-                return {
-                  hashAlgorithms: hf.hashAlgorithms,
-                  patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                };
-              }) ?? [],
-          };
+          return !fpm.hashableFiles?.some((hf) => hf.archiveContentFileExtensions)
+            ? []
+            : {
+                packageManager: fpm.packageManager,
+                fileFormats:
+                  fpm.hashableFiles?.map((hf) => {
+                    return {
+                      hashAlgorithms: hf.hashAlgorithms,
+                      patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                    };
+                  }) ?? [],
+              };
         });
 
-    const contentFileHashManifests = !runFileHashing
-      ? null
-      : this.searchForHashableFiles({
-          hashableFileFormats: contentHashFormats,
-          sourceCodePath,
-          filesToExclude,
-          directoriesToExclude,
-        });
+    const contentFileHashManifests =
+      !runFileHashing || !contentHashFormats.some((chf) => chf.fileFormats)
+        ? null
+        : this.searchForHashableFiles({
+            hashableFileFormats: contentHashFormats.filter((chf) => chf.fileFormats),
+            sourceCodePath,
+            filesToExclude,
+            directoriesToExclude,
+          });
 
     // TODO: PA-14211 we could probably just add this to the form files directly
     const hashManifests = (archiveFileHashManifests ?? [])
@@ -813,7 +819,6 @@ class AnalysisService {
 
     process.chdir(currentDirectory);
     soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
-    soosLogger.info(`Generated ${fileHashes.length} file hashes.`);
 
     return fileHashes;
   }
