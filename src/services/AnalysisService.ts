@@ -308,8 +308,11 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    const output = this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true, true);
+    const output = this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true);
+
+    soosLogger.logLineSeparator();
     output.map((o) => soosLogger.always(o));
+    soosLogger.logLineSeparator();
 
     return scanStatus.status;
   }
@@ -346,20 +349,15 @@ class AnalysisService {
     scanType: ScanType,
     scanStatus: IScanStatusResponse,
     scanUrl: string,
-    formatForConsole: boolean | undefined = true,
     colorize: boolean | undefined = false,
   ): Array<string> {
     const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
     const output: Array<string> = [];
 
-    if (formatForConsole) {
-      output.push("".padEnd(80, "-"));
-    }
-
     output.push(
-      `Scan ${scanStatus.isSuccess ? `${this.getColorBySeverity("none", colorize)}passed` : `${this.getColorBySeverity("error", colorize)}failed`}${
+      `Scan ${scanStatus.isSuccess ? `${this.getColorBySeverity("none", colorize)}passed${this.getResetColor(colorize)}` : `${this.getColorBySeverity("error", colorize)}failed${this.getResetColor(colorize)}`}${
         scanStatus.isSuccess ? ", with:" : " because of:"
-      }${this.getResetColor(colorize)}`,
+      }`,
     );
 
     const maxLengthOfIssueText = 26;
@@ -450,10 +448,6 @@ class AnalysisService {
     }
 
     output.push(`Scan Report: ${scanUrl}`);
-
-    if (formatForConsole) {
-      output.push("".padEnd(80, "-"));
-    }
 
     return output;
   }
