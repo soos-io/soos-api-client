@@ -301,65 +301,87 @@ class AnalysisService {
 
     const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
 
-    const vulnerabilities = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.Vulnerability?.count ?? 0,
-          "vulnerability",
-          "vulnerabilities",
-        )}) `
-      : "";
-
-    const codeIssues =
-      scanType === ScanType.SAST
-        ? `(${StringUtilities.pluralizeTemplate(
-            scanStatus.issues?.Sast?.count ?? 0,
-            "code issue",
-          )}) `
-        : "";
-
-    const webVulnerabilities =
-      scanType === ScanType.DAST
-        ? `(${StringUtilities.pluralizeTemplate(
-            scanStatus.issues?.Dast?.count ?? 0,
-            "web vulnerability",
-            "web vulnerabilities",
-          )}) `
-        : "";
-
-    const violations = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.Violation?.count ?? 0,
-          "violation",
-        )}) `
-      : "";
-
-    const substitutions = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.DependencySubstitution?.count ?? 0,
-          "dependency substitution",
-        )}) `
-      : "";
-
-    const typos = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.DependencyTypo?.count ?? 0,
-          "dependency typo",
-        )}) `
-      : "";
-
-    const unknownPackages = isGeneratedScanType
-      ? `(${StringUtilities.pluralizeTemplate(
-          scanStatus.issues?.UnknownPackage?.count ?? 0,
-          "unknown package",
-        )}) `
-      : "";
-
+    soosLogger.always("".padEnd(25, "-"));
     soosLogger.always(
       `Scan ${scanStatus.isSuccess ? "passed" : "failed"}${
-        scanStatus.isSuccess ? ", with" : " because of"
-      } ${vulnerabilities}${codeIssues}${webVulnerabilities}${violations}${substitutions}${typos}${unknownPackages}`,
+        scanStatus.isSuccess ? ", with:" : " because of:"
+      }`,
     );
-    soosLogger.info(`View the results here: ${scanUrl}`);
+
+    const maxLengthOfIssueText = 26;
+    const padChar = " ";
+
+    if (isGeneratedScanType) {
+      const vulnerabilityCount = scanStatus.issues?.Vulnerability?.count ?? 0;
+      soosLogger.always(
+        `${StringUtilities.pluralizeWord(
+          vulnerabilityCount,
+          "Vulnerability:",
+          "Vulnerabilities:",
+        ).padEnd(maxLengthOfIssueText, padChar)}${vulnerabilityCount}`,
+      );
+    }
+
+    const violationCount = scanStatus.issues?.Violation?.count ?? 0;
+    soosLogger.always(
+      `${StringUtilities.pluralizeWord(violationCount, "Violation:", "Violations:").padEnd(
+        maxLengthOfIssueText,
+        padChar,
+      )}${violationCount}`,
+    );
+
+    if (scanType === ScanType.DAST) {
+      const dastCount = scanStatus.issues?.Dast?.count ?? 0;
+      soosLogger.always(
+        `${StringUtilities.pluralizeWord(
+          dastCount,
+          "Web Vulnerability:",
+          "Web Vulnerabilities:",
+        ).padEnd(maxLengthOfIssueText, padChar)}${dastCount}`,
+      );
+    }
+
+    if (scanType === ScanType.SAST) {
+      const sastCount = scanStatus.issues?.Sast?.count ?? 0;
+      soosLogger.always(
+        `${StringUtilities.pluralizeWord(sastCount, "Code Issue:", "Code Issues:").padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${sastCount}`,
+      );
+    }
+
+    if (isGeneratedScanType) {
+      const unknownPackageCount = scanStatus.issues?.UnknownPackage?.count ?? 0;
+      soosLogger.always(
+        `${StringUtilities.pluralizeWord(
+          unknownPackageCount,
+          "Unknown Package:",
+          "Unknown Packages:",
+        ).padEnd(maxLengthOfIssueText, padChar)}${unknownPackageCount}`,
+      );
+
+      const dependencyTypoCount = scanStatus.issues?.DependencyTypo?.count ?? 0;
+      soosLogger.always(
+        `${StringUtilities.pluralizeWord(
+          dependencyTypoCount,
+          "Dependency Typo:",
+          "Dependency Typos:",
+        ).padEnd(maxLengthOfIssueText, padChar)}${dependencyTypoCount}`,
+      );
+
+      const dependencySubstitutionCount = scanStatus.issues?.DependencySubstitution?.count ?? 0;
+      soosLogger.always(
+        `${StringUtilities.pluralizeWord(
+          dependencySubstitutionCount,
+          "Dependency Substitution:",
+          "Dependency Substitutions:",
+        ).padEnd(maxLengthOfIssueText, padChar)}${dependencySubstitutionCount}`,
+      );
+    }
+
+    soosLogger.always("".padEnd(25, "-"));
+    soosLogger.always(`Scan Report: ${scanUrl}`);
     return scanStatus.status;
   }
 
