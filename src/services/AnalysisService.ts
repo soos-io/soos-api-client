@@ -356,7 +356,7 @@ class AnalysisService {
 
     output.push(
       `Scan ${scanStatus.isSuccess ? `${this.getColorBySeverity("none", colorize)}passed${this.getResetColor(colorize)}` : `${this.getColorBySeverity("high", colorize)}failed${this.getResetColor(colorize)}`}${
-        scanStatus.isSuccess ? ", with:" : " because of:"
+        scanStatus.isSuccess ? " with:" : " because of:"
       }`,
     );
 
