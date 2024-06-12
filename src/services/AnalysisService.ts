@@ -128,6 +128,14 @@ const integrationNameToEnvVariable: Record<IntegrationName, string> = {
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
+const NoneColor = "\x1b[32m";
+const InfoColor = "\x1b[34m";
+const LowColor = "\x1b[90m";
+const MediumColor = "\x1b[33m";
+const HighColor = "\x1b[31m";
+const CriticalColor = "\x1b[35m";
+const ResetColor = "\x1b[0m";
+
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
   public projectsApiClient: SOOSProjectsApiClient;
@@ -301,16 +309,45 @@ class AnalysisService {
       soosLogger.groupEnd();
     }
 
-    this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true);
+    soosLogger.always(this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true, true));
 
     return scanStatus.status;
+  }
+
+  private getColorBySeverity(severity: string | undefined, colorize: boolean): string {
+    if (!severity) {
+      return "";
+    }
+
+    switch (severity.toLocaleLowerCase()) {
+      default:
+      case "unknown":
+        return "";
+      case "none":
+        return colorize ? NoneColor : "";
+      case "info":
+        return colorize ? InfoColor : "";
+      case "low":
+        return colorize ? LowColor : "";
+      case "medium":
+        return colorize ? MediumColor : "";
+      case "high":
+        return colorize ? HighColor : "";
+      case "critical":
+        return colorize ? CriticalColor : "";
+    }
+  }
+
+  private getResetColor(colorize: boolean): string {
+    return colorize ? ResetColor : "";
   }
 
   getFinalScanStatusMessage(
     scanType: ScanType,
     scanStatus: IScanStatusResponse,
     scanUrl: string,
-    formatForConsole: boolean,
+    formatForConsole: boolean | undefined = true,
+    colorize: boolean | undefined = false,
   ): string {
     const isGeneratedScanType = GeneratedScanTypes.includes(scanType);
     const output: Array<string> = [];
@@ -335,7 +372,10 @@ class AnalysisService {
           vulnerabilityCount,
           "Vulnerability:",
           "Vulnerabilities:",
-        ).padEnd(maxLengthOfIssueText, padChar)}${vulnerabilityCount}`,
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.Vulnerability?.maxSeverity, colorize)}${vulnerabilityCount}${this.getResetColor(colorize)}`,
       );
     }
 
@@ -344,7 +384,7 @@ class AnalysisService {
       `${StringUtilities.pluralizeWord(violationCount, "Violation:", "Violations:").padEnd(
         maxLengthOfIssueText,
         padChar,
-      )}${violationCount}`,
+      )}${this.getColorBySeverity(scanStatus.issues?.Violation?.maxSeverity, colorize)}${violationCount}${this.getResetColor(colorize)}`,
     );
 
     if (scanType === ScanType.DAST) {
@@ -354,7 +394,10 @@ class AnalysisService {
           dastCount,
           "Web Vulnerability:",
           "Web Vulnerabilities:",
-        ).padEnd(maxLengthOfIssueText, padChar)}${dastCount}`,
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.Dast?.maxSeverity, colorize)}${dastCount}${this.getResetColor(colorize)}`,
       );
     }
 
@@ -364,7 +407,7 @@ class AnalysisService {
         `${StringUtilities.pluralizeWord(sastCount, "Code Issue:", "Code Issues:").padEnd(
           maxLengthOfIssueText,
           padChar,
-        )}${sastCount}`,
+        )}${this.getColorBySeverity(scanStatus.issues?.Sast?.maxSeverity, colorize)}${sastCount}${this.getResetColor(colorize)}`,
       );
     }
 
@@ -375,7 +418,10 @@ class AnalysisService {
           unknownPackageCount,
           "Unknown Package:",
           "Unknown Packages:",
-        ).padEnd(maxLengthOfIssueText, padChar)}${unknownPackageCount}`,
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.UnknownPackage?.maxSeverity, colorize)}${unknownPackageCount}${this.getResetColor(colorize)}`,
       );
 
       const dependencyTypoCount = scanStatus.issues?.DependencyTypo?.count ?? 0;
@@ -384,7 +430,10 @@ class AnalysisService {
           dependencyTypoCount,
           "Dependency Typo:",
           "Dependency Typos:",
-        ).padEnd(maxLengthOfIssueText, padChar)}${dependencyTypoCount}`,
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.DependencyTypo?.maxSeverity, colorize)}${dependencyTypoCount}${this.getResetColor(colorize)}`,
       );
 
       const dependencySubstitutionCount = scanStatus.issues?.DependencySubstitution?.count ?? 0;
@@ -393,7 +442,10 @@ class AnalysisService {
           dependencySubstitutionCount,
           "Dependency Substitution:",
           "Dependency Substitutions:",
-        ).padEnd(maxLengthOfIssueText, padChar)}${dependencySubstitutionCount}`,
+        ).padEnd(
+          maxLengthOfIssueText,
+          padChar,
+        )}${this.getColorBySeverity(scanStatus.issues?.DependencySubstitution?.maxSeverity, colorize)}${dependencySubstitutionCount}${this.getResetColor(colorize)}`,
       );
     }
 
