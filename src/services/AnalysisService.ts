@@ -629,7 +629,7 @@ class AnalysisService {
           return {
             packageManager: fpm.packageManager,
             manifests:
-              fpm.supportedManifests?.map((sm) => {
+              (fpm.supportedManifests ?? []).map((sm) => {
                 return {
                   isLockFile: sm.isLockFile,
                   pattern: sm.pattern,
@@ -663,7 +663,7 @@ class AnalysisService {
             : {
                 packageManager: fpm.packageManager,
                 fileFormats:
-                  fpm.hashableFiles?.map((hf) => {
+                  hashableFiles.map((hf) => {
                     return {
                       hashAlgorithms: hf.hashAlgorithms,
                       patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
@@ -697,7 +697,7 @@ class AnalysisService {
             : {
                 packageManager: fpm.packageManager,
                 fileFormats:
-                  fpm.hashableFiles?.map((hf) => {
+                  hashableFiles.map((hf) => {
                     return {
                       hashAlgorithms: hf.hashAlgorithms,
                       patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
@@ -775,35 +775,41 @@ class AnalysisService {
     );
     const manifestFiles = packageManagerManifests.reduce<Array<IManifestFile>>(
       (accumulator, packageManagerManifests) => {
-        const matches = packageManagerManifests.manifests
-          .filter((manifest) => useLockFile === manifest.isLockFile)
-          .map((manifest) => {
-            const manifestGlobPattern = manifest.pattern.startsWith(".")
-              ? `*${manifest.pattern}` // ends with
-              : manifest.pattern; // wildcard match
+        const filteredLockFileFormats = packageManagerManifests.manifests.filter(
+          (manifest) => useLockFile === manifest.isLockFile,
+        );
 
-            const pattern = `**/${manifestGlobPattern}`;
-            const files = Glob.sync(pattern, {
-              ignore: [
-                ...(filesToExclude || []),
-                ...directoriesToExclude,
-                SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
-              ],
-              nocase: true,
-            });
+        soosLogger.debug(
+          `Attempting to match ${packageManagerManifests.packageManager} manifest formats: ${filteredLockFileFormats.join(", ")}`,
+        );
 
-            // This is needed to resolve the path as an absolute opposed to trying to open the file at current directory.
-            const absolutePathFiles = files.map((x) => Path.resolve(x));
+        const matches = filteredLockFileFormats.map((manifest) => {
+          const manifestGlobPattern = manifest.pattern.startsWith(".")
+            ? `*${manifest.pattern}` // ends with
+            : manifest.pattern; // wildcard match
 
-            const matchingFilesMessage = `${absolutePathFiles.length} files found matching pattern '${pattern}'.`;
-            if (absolutePathFiles.length > 0) {
-              soosLogger.info(matchingFilesMessage);
-            } else {
-              soosLogger.verboseInfo(matchingFilesMessage);
-            }
-
-            return absolutePathFiles;
+          const pattern = `**/${manifestGlobPattern}`;
+          const files = Glob.sync(pattern, {
+            ignore: [
+              ...(filesToExclude || []),
+              ...directoriesToExclude,
+              SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
+            ],
+            nocase: true,
           });
+
+          // This is needed to resolve the path as an absolute opposed to trying to open the file at current directory.
+          const absolutePathFiles = files.map((x) => Path.resolve(x));
+
+          const matchingFilesMessage = `${absolutePathFiles.length} files found matching pattern '${pattern}'.`;
+          if (absolutePathFiles.length > 0) {
+            soosLogger.info(matchingFilesMessage);
+          } else {
+            soosLogger.debug(matchingFilesMessage);
+          }
+
+          return absolutePathFiles;
+        });
 
         return accumulator.concat(
           matches.flat().map((filePath): IManifestFile => {
@@ -880,7 +886,7 @@ class AnalysisService {
             if (absolutePathFiles.length > 0) {
               soosLogger.info(matchingFilesMessage);
             } else {
-              soosLogger.verboseInfo(matchingFilesMessage);
+              soosLogger.debug(matchingFilesMessage);
             }
 
             return absolutePathFiles.flat().map((filePath): ISoosFileHash => {
