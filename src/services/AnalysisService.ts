@@ -629,7 +629,7 @@ class AnalysisService {
           return {
             packageManager: fpm.packageManager,
             manifests:
-              (fpm.manifests ?? []).map((sm) => {
+              fpm.manifests.map((sm) => {
                 return {
                   isLockFile: sm.isLockFile,
                   pattern: sm.pattern,
