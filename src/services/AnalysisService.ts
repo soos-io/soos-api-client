@@ -779,10 +779,6 @@ class AnalysisService {
           (manifest) => useLockFile === manifest.isLockFile,
         );
 
-        soosLogger.debug(
-          `Attempting to match ${packageManagerManifests.packageManager} manifest formats: ${filteredLockFileFormats.join(", ")}`,
-        );
-
         const matches = filteredLockFileFormats.map((manifest) => {
           const manifestGlobPattern = manifest.pattern.startsWith(".")
             ? `*${manifest.pattern}` // ends with
