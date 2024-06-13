@@ -775,37 +775,35 @@ class AnalysisService {
     );
     const manifestFiles = packageManagerManifests.reduce<Array<IManifestFile>>(
       (accumulator, packageManagerManifests) => {
-        const filteredLockFileFormats = packageManagerManifests.manifests.filter(
-          (manifest) => useLockFile === manifest.isLockFile,
-        );
+        const matches = packageManagerManifests.manifests
+          .filter((manifest) => useLockFile === manifest.isLockFile)
+          .map((manifest) => {
+            const manifestGlobPattern = manifest.pattern.startsWith(".")
+              ? `*${manifest.pattern}` // ends with
+              : manifest.pattern; // wildcard match
 
-        const matches = filteredLockFileFormats.map((manifest) => {
-          const manifestGlobPattern = manifest.pattern.startsWith(".")
-            ? `*${manifest.pattern}` // ends with
-            : manifest.pattern; // wildcard match
+            const pattern = `**/${manifestGlobPattern}`;
+            const files = Glob.sync(pattern, {
+              ignore: [
+                ...(filesToExclude || []),
+                ...directoriesToExclude,
+                SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
+              ],
+              nocase: true,
+            });
 
-          const pattern = `**/${manifestGlobPattern}`;
-          const files = Glob.sync(pattern, {
-            ignore: [
-              ...(filesToExclude || []),
-              ...directoriesToExclude,
-              SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
-            ],
-            nocase: true,
+            // This is needed to resolve the path as an absolute opposed to trying to open the file at current directory.
+            const absolutePathFiles = files.map((x) => Path.resolve(x));
+
+            const matchingFilesMessage = `${absolutePathFiles.length} files found matching pattern '${pattern}'.`;
+            if (absolutePathFiles.length > 0) {
+              soosLogger.info(matchingFilesMessage);
+            } else {
+              soosLogger.debug(matchingFilesMessage);
+            }
+
+            return absolutePathFiles;
           });
-
-          // This is needed to resolve the path as an absolute opposed to trying to open the file at current directory.
-          const absolutePathFiles = files.map((x) => Path.resolve(x));
-
-          const matchingFilesMessage = `${absolutePathFiles.length} files found matching pattern '${pattern}'.`;
-          if (absolutePathFiles.length > 0) {
-            soosLogger.info(matchingFilesMessage);
-          } else {
-            soosLogger.debug(matchingFilesMessage);
-          }
-
-          return absolutePathFiles;
-        });
 
         return accumulator.concat(
           matches.flat().map((filePath): IManifestFile => {
