@@ -608,7 +608,7 @@ class AnalysisService {
       fileMatchType === FileMatchTypeEnum.ManifestAndFileHash;
 
     const filteredPackageManagers =
-      isNil(packageManagers) || packageManagers.length === 0
+      packageManagers.length === 0
         ? supportedScanFileFormats
         : supportedScanFileFormats.filter((packageManagerScanFileFormats) =>
             packageManagers.some((pm) =>
@@ -629,7 +629,7 @@ class AnalysisService {
           return {
             packageManager: fpm.packageManager,
             manifests:
-              fpm.supportedManifests?.map((sm) => {
+              fpm.manifests.map((sm) => {
                 return {
                   isLockFile: sm.isLockFile,
                   pattern: sm.pattern,
@@ -637,6 +637,12 @@ class AnalysisService {
               }) ?? [],
           };
         });
+
+    if (runManifestMatching) {
+      soosLogger.debug(
+        `Running manifest file matching for ${manifestFormats.length} manifest formats.`,
+      );
+    }
 
     const manifestFiles = !runManifestMatching
       ? []
@@ -646,17 +652,18 @@ class AnalysisService {
           filesToExclude,
           directoriesToExclude,
           sourceCodePath,
-        }) ?? [];
+        });
 
     var archiveHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          return !fpm.hashableFiles?.some((hf) => hf.archiveFileExtensions)
+          const hashableFiles = fpm.hashableFiles ?? [];
+          return !hashableFiles.some((hf) => hf.archiveFileExtensions)
             ? []
             : {
                 packageManager: fpm.packageManager,
                 fileFormats:
-                  fpm.hashableFiles?.map((hf) => {
+                  hashableFiles.map((hf) => {
                     return {
                       hashAlgorithms: hf.hashAlgorithms,
                       patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
@@ -665,9 +672,15 @@ class AnalysisService {
               };
         });
 
+    if (runFileHashing) {
+      soosLogger.debug(
+        `Running file hash matching for ${archiveHashFormats.length} archive file formats.`,
+      );
+    }
+
     const archiveFileHashManifests =
       !runFileHashing || !archiveHashFormats.some((ahf) => ahf.fileFormats)
-        ? null
+        ? []
         : this.searchForHashableFiles({
             hashableFileFormats: archiveHashFormats.filter((ahf) => ahf.fileFormats),
             sourceCodePath,
@@ -678,12 +691,13 @@ class AnalysisService {
     var contentHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          return !fpm.hashableFiles?.some((hf) => hf.archiveContentFileExtensions)
+          const hashableFiles = fpm.hashableFiles ?? [];
+          return !hashableFiles.some((hf) => hf.archiveContentFileExtensions)
             ? []
             : {
                 packageManager: fpm.packageManager,
                 fileFormats:
-                  fpm.hashableFiles?.map((hf) => {
+                  hashableFiles.map((hf) => {
                     return {
                       hashAlgorithms: hf.hashAlgorithms,
                       patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
@@ -692,9 +706,13 @@ class AnalysisService {
               };
         });
 
+    if (runFileHashing) {
+      soosLogger.debug(`Running file hash matching for ${contentHashFormats.length} file formats.`);
+    }
+
     const contentFileHashManifests =
       !runFileHashing || !contentHashFormats.some((chf) => chf.fileFormats)
-        ? null
+        ? []
         : this.searchForHashableFiles({
             hashableFileFormats: contentHashFormats.filter((chf) => chf.fileFormats),
             sourceCodePath,
@@ -703,8 +721,8 @@ class AnalysisService {
           });
 
     // TODO: PA-14211 we could probably just add this to the form files directly
-    const hashManifests = (archiveFileHashManifests ?? [])
-      .concat(contentFileHashManifests ?? [])
+    const hashManifests = archiveFileHashManifests
+      .concat(contentFileHashManifests)
       .filter((hm) => hm.fileHashes.length > 0);
 
     if (runFileHashing && hashManifests) {
@@ -781,7 +799,7 @@ class AnalysisService {
             if (absolutePathFiles.length > 0) {
               soosLogger.info(matchingFilesMessage);
             } else {
-              soosLogger.verboseInfo(matchingFilesMessage);
+              soosLogger.debug(matchingFilesMessage);
             }
 
             return absolutePathFiles;
@@ -862,7 +880,7 @@ class AnalysisService {
             if (absolutePathFiles.length > 0) {
               soosLogger.info(matchingFilesMessage);
             } else {
-              soosLogger.verboseInfo(matchingFilesMessage);
+              soosLogger.debug(matchingFilesMessage);
             }
 
             return absolutePathFiles.flat().map((filePath): ISoosFileHash => {

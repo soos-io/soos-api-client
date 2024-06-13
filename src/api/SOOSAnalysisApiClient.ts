@@ -65,7 +65,7 @@ interface IGetSupportedScanFileFormatsRequest {
 
 interface IGetSupportedScanFileFormatsResponsePackageManagerManifestAndHashableFiles {
   packageManager: PackageManagerType;
-  supportedManifests: Array<{
+  manifests: Array<{
     pattern: string;
     isLockFile: boolean;
   }>;
