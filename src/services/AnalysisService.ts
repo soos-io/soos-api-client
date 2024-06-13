@@ -629,7 +629,7 @@ class AnalysisService {
           return {
             packageManager: fpm.packageManager,
             manifests:
-              (fpm.supportedManifests ?? []).map((sm) => {
+              (fpm.manifests ?? []).map((sm) => {
                 return {
                   isLockFile: sm.isLockFile,
                   pattern: sm.pattern,
@@ -680,7 +680,7 @@ class AnalysisService {
 
     const archiveFileHashManifests =
       !runFileHashing || !archiveHashFormats.some((ahf) => ahf.fileFormats)
-        ? null
+        ? []
         : this.searchForHashableFiles({
             hashableFileFormats: archiveHashFormats.filter((ahf) => ahf.fileFormats),
             sourceCodePath,
@@ -712,7 +712,7 @@ class AnalysisService {
 
     const contentFileHashManifests =
       !runFileHashing || !contentHashFormats.some((chf) => chf.fileFormats)
-        ? null
+        ? []
         : this.searchForHashableFiles({
             hashableFileFormats: contentHashFormats.filter((chf) => chf.fileFormats),
             sourceCodePath,
@@ -721,8 +721,8 @@ class AnalysisService {
           });
 
     // TODO: PA-14211 we could probably just add this to the form files directly
-    const hashManifests = (archiveFileHashManifests ?? [])
-      .concat(contentFileHashManifests ?? [])
+    const hashManifests = archiveFileHashManifests
+      .concat(contentFileHashManifests)
       .filter((hm) => hm.fileHashes.length > 0);
 
     if (runFileHashing && hashManifests) {
