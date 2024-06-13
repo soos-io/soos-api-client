@@ -608,7 +608,7 @@ class AnalysisService {
       fileMatchType === FileMatchTypeEnum.ManifestAndFileHash;
 
     const filteredPackageManagers =
-      isNil(packageManagers) || packageManagers.length === 0
+      packageManagers.length === 0
         ? supportedScanFileFormats
         : supportedScanFileFormats.filter((packageManagerScanFileFormats) =>
             packageManagers.some((pm) =>
@@ -638,6 +638,12 @@ class AnalysisService {
           };
         });
 
+    if (runManifestMatching) {
+      soosLogger.debug(
+        `Running manifest file matching for ${manifestFormats.length} manifest formats.`,
+      );
+    }
+
     const manifestFiles = !runManifestMatching
       ? []
       : this.searchForManifestFiles({
@@ -646,12 +652,13 @@ class AnalysisService {
           filesToExclude,
           directoriesToExclude,
           sourceCodePath,
-        }) ?? [];
+        });
 
     var archiveHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          return !fpm.hashableFiles?.some((hf) => hf.archiveFileExtensions)
+          const hashableFiles = fpm.hashableFiles ?? [];
+          return !hashableFiles.some((hf) => hf.archiveFileExtensions)
             ? []
             : {
                 packageManager: fpm.packageManager,
@@ -664,6 +671,12 @@ class AnalysisService {
                   }) ?? [],
               };
         });
+
+    if (runFileHashing) {
+      soosLogger.debug(
+        `Running file hash matching for ${archiveHashFormats.length} archive file formats.`,
+      );
+    }
 
     const archiveFileHashManifests =
       !runFileHashing || !archiveHashFormats.some((ahf) => ahf.fileFormats)
@@ -678,7 +691,8 @@ class AnalysisService {
     var contentHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          return !fpm.hashableFiles?.some((hf) => hf.archiveContentFileExtensions)
+          const hashableFiles = fpm.hashableFiles ?? [];
+          return !hashableFiles.some((hf) => hf.archiveContentFileExtensions)
             ? []
             : {
                 packageManager: fpm.packageManager,
@@ -691,6 +705,10 @@ class AnalysisService {
                   }) ?? [],
               };
         });
+
+    if (runFileHashing) {
+      soosLogger.debug(`Running file hash matching for ${contentHashFormats.length} file formats.`);
+    }
 
     const contentFileHashManifests =
       !runFileHashing || !contentHashFormats.some((chf) => chf.fileFormats)
