@@ -56,6 +56,7 @@ export enum PackageManagerType {
   Rust = "Rust",
   Swift = "Swift",
   Wolfi = "Wolfi",
+  Unity = "Unity",
 }
 
 export enum ManifestStatus {
