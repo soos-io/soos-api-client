@@ -39,6 +39,7 @@ export enum IntegrationType {
 export enum PackageManagerType {
   Unknown = "Unknown",
   Alpine = "Alpine",
+  AmazonLinux = "AmazonLinux",
   CFamily = "CFamily",
   Dart = "Dart",
   Debian = "Debian",
