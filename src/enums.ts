@@ -39,6 +39,7 @@ export enum IntegrationType {
 export enum PackageManagerType {
   Unknown = "Unknown",
   Alpine = "Alpine",
+  AmazonLinux = "AmazonLinux",
   CFamily = "CFamily",
   Dart = "Dart",
   Debian = "Debian",
@@ -56,6 +57,7 @@ export enum PackageManagerType {
   Rust = "Rust",
   Swift = "Swift",
   Wolfi = "Wolfi",
+  Unity = "Unity",
 }
 
 export enum ManifestStatus {
