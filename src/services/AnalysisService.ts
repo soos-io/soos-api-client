@@ -632,6 +632,7 @@ class AnalysisService {
               fpm.manifests.map((sm) => {
                 return {
                   isLockFile: sm.isLockFile,
+                  includeWithLockFiles: sm.includeWithLockFiles,
                   pattern: sm.pattern,
                 };
               }) ?? [],
@@ -758,6 +759,7 @@ class AnalysisService {
       manifests: Array<{
         pattern: string;
         isLockFile: boolean;
+        includeWithLockFiles: boolean;
       }>;
     }>;
     useLockFile: boolean;
@@ -776,7 +778,11 @@ class AnalysisService {
     const manifestFiles = packageManagerManifests.reduce<Array<IManifestFile>>(
       (accumulator, packageManagerManifests) => {
         const matches = packageManagerManifests.manifests
-          .filter((manifest) => useLockFile === manifest.isLockFile)
+          .filter(
+            (manifest) =>
+              useLockFile === manifest.isLockFile ||
+              (!useLockFile && !manifest.isLockFile && manifest.includeWithLockFiles),
+          )
           .map((manifest) => {
             const manifestGlobPattern = manifest.pattern.startsWith(".")
               ? `*${manifest.pattern}` // ends with
