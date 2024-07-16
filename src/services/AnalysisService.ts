@@ -781,7 +781,7 @@ class AnalysisService {
           .filter(
             (manifest) =>
               useLockFile === manifest.isLockFile ||
-              (!useLockFile && !manifest.isLockFile && manifest.includeWithLockFiles),
+              (useLockFile && !manifest.isLockFile && manifest.includeWithLockFiles),
           )
           .map((manifest) => {
             const manifestGlobPattern = manifest.pattern.startsWith(".")
