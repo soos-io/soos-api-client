@@ -46,6 +46,7 @@ export enum PackageManagerType {
   Docker = "Docker",
   Erlang = "Erlang",
   Fedora = "Fedora",
+  GitHub = "GitHub",
   Go = "Go",
   Homebrew = "Homebrew",
   Java = "Java",
