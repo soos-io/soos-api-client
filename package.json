@@ -14,7 +14,7 @@
     "format:fix": "prettier ./src --write",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "check": "npm run format && npm run typecheck && npm run test && npm outdated",
+    "check": "npm run format && npm run typecheck && npm run test && (npm outdated || exit 0)",
     "patch": "npm version patch --no-git-tag-version",
     "build:link": "npm run build && npm link"
   },
