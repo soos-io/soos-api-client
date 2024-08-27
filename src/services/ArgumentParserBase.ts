@@ -15,6 +15,10 @@ interface ICommonArguments {
   clientId: string;
   logLevel: LogLevel;
   scriptVersion: string;
+
+  /**
+   * @deprecated Only here for backwards compatibility, do not reference.
+   */
   verbose: boolean;
 }
 
@@ -78,7 +82,7 @@ abstract class ArgumentParserBase {
     });
 
     this.addEnumArgument(this.argumentParser, "--logLevel", LogLevel, {
-      help: "Minimum level to show logs: PASS, IGNORE, INFO, WARN or FAIL.",
+      help: "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
       default: LogLevel.INFO,
       required: false,
     });
@@ -90,7 +94,7 @@ abstract class ArgumentParserBase {
     });
 
     this.argumentParser.add_argument("--verbose", {
-      help: "Enable verbose logging.",
+      help: "DEPRECATED - Change logLevel to DEBUG. This parameter has no effect.",
       action: "store_true",
       default: false,
       required: false,
