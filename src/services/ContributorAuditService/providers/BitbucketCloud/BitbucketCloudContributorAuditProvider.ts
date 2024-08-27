@@ -25,7 +25,7 @@ class BitbucketCloudContributorAuditProvider implements IContributorAuditProvide
     const username = ParamUtilities.getAsString(implementationParams, "username");
     const bitbucketApiClient = new BitbucketCloudApiClient(days, username, bitbucketPAT, workspace);
     const repositories = await bitbucketApiClient.getBitbucketCloudRepositories();
-    soosLogger.verboseDebug("Fetching commits for each repository");
+    soosLogger.debug("Fetching commits for each repository");
     const contributors = await this.getBitbucketCloudRepositoryContributors(
       bitbucketApiClient,
       repositories,

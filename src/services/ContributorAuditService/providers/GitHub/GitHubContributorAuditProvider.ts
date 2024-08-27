@@ -23,12 +23,12 @@ class GitHubContributorAuditProvider implements IContributorAuditProvider {
     const days = ParamUtilities.getAsNumber(implementationParams, "days");
     const gitHubApiClient = new GitHubApiClient(days, gitHubPAT, organizationName);
     const organizations = await gitHubApiClient.getGitHubOrganizations();
-    soosLogger.verboseDebug("Fetching GitHub repositories");
+    soosLogger.debug("Fetching GitHub repositories");
     const repositories = await Promise.all(
       organizations.map((org) => gitHubApiClient.getGitHubOrganizationRepositories(org)),
     );
 
-    soosLogger.verboseDebug("Fetching commits for each repository");
+    soosLogger.debug("Fetching commits for each repository");
     const contributors = await this.getGitHubRepositoryContributors(
       gitHubApiClient,
       repositories.flatMap((repoArray) => {
