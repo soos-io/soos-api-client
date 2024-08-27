@@ -175,7 +175,7 @@ class BitbucketCloudApiClient {
     client.interceptors.response.clear();
     client.interceptors.response.use(
       async (response) => {
-        soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
+        soosLogger.debug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         if (response.data.next) {
           return await paginationFunction(response, client, dateToFilter);
         }
@@ -187,7 +187,7 @@ class BitbucketCloudApiClient {
         config.retryCount = config.retryCount || 0;
 
         if (response?.status === 429 && config.retryCount < maxRetries) {
-          soosLogger.verboseDebug(
+          soosLogger.debug(
             apiClientName,
             `Rate limit exceeded on the BitbucketCloud API. Waiting ${SOOS_BITBUCKET_CLOUD_CONTRIBUTOR_AUDIT_CONSTANTS.RetrySeconds} seconds before retrying. Retry count: ${config.retryCount}`,
           );
@@ -198,7 +198,7 @@ class BitbucketCloudApiClient {
         }
 
         if (response?.status) {
-          soosLogger.verboseDebug(apiClientName, `Response Status: ${response.status}`);
+          soosLogger.debug(apiClientName, `Response Status: ${response.status}`);
         }
         return Promise.reject(error);
       },
@@ -217,7 +217,7 @@ class BitbucketCloudApiClient {
     );
 
     while (nextUrl && isWithinDateRange) {
-      soosLogger.verboseDebug("Fetching next page", nextUrl);
+      soosLogger.debug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get<BitbucketRepositoryApiResponse>(nextUrl);
       data.values = data.values.concat(nextPageResponse.data.values);
       nextUrl = nextPageResponse.data.next ?? undefined;
@@ -240,10 +240,10 @@ class BitbucketCloudApiClient {
     let isWithinDateRange = DateUtilities.isWithinDateRange(lastCommitDate, new Date(dateToFilter));
 
     while (nextUrl && isWithinDateRange) {
-      soosLogger.verboseDebug("Fetching next page", nextUrl);
+      soosLogger.debug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get<BitbucketCloudCommitsApiResponse>(nextUrl);
       data.values = data.values.concat(nextPageResponse.data.values);
-      soosLogger.verboseDebug(
+      soosLogger.debug(
         `Checking if commits are within date range min date ${new Date(dateToFilter)}`,
       );
       lastCommitDate = new Date(

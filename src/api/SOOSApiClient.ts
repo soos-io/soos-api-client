@@ -31,17 +31,14 @@ class SOOSApiClient {
     client.interceptors.request.use(
       (request) => {
         if (request.data) {
-          soosLogger.verboseDebug(
+          soosLogger.debug(
             apiClientName,
             `Request URL: ${request.method?.toLocaleUpperCase()} ${request.url}`,
           );
           if (request.params) {
-            soosLogger.verboseDebug(
-              apiClientName,
-              `Request Params: ${JSON.stringify(request.params)}`,
-            );
+            soosLogger.debug(apiClientName, `Request Params: ${JSON.stringify(request.params)}`);
           }
-          soosLogger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
+          soosLogger.debug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
         }
         return request;
       },
@@ -52,7 +49,7 @@ class SOOSApiClient {
 
     client.interceptors.response.use(
       (response) => {
-        soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
+        soosLogger.debug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         return response;
       },
       (rejectedResponse) => {

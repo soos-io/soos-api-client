@@ -81,17 +81,14 @@ class GitHubApiClient {
     client.interceptors.request.use(
       (request) => {
         if (request.data) {
-          soosLogger.verboseDebug(
+          soosLogger.debug(
             apiClientName,
             `Request URL: ${request.method?.toLocaleUpperCase()} ${request.url}`,
           );
           if (request.params) {
-            soosLogger.verboseDebug(
-              apiClientName,
-              `Request Params: ${JSON.stringify(request.params)}`,
-            );
+            soosLogger.debug(apiClientName, `Request Params: ${JSON.stringify(request.params)}`);
           }
-          soosLogger.verboseDebug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
+          soosLogger.debug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
         }
         return request;
       },
@@ -102,7 +99,7 @@ class GitHubApiClient {
 
     client.interceptors.response.use(
       async (response) => {
-        soosLogger.verboseDebug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
+        soosLogger.debug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
         if (response.config.url?.includes("per_page")) {
           return await GitHubApiClient.handleNextPage(response, client);
         }
@@ -119,10 +116,10 @@ class GitHubApiClient {
         ) {
           const rateLimitReset = response?.headers["x-ratelimit-reset"] as number;
           if (rateLimitReset) {
-            soosLogger.verboseDebug(`Trying to parse rate limit reset: ${rateLimitReset}`);
+            soosLogger.debug(`Trying to parse rate limit reset: ${rateLimitReset}`);
             const rateLimitDate = DateUtilities.getDateFromUnixUTC(rateLimitReset);
             const timeToWait = Math.floor((rateLimitDate.getTime() - Date.now()) / 1000);
-            soosLogger.verboseDebug(
+            soosLogger.debug(
               apiClientName,
               `Rate limit exceeded on the GitHub API. Waiting ${timeToWait} seconds before retrying. Retry count: ${config.retryCount}`,
             );
@@ -133,10 +130,10 @@ class GitHubApiClient {
         }
 
         if (response?.status) {
-          soosLogger.verboseDebug(apiClientName, `Response Status: ${response.status}`);
+          soosLogger.debug(apiClientName, `Response Status: ${response.status}`);
         }
         if (response?.data?.message) {
-          soosLogger.verboseDebug(apiClientName, `Response Message: ${response.data.message}`);
+          soosLogger.debug(apiClientName, `Response Message: ${response.data.message}`);
         }
         return Promise.reject(error);
       },
@@ -152,7 +149,7 @@ class GitHubApiClient {
     let data = response.data;
     let nextUrl = GitHubApiClient.getNextPageUrl(response);
     if (nextUrl) {
-      soosLogger.verboseDebug("Fetching next page", nextUrl);
+      soosLogger.debug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get(nextUrl);
       data = data.concat(nextPageResponse.data);
     }

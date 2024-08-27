@@ -1,18 +1,12 @@
 import { LogLevel } from "../enums";
 
 class SOOSLogger {
-  private verbose: boolean;
   private console: Console;
   private minLogLevel: LogLevel;
 
-  constructor(
-    verbose: boolean = false,
-    minLogLevel: LogLevel = LogLevel.INFO,
-    console: Console = global.console,
-  ) {
-    this.verbose = verbose;
+  constructor(minLogLevel: LogLevel = LogLevel.INFO, console: Console = global.console) {
     this.console = console;
-    this.minLogLevel = this.verbose ? LogLevel.DEBUG : minLogLevel;
+    this.minLogLevel = minLogLevel;
   }
 
   private getTimeStamp(): string {
@@ -44,15 +38,8 @@ class SOOSLogger {
     return orderedKeys.indexOf(level) >= orderedKeys.indexOf(this.minLogLevel);
   }
 
-  setVerbose(verbose: boolean) {
-    // TODO - PA-13294 - Consolidate verbose and log level to avoid overriding log level
-    this.verbose = this.minLogLevel === LogLevel.DEBUG || verbose;
-    if (this.verbose) this.minLogLevel = LogLevel.DEBUG;
-  }
-
   setMinLogLevel(minLogLevel: LogLevel) {
     this.minLogLevel = minLogLevel;
-    if (this.minLogLevel === LogLevel.DEBUG) this.verbose = true;
   }
 
   debug(message?: any, ...optionalParams: any[]): void {
@@ -78,42 +65,6 @@ class SOOSLogger {
   groupEnd(): void {
     this.console.groupEnd();
     this.console.log("\n");
-  }
-
-  verboseDebug(message?: any, ...optionalParams: any[]): void {
-    if (this.verbose) {
-      this.debug(message, ...optionalParams);
-    }
-  }
-
-  verboseInfo(message?: any, ...optionalParams: any[]): void {
-    if (this.verbose) {
-      this.info(message, ...optionalParams);
-    }
-  }
-
-  verboseWarn(message?: any, ...optionalParams: any[]): void {
-    if (this.verbose) {
-      this.warn(message, ...optionalParams);
-    }
-  }
-
-  verboseError(message?: any, ...optionalParams: any[]): void {
-    if (this.verbose) {
-      this.error(message, ...optionalParams);
-    }
-  }
-
-  verboseGroup(...label: any[]): void {
-    if (this.verbose) {
-      this.group(...label);
-    }
-  }
-
-  verboseGroupEnd(): void {
-    if (this.verbose) {
-      this.groupEnd();
-    }
   }
 
   always(message?: any, ...optionalParams: any[]): void {
