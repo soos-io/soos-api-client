@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Run SOOS - Scan for vulnerabilities
-      uses: soos-io/soos-sca-github-action@v2
+      uses: soos-io/soos-sca-github-action@ce8cb0a6d90fb0bceff89e7d66ad66f52fe3e658
       with:
         project_name: "soos-api-client"
         client_id: ${{ secrets.SOOS_CLIENT_ID }}
