@@ -129,6 +129,7 @@ abstract class ArgumentParserBase {
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
     const args = this.argumentParser.parse_args();
     this.ensureRequiredArguments(args);
+    this.checkDeprecatedArguments(args);
     return args;
   }
 
