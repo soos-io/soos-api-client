@@ -3,6 +3,7 @@ import { ArgumentParser } from "argparse";
 import { SOOS_CONSTANTS } from "../constants";
 import { IntegrationName, LogLevel, ScanType } from "../enums";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
+import { soosLogger } from "../logging";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -134,6 +135,14 @@ abstract class ArgumentParserBase {
   protected ensureRequiredArguments(args: any): void {
     ensureNonEmptyValue(args.clientId, "clientId");
     ensureNonEmptyValue(args.apiKey, "apiKey");
+  }
+
+  protected checkDeprecatedArguments(args: any): void {
+    if (args.verbose) {
+      soosLogger.warn(
+        "verbose is deprecated and has no effect. Set the log level to DEBUG for the same effect.",
+      );
+    }
   }
 }
 
