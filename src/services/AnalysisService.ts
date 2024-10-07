@@ -473,20 +473,13 @@ class AnalysisService {
     });
     if (output) {
       soosLogger.info(`${outputFormat} report generated successfully.`);
-      soosLogger.info(`Output ('${outputFormat}' format):`);
-      soosLogger.info(JSON.stringify(output, null, 2));
       if (workingDirectory) {
-        soosLogger.info(
-          `Writing ${outputFormat} report to ${Path.join(
-            workingDirectory,
-            SOOS_CONSTANTS.Files.SarifOutput,
-          )}`,
-        );
-        FileSystem.writeFileSync(
-          Path.join(workingDirectory, SOOS_CONSTANTS.Files.SarifOutput),
-          JSON.stringify(output, null, 2),
-        );
+        const outputFile = Path.join(workingDirectory, SOOS_CONSTANTS.Files.SarifOutput);
+        soosLogger.info(`Writing ${outputFormat} report to ${outputFile}`);
+        FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
       }
+    } else {
+      soosLogger.error(`${outputFormat} report was not generated.`);
     }
   }
 
