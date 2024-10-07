@@ -3,7 +3,6 @@ import { ArgumentParser } from "argparse";
 import { SOOS_CONSTANTS } from "../constants";
 import { IntegrationName, LogLevel, ScanType } from "../enums";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
-import { soosLogger } from "../logging";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -16,11 +15,6 @@ interface ICommonArguments {
   clientId: string;
   logLevel: LogLevel;
   scriptVersion: string;
-
-  /**
-   * @deprecated Only here for backwards compatibility, do not reference.
-   */
-  verbose: boolean;
 }
 
 abstract class ArgumentParserBase {
@@ -93,13 +87,6 @@ abstract class ArgumentParserBase {
       required: false,
       default: scriptVersion,
     });
-
-    this.argumentParser.add_argument("--verbose", {
-      help: "DEPRECATED - Change logLevel to DEBUG. This parameter has no effect.",
-      action: "store_true",
-      default: false,
-      required: false,
-    });
   }
 
   addEnumArgument(
@@ -138,12 +125,8 @@ abstract class ArgumentParserBase {
     ensureNonEmptyValue(args.apiKey, "apiKey");
   }
 
-  protected checkDeprecatedArguments(args: any): void {
-    if (args.verbose) {
-      soosLogger.warn(
-        "verbose is deprecated and has no effect. Set the log level to DEBUG for the same effect.",
-      );
-    }
+  protected checkDeprecatedArguments(_args: any): void {
+    // NOTE: add any deprecated args here and print a warning if they are referenced - remove _ from args param
   }
 }
 
