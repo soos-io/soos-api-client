@@ -132,6 +132,11 @@ const generateFileHash = (
     .digest(binaryToTextEncoding);
 };
 
+const isScanDone = (scanStatus: ScanStatus): boolean =>
+  [ScanStatus.Finished, ScanStatus.FailedWithIssues, ScanStatus.Incomplete, ScanStatus.Error].some(
+    (s) => s === scanStatus,
+  );
+
 const getAnalysisExitCodeWithMessage = (
   scanStatus: ScanStatus,
   integrationName: IntegrationName,
@@ -222,4 +227,5 @@ export {
   getAnalysisExitCodeWithMessage,
   DateUtilities,
   StringUtilities,
+  isScanDone,
 };
