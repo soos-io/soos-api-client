@@ -761,7 +761,7 @@ class AnalysisService {
     sourceCodePath: string;
   }): Array<IManifestFile> {
     const currentDirectory = process.cwd();
-    soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
+    soosLogger.info(`Setting current directory to project path '${sourceCodePath}'.`);
     process.chdir(sourceCodePath);
     soosLogger.info(
       `Lock file setting is ${
@@ -824,7 +824,7 @@ class AnalysisService {
     );
 
     process.chdir(currentDirectory);
-    soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
+    soosLogger.info(`Setting current directory back to '${currentDirectory}'.\n`);
     soosLogger.info(`${manifestFiles.length} manifest files found.`);
 
     return manifestFiles;
@@ -852,7 +852,7 @@ class AnalysisService {
     directoriesToExclude: string[];
   }): Array<ISoosHashesManifest> {
     const currentDirectory = process.cwd();
-    soosLogger.info(`Setting current working directory to project path '${sourceCodePath}'.`);
+    soosLogger.info(`Setting current directory to project path '${sourceCodePath}'.`);
 
     process.chdir(sourceCodePath);
     const fileHashes = hashableFileFormats.reduce<Array<ISoosHashesManifest>>(
@@ -924,7 +924,7 @@ class AnalysisService {
     );
 
     process.chdir(currentDirectory);
-    soosLogger.info(`Setting current working directory back to '${currentDirectory}'.\n`);
+    soosLogger.info(`Setting current directory back to '${currentDirectory}'.\n`);
 
     return fileHashes;
   }
