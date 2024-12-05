@@ -69,6 +69,7 @@ interface IGetSupportedScanFileFormatsResponsePackageManagerManifestAndHashableF
     pattern: string;
     isLockFile: boolean;
     includeWithLockFiles: boolean;
+    SupportsLockFiles: boolean;
   }>;
   hashableFiles: Array<{
     hashAlgorithms: Array<{

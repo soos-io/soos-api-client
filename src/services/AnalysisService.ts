@@ -626,6 +626,7 @@ class AnalysisService {
                 return {
                   isLockFile: sm.isLockFile,
                   includeWithLockFiles: sm.includeWithLockFiles,
+                  supportsLockFiles: sm.SupportsLockFiles,
                   pattern: sm.pattern,
                 };
               }) ?? [],
@@ -753,6 +754,7 @@ class AnalysisService {
         pattern: string;
         isLockFile: boolean;
         includeWithLockFiles: boolean;
+        supportsLockFiles: boolean;
       }>;
     }>;
     useLockFile: boolean;
@@ -774,6 +776,7 @@ class AnalysisService {
           .filter(
             (manifest) =>
               useLockFile === manifest.isLockFile ||
+              (useLockFile && !manifest.isLockFile && !manifest.supportsLockFiles) ||
               (useLockFile && !manifest.isLockFile && manifest.includeWithLockFiles),
           )
           .map((manifest) => {
