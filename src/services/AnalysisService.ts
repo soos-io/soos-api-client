@@ -104,26 +104,67 @@ interface IUpdateScanStatusParams {
   scanStatusUrl?: string;
 }
 
-const integrationNameToEnvVariable: Record<IntegrationName, string> = {
-  [IntegrationName.AzureDevOps]: "Build.RequestedFor",
-  [IntegrationName.AWSCodeBuild]: "CODEBUILD_BUILD_INITIATOR",
-  [IntegrationName.Bamboo]: "bamboo_planRepository_1_username",
-  [IntegrationName.BitBucket]: "BITBUCKET_STEP_TRIGGERER_UUID",
-  [IntegrationName.CircleCI]: "CIRCLE_USERNAME",
-  [IntegrationName.CodeShip]: "CI_COMMITTER_USERNAME",
-  [IntegrationName.GithubActions]: "GITHUB_ACTOR",
-  [IntegrationName.GitLab]: "GITLAB_USER_LOGIN",
-  [IntegrationName.Jenkins]: "CHANGE_AUTHOR",
-  [IntegrationName.SoosCsa]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosDast]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosSast]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosSca]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosSbom]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.TeamCity]: "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
-  [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
-  [IntegrationName.VisualStudio]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.VisualStudioCode]: "SOOS_CONTRIBUTING_DEVELOPER",
-};
+/*
+  Environment Variable References
+  Azure DevOps: https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+  AWS CodeBuild: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+  Bamboo: https://confluence.atlassian.com/bamboo/bamboo-variables-289277087.html
+  CicleCI: https://circleci.com/docs/variables/#built-in-environment-variables
+  Codeship: https://docs.cloudbees.com/docs/cloudbees-codeship/latest/pro-builds-and-configuration/environment-variables
+  GitHub Actions: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables
+  Jenkins: https://devopsqa.wordpress.com/2019/11/19/list-of-available-jenkins-environment-variables/
+  TeamCity: https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html#Predefined+Server+Build+Parameters
+  TravisCI: https://docs.travis-ci.com/user/environment-variables
+*/
+
+const contributingDeveloperEnvironmentVariables: Array<string> = [
+  // AzureDevOps
+  "Build_RequestedFor",
+  "Build_RequestedForEmail",
+
+  // AWS CodeBuild"
+  "CODEBUILD_BUILD_INITIATOR",
+  "CODEBUILD_INITIATOR",
+
+  // Bamboo"
+  "bamboo_planRepository_1_username",
+  "bamboo_ManualBuildTriggerReason_userName",
+
+  // Bitbucket
+  "BITBUCKET_STEP_TRIGGERER_UUID",
+
+  // CicleCI
+  "CIRCLE_USERNAME",
+  "CIRCLE_PR_USERNAME",
+
+  // Codeship
+  "CI_COMMITTER_USERNAME",
+  "CI_COMMITTER_EMAIL",
+
+  // GitHub Actions
+  "GITHUB_ACTOR",
+  "GITHUB_TRIGGERING_ACTOR",
+
+  // Jenkins
+  "CHANGE_AUTHOR",
+  "CHANGE_AUTHOR_EMAIL",
+  "GIT_COMMITTER_NAME",
+  "GIT_COMMITTER_EMAIL",
+  "GIT_AUTHOR_NAME",
+  "GIT_AUTHOR_EMAIL",
+
+  // SOOS
+  "SOOS_CONTRIBUTING_DEVELOPER",
+
+  // TeamCity
+  "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
+
+  // TravisCI
+  "TRAVIS_JOB_RESTARTED_BY",
+
+  // Visual Studio/Code
+  "SOOS_CONTRIBUTING_DEVELOPER",
+];
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
@@ -217,19 +258,19 @@ class AnalysisService {
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
 
-    if (contributingDeveloperAudit?.length === 0) {
-      soosLogger.info(`Integration Name: ${integrationName}`);
-      const envVariableName = integrationNameToEnvVariable[integrationName];
-      if (envVariableName) {
-        const contributingDeveloper = process.env[envVariableName];
-        if (contributingDeveloper) {
-          contributingDeveloperAudit.push({
-            source: ContributingDeveloperSource.EnvironmentVariable,
-            sourceName: envVariableName,
-            contributingDeveloperId: contributingDeveloper,
-          });
-        }
-      }
+    if (contributingDeveloperAudit === undefined || contributingDeveloperAudit.length === 0) {
+      contributingDeveloperAudit = contributingDeveloperEnvironmentVariables
+        .map((ev) => {
+          const environmentVariableValue = process.env[ev];
+          return environmentVariableValue && environmentVariableValue.length > 0
+            ? {
+                source: ContributingDeveloperSource.EnvironmentVariable,
+                sourceName: ev,
+                contributingDeveloperId: environmentVariableValue,
+              }
+            : null;
+        })
+        .filter((a) => a !== null);
     }
 
     const result = await this.analysisApiClient.createScan({
