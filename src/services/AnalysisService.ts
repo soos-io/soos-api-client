@@ -258,25 +258,19 @@ class AnalysisService {
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
 
-    if (contributingDeveloperAudit === undefined) {
-      contributingDeveloperAudit = [];
-    }
-
-    if (contributingDeveloperAudit.length === 0) {
-      soosLogger.info(`Integration Name: ${integrationName}`);
-
-      // loop through all possible contributing developer environment variables and add the values for any that are found
-      contributingDeveloperEnvironmentVariables.map((ev) => {
-        const environmentVariableValue = process.env[ev];
-
-        if (environmentVariableValue && environmentVariableValue.length > 0) {
-          contributingDeveloperAudit.push({
-            source: ContributingDeveloperSource.EnvironmentVariable,
-            sourceName: ev,
-            contributingDeveloperId: environmentVariableValue,
-          });
-        }
-      });
+    if (contributingDeveloperAudit === undefined || contributingDeveloperAudit.length === 0) {
+      contributingDeveloperAudit = contributingDeveloperEnvironmentVariables
+        .map((ev) => {
+          const environmentVariableValue = process.env[ev];
+          return environmentVariableValue && environmentVariableValue.length > 0
+            ? {
+                source: ContributingDeveloperSource.EnvironmentVariable,
+                sourceName: ev,
+                contributingDeveloperId: environmentVariableValue,
+              }
+            : null;
+        })
+        .filter((a) => a !== null);
     }
 
     const result = await this.analysisApiClient.createScan({
