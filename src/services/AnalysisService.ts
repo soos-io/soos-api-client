@@ -117,124 +117,6 @@ interface IUpdateScanStatusParams {
   TravisCI: https://docs.travis-ci.com/user/environment-variables
 */
 
-const commitHashEnvironmentVariables: Array<string> = [
-  // Azure DevOps
-  "Build_SourceVersion",
-
-  // AWS CodeBuild
-  "CODEBUILD_SOURCE_VERSION",
-  "CODEBUILD_RESOLVED_SOURCE_VERSION",
-
-  // Bamboo
-  "bamboo_planRepository_1_revision",
-
-  // Bitbucket
-  "BITBUCKET_COMMIT",
-
-  // CicleCI
-  "CIRCLE_SHA1",
-
-  // CodeShip
-  "CI_COMMIT_ID",
-
-  // GitHub Actions
-  "GITHUB_SHA",
-
-  // Jenkins
-  "GIT_COMMIT",
-
-  // TeamCity - n/a
-
-  // TravisCI
-  "TRAVIS_COMMIT",
-];
-
-const branchNameEnvironmentVariables: Array<string> = [
-  // Azure DevOps
-  "Build_SourceBranchName",
-
-  // AWS CodeBuild
-  "CODEBUILD_WEBHOOK_BASE_REF",
-
-  // Bamboo
-  "bamboo_planRepository_1_branchName",
-
-  // Bitbucket
-  "BITBUCKET_BRANCH",
-
-  // CicleCI
-  "CIRCLE_BRANCH",
-
-  // CodeShip
-  "CI_BRANCH",
-
-  // GitHub Actions
-  "GITHUB_REF_NAME",
-
-  // Jenkins
-  "GIT_BRANCH",
-  "BRANCH_NAME",
-
-  // TeamCity
-  "teamcity_build_branch",
-
-  // TravisCI
-  "TRAVIS_BRANCH",
-];
-
-const buildUriEnvironmentVariables: Array<string> = [
-  // Azure DevOps
-  "Build_BuildUri",
-
-  // AWS CodeBuild
-  "CODEBUILD_PUBLIC_BUILD_URL",
-
-  // Bamboo
-  "bamboo_resultsUrl",
-
-  // Bitbucket
-  "BITBUCKET_GIT_HTTP_ORIGIN", // questionable
-
-  // CicleCI
-  "CIRCLE_BUILD_URL",
-
-  // CodeShip - n/a
-  // GitHub Actions - n/a
-
-  // Jenkins
-  "BUILD_URL",
-
-  // TeamCity
-  "env_BUILD_URL",
-
-  // TravisCI
-  "TRAVIS_BUILD_WEB_URL",
-];
-
-const buildNumberEnvironmentVariables: Array<string> = [
-  // Azure DevOps
-  "Build_BuildNumber",
-
-  // AWS CodeBuild
-  "CODEBUILD_BUILD_NUMBER",
-
-  // Bamboo
-  "bamboo_buildNumber",
-
-  // Bitbucket
-  "BITBUCKET_BUILD_NUMBER",
-
-  // CicleCI - n/a
-  // CodeShip - n/a
-  // GitHub Actions - n/a
-
-  // Jenkins
-  "BUILD_NUMBER",
-
-  // TravisCI - n/a
-  // TeamCity - n/a
-];
-
 const contributingDeveloperEnvironmentVariables: Array<string> = [
   // AzureDevOps
   "Build_RequestedFor",
@@ -349,18 +231,6 @@ class AnalysisService {
     }
   }
 
-  private findFirstEnvironmentVariableValue(environmentVariables: Array<string>): string | null {
-    for (const ev in environmentVariables) {
-      const environmentVariableValue = process.env[ev];
-
-      if (environmentVariableValue && environmentVariableValue.length > 0) {
-        return environmentVariableValue;
-      }
-    }
-
-    return null;
-  }
-
   async setupScan({
     clientId,
     projectName,
@@ -389,7 +259,7 @@ class AnalysisService {
     soosLogger.info(`Branch Name: ${branchName}`);
 
     if (contributingDeveloperAudit === undefined) {
-      contributingDeveloperAudit  = [];
+      contributingDeveloperAudit = [];
     }
 
     if (contributingDeveloperAudit.length === 0) {
@@ -399,7 +269,7 @@ class AnalysisService {
       for (const ev in contributingDeveloperEnvironmentVariables) {
         const environmentVariableValue = process.env[ev];
 
-        if (environmentVariableValue) {
+        if (environmentVariableValue && environmentVariableValue.length > 0) {
           contributingDeveloperAudit.push({
             source: ContributingDeveloperSource.EnvironmentVariable,
             sourceName: ev,
@@ -408,19 +278,6 @@ class AnalysisService {
         }
       }
     }
-
-    commitHash = commitHash
-      ? commitHash
-      : this.findFirstEnvironmentVariableValue(commitHashEnvironmentVariables);
-    branchName = branchName
-      ? branchName
-      : this.findFirstEnvironmentVariableValue(branchNameEnvironmentVariables);
-    buildUri = branchUri
-      ? branchUri
-      : this.findFirstEnvironmentVariableValue(buildUriEnvironmentVariables);
-    buildVersion = buildVersion
-      ? buildVersion
-      : this.findFirstEnvironmentVariableValue(buildNumberEnvironmentVariables);
 
     const result = await this.analysisApiClient.createScan({
       clientId: clientId,
