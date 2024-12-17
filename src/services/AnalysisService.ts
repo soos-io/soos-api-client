@@ -104,26 +104,185 @@ interface IUpdateScanStatusParams {
   scanStatusUrl?: string;
 }
 
-const integrationNameToEnvVariable: Record<IntegrationName, string> = {
-  [IntegrationName.AzureDevOps]: "Build.RequestedFor",
-  [IntegrationName.AWSCodeBuild]: "CODEBUILD_BUILD_INITIATOR",
-  [IntegrationName.Bamboo]: "bamboo_planRepository_1_username",
-  [IntegrationName.BitBucket]: "BITBUCKET_STEP_TRIGGERER_UUID",
-  [IntegrationName.CircleCI]: "CIRCLE_USERNAME",
-  [IntegrationName.CodeShip]: "CI_COMMITTER_USERNAME",
-  [IntegrationName.GithubActions]: "GITHUB_ACTOR",
-  [IntegrationName.GitLab]: "GITLAB_USER_LOGIN",
-  [IntegrationName.Jenkins]: "CHANGE_AUTHOR",
-  [IntegrationName.SoosCsa]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosDast]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosSast]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosSca]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.SoosSbom]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.TeamCity]: "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
-  [IntegrationName.TravisCI]: "TRAVIS_COMMIT",
-  [IntegrationName.VisualStudio]: "SOOS_CONTRIBUTING_DEVELOPER",
-  [IntegrationName.VisualStudioCode]: "SOOS_CONTRIBUTING_DEVELOPER",
-};
+/*
+  Environment Variable References
+  Azure DevOps: https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+  AWS CodeBuild: https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+  Bamboo: https://confluence.atlassian.com/bamboo/bamboo-variables-289277087.html
+  CicleCI: https://circleci.com/docs/variables/#built-in-environment-variables
+  Codeship: https://docs.cloudbees.com/docs/cloudbees-codeship/latest/pro-builds-and-configuration/environment-variables
+  GitHub Actions: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables
+  Jenkins: https://devopsqa.wordpress.com/2019/11/19/list-of-available-jenkins-environment-variables/
+  TeamCity: https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html#Predefined+Server+Build+Parameters
+  TravisCI: https://docs.travis-ci.com/user/environment-variables
+*/
+
+const commitHashEnvironmentVariables: Array<string> = [
+  // Azure DevOps
+  "Build_SourceVersion",
+
+  // AWS CodeBuild
+  "CODEBUILD_SOURCE_VERSION",
+  "CODEBUILD_RESOLVED_SOURCE_VERSION",
+
+  // Bamboo
+  "bamboo_planRepository_1_revision",
+
+  // Bitbucket
+  "BITBUCKET_COMMIT",
+
+  // CicleCI
+  "CIRCLE_SHA1",
+
+  // CodeShip
+  "CI_COMMIT_ID",
+
+  // GitHub Actions
+  "GITHUB_SHA",
+
+  // Jenkins
+  "GIT_COMMIT",
+
+  // TeamCity - n/a
+
+  // TravisCI
+  "TRAVIS_COMMIT",
+];
+
+const branchNameEnvironmentVariables: Array<string> = [
+  // Azure DevOps
+  "Build_SourceBranchName",
+
+  // AWS CodeBuild
+  "CODEBUILD_WEBHOOK_BASE_REF",
+
+  // Bamboo
+  "bamboo_planRepository_1_branchName",
+
+  // Bitbucket
+  "BITBUCKET_BRANCH",
+
+  // CicleCI
+  "CIRCLE_BRANCH",
+
+  // CodeShip
+  "CI_BRANCH",
+
+  // GitHub Actions
+  "GITHUB_REF_NAME",
+
+  // Jenkins
+  "GIT_BRANCH",
+  "BRANCH_NAME",
+
+  // TeamCity
+  "teamcity_build_branch",
+
+  // TravisCI
+  "TRAVIS_BRANCH",
+];
+
+const buildUriEnvironmentVariables: Array<string> = [
+  // Azure DevOps
+  "Build_BuildUri",
+
+  // AWS CodeBuild
+  "CODEBUILD_PUBLIC_BUILD_URL",
+
+  // Bamboo
+  "bamboo_resultsUrl",
+
+  // Bitbucket
+  "BITBUCKET_GIT_HTTP_ORIGIN", // questionable
+
+  // CicleCI
+  "CIRCLE_BUILD_URL",
+
+  // CodeShip - n/a
+  // GitHub Actions - n/a
+
+  // Jenkins
+  "BUILD_URL",
+
+  // TeamCity
+  "env_BUILD_URL",
+
+  // TravisCI
+  "TRAVIS_BUILD_WEB_URL",
+];
+
+const buildNumberEnvironmentVariables: Array<string> = [
+  // Azure DevOps
+  "Build_BuildNumber",
+
+  // AWS CodeBuild
+  "CODEBUILD_BUILD_NUMBER",
+
+  // Bamboo
+  "bamboo_buildNumber",
+
+  // Bitbucket
+  "BITBUCKET_BUILD_NUMBER",
+
+  // CicleCI - n/a
+  // CodeShip - n/a
+  // GitHub Actions - n/a
+
+  // Jenkins
+  "BUILD_NUMBER",
+
+  // TravisCI - n/a
+  // TeamCity - n/a
+];
+
+const contributingDeveloperEnvironmentVariables: Array<string> = [
+  // AzureDevOps
+  "Build_RequestedFor",
+  "Build_RequestedForEmail",
+
+  // AWS CodeBuild"
+  "CODEBUILD_BUILD_INITIATOR",
+  "CODEBUILD_INITIATOR",
+
+  // Bamboo"
+  "bamboo_planRepository_1_username",
+  "bamboo_ManualBuildTriggerReason_userName",
+
+  // Bitbucket
+  "BITBUCKET_STEP_TRIGGERER_UUID",
+
+  // CicleCI
+  "CIRCLE_USERNAME",
+  "CIRCLE_PR_USERNAME",
+
+  // Codeship
+  "CI_COMMITTER_USERNAME",
+  "CI_COMMITTER_EMAIL",
+
+  // GitHub Actions
+  "GITHUB_ACTOR",
+  "GITHUB_TRIGGERING_ACTOR",
+
+  // Jenkins
+  "CHANGE_AUTHOR",
+  "CHANGE_AUTHOR_EMAIL",
+  "GIT_COMMITTER_NAME",
+  "GIT_COMMITTER_EMAIL",
+  "GIT_AUTHOR_NAME",
+  "GIT_AUTHOR_EMAIL",
+
+  // SOOS
+  "SOOS_CONTRIBUTING_DEVELOPER",
+
+  // TeamCity
+  "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
+
+  // TravisCI
+  "TRAVIS_JOB_RESTARTED_BY",
+
+  // Visual Studio/Code
+  "SOOS_CONTRIBUTING_DEVELOPER",
+];
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
@@ -190,6 +349,18 @@ class AnalysisService {
     }
   }
 
+  private findFirstEnvironmentVariableValue(environmentVariables: Array<string>): string | null {
+    for (const ev in environmentVariables) {
+      const environmentVariableValue = process.env[ev];
+
+      if (environmentVariableValue) {
+        return environmentVariableValue;
+      }
+    }
+
+    return null;
+  }
+
   async setupScan({
     clientId,
     projectName,
@@ -219,18 +390,33 @@ class AnalysisService {
 
     if (contributingDeveloperAudit?.length === 0) {
       soosLogger.info(`Integration Name: ${integrationName}`);
-      const envVariableName = integrationNameToEnvVariable[integrationName];
-      if (envVariableName) {
-        const contributingDeveloper = process.env[envVariableName];
-        if (contributingDeveloper) {
+
+      // loop through all possible contributing developer environment variables and add the values for any that are found
+      for (const ev in contributingDeveloperEnvironmentVariables) {
+        const environmentVariableValue = process.env[ev];
+
+        if (environmentVariableValue) {
           contributingDeveloperAudit.push({
             source: ContributingDeveloperSource.EnvironmentVariable,
-            sourceName: envVariableName,
-            contributingDeveloperId: contributingDeveloper,
+            sourceName: ev,
+            contributingDeveloperId: environmentVariableValue,
           });
         }
       }
     }
+
+    commitHash = commitHash
+      ? commitHash
+      : this.findFirstEnvironmentVariableValue(commitHashEnvironmentVariables);
+    branchName = branchName
+      ? branchName
+      : this.findFirstEnvironmentVariableValue(branchNameEnvironmentVariables);
+    buildUri = branchUri
+      ? branchUri
+      : this.findFirstEnvironmentVariableValue(buildUriEnvironmentVariables);
+    buildVersion = buildVersion
+      ? buildVersion
+      : this.findFirstEnvironmentVariableValue(buildNumberEnvironmentVariables);
 
     const result = await this.analysisApiClient.createScan({
       clientId: clientId,
