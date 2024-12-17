@@ -266,7 +266,7 @@ class AnalysisService {
       soosLogger.info(`Integration Name: ${integrationName}`);
 
       // loop through all possible contributing developer environment variables and add the values for any that are found
-      for (const ev in contributingDeveloperEnvironmentVariables) {
+      contributingDeveloperEnvironmentVariables.map((ev) => {
         const environmentVariableValue = process.env[ev];
 
         if (environmentVariableValue && environmentVariableValue.length > 0) {
@@ -276,7 +276,7 @@ class AnalysisService {
             contributingDeveloperId: environmentVariableValue,
           });
         }
-      }
+      });
     }
 
     const result = await this.analysisApiClient.createScan({
