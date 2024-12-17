@@ -353,7 +353,7 @@ class AnalysisService {
     for (const ev in environmentVariables) {
       const environmentVariableValue = process.env[ev];
 
-      if (environmentVariableValue) {
+      if (environmentVariableValue && environmentVariableValue.length > 0) {
         return environmentVariableValue;
       }
     }
