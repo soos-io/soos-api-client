@@ -388,7 +388,11 @@ class AnalysisService {
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     soosLogger.info(`Branch Name: ${branchName}`);
 
-    if (contributingDeveloperAudit?.length === 0) {
+    if (contributingDeveloperAudit === undefined) {
+      contributingDeveloperAudit  = [];
+    }
+
+    if (contributingDeveloperAudit.length === 0) {
       soosLogger.info(`Integration Name: ${integrationName}`);
 
       // loop through all possible contributing developer environment variables and add the values for any that are found
