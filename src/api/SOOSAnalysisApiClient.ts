@@ -45,6 +45,8 @@ interface ICreateScanRequest {
   contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
   toolName?: string | null;
   toolVersion?: string | null;
+  commandLine?: string | null;
+  scanMode?: string | null;
 }
 
 interface ICreateScanResponse {
@@ -206,6 +208,8 @@ class SOOSAnalysisApiClient {
     contributingDeveloperAudit,
     toolName,
     toolVersion,
+    commandLine,
+    scanMode,
   }: ICreateScanRequest): Promise<ICreateScanResponse> {
     const response = await this.client.post<ICreateScanResponse>(
       `clients/${clientId}/scan-types/${scanType}/scans`,
@@ -224,6 +228,8 @@ class SOOSAnalysisApiClient {
         contributingDeveloperAudit: contributingDeveloperAudit,
         toolName: toolName,
         toolVersion: toolVersion,
+        commandLine: commandLine,
+        scanMode: scanMode,
       },
     );
 

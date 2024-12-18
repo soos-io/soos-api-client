@@ -91,6 +91,8 @@ interface ISetupScanParams {
   scanType: ScanType;
   toolName?: string | null;
   toolVersion?: string | null;
+  commandLine?: string | null;
+  scanMode?: string | null;
 }
 
 interface IUpdateScanStatusParams {
@@ -248,6 +250,8 @@ class AnalysisService {
     scanType,
     toolName,
     toolVersion,
+    commandLine,
+    scanMode,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
     soosLogger.info("Checking status...");
     const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
@@ -290,6 +294,8 @@ class AnalysisService {
       scanType: scanType,
       toolName: toolName,
       toolVersion: toolVersion,
+      commandLine: commandLine,
+      scanMode: scanMode,
     });
 
     soosLogger.info(`Project Hash: ${result.projectHash}`);
