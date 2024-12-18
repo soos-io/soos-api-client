@@ -158,12 +158,19 @@ const contributingDeveloperEnvironmentVariables: Array<string> = [
 
   // TeamCity
   "TEAMCITY_BUILD_TRIGGEREDBY_USERNAME",
+  "TEAMCITY.BUILD.TRIGGEREDBY.USERNAME",
 
   // TravisCI
   "TRAVIS_JOB_RESTARTED_BY",
 
   // Visual Studio/Code
   "SOOS_CONTRIBUTING_DEVELOPER",
+];
+
+const contributingDeveloperStringInterpolationVariables: Array<string> = [
+  // Jenkins
+  "${env.CHANGE_AUTHOR}",
+  "\$CHANGE_AUTHOR",
 ];
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
@@ -272,6 +279,14 @@ class AnalysisService {
         })
         .filter((a) => a !== null);
     }
+
+    // TODO: testing, remove this
+    contributingDeveloperStringInterpolationVariables
+      .map((v) => {
+        soosLogger.info(`VAR: ${v}`);
+        return v && v.length > 0 ? v : null;
+      })
+      .filter((a) => a !== null);
 
     const result = await this.analysisApiClient.createScan({
       clientId: clientId,
