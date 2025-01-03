@@ -220,7 +220,10 @@ class AnalysisService {
   static create(apiKey: string, apiURL: string): AnalysisService {
     const analysisApiClient = new SOOSAnalysisApiClient(apiKey, apiURL);
     const attributionApiClient = new SOOSAttributionApiClient(apiKey, apiURL);
-    const projectsApiClient = new SOOSProjectsApiClient(apiKey, apiURL);
+    const projectsApiClient = new SOOSProjectsApiClient(
+      apiKey,
+      apiURL.replace("api.", "api-projects."),
+    );
     const userApiClient = new SOOSUserApiClient(apiKey, apiURL.replace("api.", "api-user."));
     const hooksApiClient = new SOOSHooksApiClient(apiKey, apiURL.replace("api.", "api-hooks."));
 
