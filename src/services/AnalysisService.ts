@@ -33,7 +33,7 @@ import * as Glob from "glob";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
 import SOOSAttributionApiClient, { IAttributionStatusModel } from "../api/SOOSAttributionApiClient";
 
-interface IGenerateAttrubtionOutputParams {
+interface IGenerateAttributionOutputParams {
   clientId: string;
   projectHash: string;
   projectName: string;
@@ -579,7 +579,7 @@ class AnalysisService {
     includeVulnerabilities,
     includeOriginalSbom,
     workingDirectory,
-  }: IGenerateAttrubtionOutputParams): Promise<void> {
+  }: IGenerateAttributionOutputParams): Promise<void> {
     soosLogger.info(`Generating ${format} report as ${fileType} for ${projectName}...`);
 
     const attributionStatus = await this.attributionApiClient.createAttributionRequest({
@@ -617,7 +617,7 @@ class AnalysisService {
       if (output && workingDirectory) {
         soosLogger.info(`${format} report generated successfully.`);
 
-        const outputFile = Path.join(workingDirectory, SOOS_CONSTANTS.Files.SarifOutput);
+        const outputFile = Path.join(workingDirectory, attributionStatus.filename);
         soosLogger.info(`Writing ${format} report to ${outputFile}`);
         FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
       } else {
