@@ -614,10 +614,10 @@ class AnalysisService {
         attributionId: finalAttributionStatus.id,
       });
 
-      if (output && workingDirectory) {
+      if (output && workingDirectory && finalAttributionStatus.filename) {
         soosLogger.info(`${format} report generated successfully.`);
 
-        const outputFile = Path.join(workingDirectory, attributionStatus.filename);
+        const outputFile = Path.join(workingDirectory, finalAttributionStatus.filename);
         soosLogger.info(`Writing ${format} report to ${outputFile}`);
         FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
       } else {

@@ -17,7 +17,7 @@ interface IPostScanAttributionRequest {
 
 interface IAttributionStatusModel {
   id: string;
-  filename: string;
+  filename: string | null;
   status: AttributionStatusEnum;
   statusDescription: string | null;
   statusLastUpdated: string;
