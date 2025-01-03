@@ -546,7 +546,7 @@ class AnalysisService {
       attributionStatus.status === AttributionStatusEnum.Requested ||
       attributionStatus.status === AttributionStatusEnum.InProgress
     ) {
-      soosLogger.info(`Waiting for export to complete...`);
+      soosLogger.info(`Waiting for export to complete (${attributionStatus.status})...`);
       await sleep(SOOS_CONSTANTS.Status.DelayTime);
       return await this.waitForAttributionToFinish({
         clientId,
