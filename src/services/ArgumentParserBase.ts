@@ -178,7 +178,7 @@ abstract class ArgumentParserBase {
   protected ensureArgumentCombinationsAreValid(args: any): void {
     if (!this.validateExportFormatAndFileType(this.scanType, args.format, args.fileType)) {
       throw new Error(
-        `Invalid argument combination. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (https://kb.soos.io/help/soos-reports-for-export).`,
+        `Invalid argument combination for ${this.scanType}. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (https://kb.soos.io/help/soos-reports-for-export).`,
       );
     }
   }
