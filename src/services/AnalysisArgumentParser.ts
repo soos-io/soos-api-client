@@ -1,5 +1,7 @@
 import { ArgumentParser } from "argparse";
 import {
+  AttributionFileTypeEnum,
+  AttributionFormatEnum,
   ContributingDeveloperSource,
   IntegrationName,
   IntegrationType,
@@ -24,6 +26,8 @@ interface IBaseScanArguments extends ICommonArguments {
   onFailure: OnFailure;
   operatingEnvironment: string;
   projectName: string;
+  exportFormat: AttributionFormatEnum;
+  exportFileType: AttributionFileTypeEnum;
 }
 
 class AnalysisArgumentParser extends ArgumentParserBase {
@@ -131,6 +135,16 @@ class AnalysisArgumentParser extends ArgumentParserBase {
       type: (value: string) => {
         return ensureNonEmptyValue(value, "projectName");
       },
+    });
+
+    this.addEnumArgument(this.argumentParser, "--exportFormat", AttributionFormatEnum, {
+      help: "The report export format (CyclondDX, SPDX, CsafVEX, SARIF, SoosIssues, SoosPackages, SoosLicences, SoosVulnerabilities)",
+      required: false,
+    });
+
+    this.addEnumArgument(this.argumentParser, "--exportFileType", AttributionFileTypeEnum, {
+      help: "The report export file type (NOTE not all file types are available for all export formats) (JSON, CSV, TEXT, XML, HTML)",
+      required: false,
     });
   }
 }
