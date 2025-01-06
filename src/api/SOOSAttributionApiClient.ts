@@ -53,7 +53,7 @@ class SOOSAttributionApiClient {
     this.client = SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
-      apiClientName: "Analysis API",
+      apiClientName: "Analysis Attribution API",
     });
   }
 
