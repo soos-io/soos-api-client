@@ -167,9 +167,9 @@ abstract class ArgumentParserBase {
           isGeneratedScanType &&
           (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Text)
         );
+      default:
+        return false;
     }
-
-    return false;
   }
 
   protected ensureRequiredArguments(args: any): void {
