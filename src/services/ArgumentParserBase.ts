@@ -9,7 +9,6 @@ import {
   getEnvVariable,
   isNil,
 } from "../utilities";
-import { soosLogger } from "../logging";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -140,12 +139,10 @@ abstract class ArgumentParserBase {
         return isGeneratedScanType && fileType === AttributionFileTypeEnum.Json;
 
       case AttributionFormatEnum.CycloneDx:
-        const isValid =
+        return (
           isGeneratedScanType &&
-          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml);
-
-        soosLogger.info(`Valid: (${isValid}) (${fileType === AttributionFileTypeEnum.Json})`);
-        return isValid;
+          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml)
+        );
 
       case AttributionFormatEnum.Sarif:
         return fileType === AttributionFileTypeEnum.Json;
@@ -169,7 +166,6 @@ abstract class ArgumentParserBase {
           (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Text)
         );
       default:
-        soosLogger.warn(`No match for (${format})`);
         return false;
     }
   }
@@ -182,11 +178,9 @@ abstract class ArgumentParserBase {
   protected ensureArgumentCombinationsAreValid(args: any): void {
     const argumentsAreValid = this.isValidExportArguments(
       this.scanType,
-      args.format,
-      args.fileType,
+      args.exportFormat,
+      args.exportFileType,
     );
-
-    soosLogger.info(`Arguments are valid (${argumentsAreValid})`);
 
     if (!argumentsAreValid) {
       throw new Error(
