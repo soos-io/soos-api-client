@@ -9,6 +9,7 @@ import {
   getEnvVariable,
   isNil,
 } from "../utilities";
+import { soosLogger } from "../logging";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -127,12 +128,13 @@ abstract class ArgumentParserBase {
     return args;
   }
 
-  validateExportFormatAndFileType(
+  isValidExportArguments(
     scanType: ScanType | null | undefined,
     format: AttributionFormatEnum,
     fileType: AttributionFileTypeEnum,
   ): boolean {
     const isGeneratedScanType = !isNil(scanType) && generatedScanTypes.includes(scanType);
+    soosLogger.info(`${scanType} is a generated scan type (${isGeneratedScanType})`);
 
     switch (format) {
       case AttributionFormatEnum.CsafVex:
@@ -176,7 +178,7 @@ abstract class ArgumentParserBase {
   }
 
   protected ensureArgumentCombinationsAreValid(args: any): void {
-    if (!this.validateExportFormatAndFileType(this.scanType, args.format, args.fileType)) {
+    if (!this.isValidExportArguments(this.scanType, args.format, args.fileType)) {
       throw new Error(
         `Invalid argument combination for ${this.scanType}. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (https://kb.soos.io/help/soos-reports-for-export).`,
       );
