@@ -134,7 +134,6 @@ abstract class ArgumentParserBase {
     fileType: AttributionFileTypeEnum,
   ): boolean {
     const isGeneratedScanType = !isNil(scanType) && generatedScanTypes.includes(scanType);
-    soosLogger.info(`${scanType} is a generated scan type (${isGeneratedScanType})`);
 
     switch (format) {
       case AttributionFormatEnum.CsafVex:
@@ -178,7 +177,15 @@ abstract class ArgumentParserBase {
   }
 
   protected ensureArgumentCombinationsAreValid(args: any): void {
-    if (!this.isValidExportArguments(this.scanType, args.format, args.fileType)) {
+    const argumentsAreValid = this.isValidExportArguments(
+      this.scanType,
+      args.format,
+      args.fileType,
+    );
+
+    soosLogger.info(`Arguments are valid (${argumentsAreValid})`);
+
+    if (!argumentsAreValid) {
       throw new Error(
         `Invalid argument combination for ${this.scanType}. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (https://kb.soos.io/help/soos-reports-for-export).`,
       );
