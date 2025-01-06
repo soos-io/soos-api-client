@@ -176,6 +176,10 @@ abstract class ArgumentParserBase {
   }
 
   protected ensureArgumentCombinationsAreValid(args: any): void {
+    if (isNil(args.exportFormat) || isNil(args.exportFileType)) {
+      return;
+    }
+
     const argumentsAreValid = this.isValidExportArguments(
       this.scanType,
       args.exportFormat,
