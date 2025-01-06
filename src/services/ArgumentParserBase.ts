@@ -1,8 +1,14 @@
-import { IntegrationType } from "../enums";
+import { AttributionFileTypeEnum, AttributionFormatEnum, IntegrationType } from "../enums";
 import { ArgumentParser } from "argparse";
 import { SOOS_CONSTANTS } from "../constants";
 import { IntegrationName, LogLevel, ScanType } from "../enums";
-import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
+import {
+  ensureEnumValue,
+  ensureNonEmptyValue,
+  generatedScanTypes,
+  getEnvVariable,
+  isNil,
+} from "../utilities";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -116,13 +122,75 @@ abstract class ArgumentParserBase {
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
     const args = this.argumentParser.parse_args();
     this.ensureRequiredArguments(args);
+    this.ensureArgumentCombinationsAreValid(args);
     this.checkDeprecatedArguments(args);
     return args;
+  }
+
+  isValidExportArguments(
+    scanType: ScanType | null | undefined,
+    format: AttributionFormatEnum,
+    fileType: AttributionFileTypeEnum,
+  ): boolean {
+    const isGeneratedScanType = !isNil(scanType) && generatedScanTypes.includes(scanType);
+
+    switch (format) {
+      case AttributionFormatEnum.CsafVex:
+        return isGeneratedScanType && fileType === AttributionFileTypeEnum.Json;
+
+      case AttributionFormatEnum.CycloneDx:
+        return (
+          isGeneratedScanType &&
+          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml)
+        );
+
+      case AttributionFormatEnum.Sarif:
+        return fileType === AttributionFileTypeEnum.Json;
+
+      case AttributionFormatEnum.SoosIssues:
+        return (
+          fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
+        );
+
+      case AttributionFormatEnum.SoosLicenses:
+      case AttributionFormatEnum.SoosPackages:
+      case AttributionFormatEnum.SoosVulnerabilities:
+        return (
+          isGeneratedScanType &&
+          (fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv)
+        );
+
+      case AttributionFormatEnum.Spdx:
+        return (
+          isGeneratedScanType &&
+          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Text)
+        );
+      default:
+        return false;
+    }
   }
 
   protected ensureRequiredArguments(args: any): void {
     ensureNonEmptyValue(args.clientId, "clientId");
     ensureNonEmptyValue(args.apiKey, "apiKey");
+  }
+
+  protected ensureArgumentCombinationsAreValid(args: any): void {
+    if (isNil(args.exportFormat) || isNil(args.exportFileType)) {
+      return;
+    }
+
+    const argumentsAreValid = this.isValidExportArguments(
+      this.scanType,
+      args.exportFormat,
+      args.exportFileType,
+    );
+
+    if (!argumentsAreValid) {
+      throw new Error(
+        `Invalid argument combination for ${this.scanType}. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (https://kb.soos.io/help/soos-reports-for-export).`,
+      );
+    }
   }
 
   protected checkDeprecatedArguments(_args: any): void {

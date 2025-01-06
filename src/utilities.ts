@@ -1,9 +1,11 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
-import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus } from "./enums";
+import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
 import fs from "fs";
 import crypto from "node:crypto";
 import { BinaryToTextEncoding } from "crypto";
+
+const generatedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
 const isNil = (value: unknown): value is null | undefined => value === null || value === undefined;
 
@@ -213,6 +215,7 @@ const StringUtilities = {
 };
 
 export {
+  generatedScanTypes,
   isNil,
   ensureValue,
   ensureEnumValue,

@@ -6,7 +6,6 @@ import {
   IntegrationName,
   IntegrationType,
   ManifestStatus,
-  OutputFormat,
   PackageManagerType,
   ScanStatus,
   ScanType,
@@ -157,15 +156,6 @@ interface IUploadManifestFilesResponse {
   manifests?: Array<IUploadManifestFilesResponseManifestStatus> | undefined;
 }
 
-interface IGetFormattedScanRequest {
-  clientId: string;
-  projectHash: string;
-  branchHash: string;
-  scanType: ScanType;
-  scanId: string;
-  outputFormat: OutputFormat;
-}
-
 interface IUploadScanToolResultRequest {
   clientId: string;
   projectHash: string;
@@ -301,20 +291,6 @@ class SOOSAnalysisApiClient {
     };
   }
 
-  async getFormattedScanResult({
-    clientId,
-    projectHash,
-    branchHash,
-    scanType,
-    scanId,
-    outputFormat,
-  }: IGetFormattedScanRequest): Promise<Record<string, unknown>> {
-    const response = await this.client.get<Record<string, unknown>>(
-      `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}/formats/${outputFormat}`,
-    );
-    return response.data;
-  }
-
   async uploadScanToolResult({
     clientId,
     projectHash,
@@ -353,7 +329,6 @@ export {
   IUploadManifestFilesRequest,
   IUploadManifestFilesResponseManifestStatus,
   IUploadManifestFilesResponse,
-  IGetFormattedScanRequest as IFormattedScanRequest,
   IUploadScanToolResultRequest,
   IIssuesModel,
 };

@@ -124,10 +124,6 @@ export enum LogLevel {
   ERROR = "ERROR",
 }
 
-export enum OutputFormat {
-  SARIF = "SARIF",
-}
-
 export enum OnFailure {
   Continue = "continue_on_failure",
   Fail = "fail_the_build",
@@ -152,4 +148,34 @@ export enum FileMatchTypeEnum {
   Manifest = "Manifest",
   FileHash = "FileHash",
   ManifestAndFileHash = "ManifestAndFileHash",
+}
+
+export enum AttributionFormatEnum {
+  Unknown = "Unknown",
+  CsafVex = "CsafVex",
+  CycloneDx = "CycloneDx",
+  Sarif = "Sarif",
+  Spdx = "Spdx",
+  SoosIssues = "SoosIssues",
+  SoosLicenses = "SoosLicenses",
+  SoosPackages = "SoosPackages",
+  SoosVulnerabilities = "SoosVulnerabilities",
+}
+
+export enum AttributionFileTypeEnum {
+  Unknown = "Unknown",
+  Csv = "Csv",
+  Html = "Html",
+  Json = "Json",
+  Text = "Text",
+  Xml = "Xml",
+}
+
+export enum AttributionStatusEnum {
+  Unknown = "Unknown",
+  Requested = "Requested",
+  InProgress = "InProgress",
+  Completed = "Completed",
+  CompletedWithProblems = "CompletedWithProblems",
+  Failed = "Failed",
 }

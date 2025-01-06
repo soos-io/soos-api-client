@@ -1,4 +1,11 @@
-import { FileMatchTypeEnum, HashAlgorithmEnum, HashEncodingEnum } from "./../enums";
+import {
+  AttributionFileTypeEnum,
+  AttributionFormatEnum,
+  AttributionStatusEnum,
+  FileMatchTypeEnum,
+  HashAlgorithmEnum,
+  HashEncodingEnum,
+} from "./../enums";
 import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
@@ -12,7 +19,6 @@ import {
   ContributingDeveloperSource,
   IntegrationName,
   IntegrationType,
-  OutputFormat,
   PackageManagerType,
   ScanStatus,
   ScanType,
@@ -25,16 +31,28 @@ import * as Path from "path";
 import FormData from "form-data";
 import * as Glob from "glob";
 import SOOSHooksApiClient from "../api/SOOSHooksApiClient";
+import SOOSAttributionApiClient, { IAttributionStatusModel } from "../api/SOOSAttributionApiClient";
 
-interface IGenerateFormattedOutputParams {
+interface IGenerateAttributionOutputParams {
   clientId: string;
   projectHash: string;
   projectName: string;
   branchHash: string;
-  scanType: ScanType;
   analysisId: string;
-  outputFormat: OutputFormat;
+  format: AttributionFormatEnum;
+  fileType: AttributionFileTypeEnum;
+  includeDependentProjects?: boolean;
+  includeVulnerabilities?: boolean;
+  includeOriginalSbom?: boolean;
   workingDirectory: string;
+}
+
+interface IWaitForAttributionToFinishParams {
+  clientId: string;
+  projectHash: string;
+  branchHash: string;
+  scanId: string;
+  attributionId: string;
 }
 
 interface IManifestFile {
@@ -180,17 +198,20 @@ const ResetColor = "\x1b[0m";
 
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
+  public attributionApiClient: SOOSAttributionApiClient;
   public projectsApiClient: SOOSProjectsApiClient;
   public userApiClient: SOOSUserApiClient;
   public hooksApiClient: SOOSHooksApiClient;
 
   constructor(
     analysisApiClient: SOOSAnalysisApiClient,
+    attributionApiClient: SOOSAttributionApiClient,
     projectsApiClient: SOOSProjectsApiClient,
     userApiClient: SOOSUserApiClient,
     hooksApiClient: SOOSHooksApiClient,
   ) {
     this.analysisApiClient = analysisApiClient;
+    this.attributionApiClient = attributionApiClient;
     this.projectsApiClient = projectsApiClient;
     this.userApiClient = userApiClient;
     this.hooksApiClient = hooksApiClient;
@@ -198,6 +219,7 @@ class AnalysisService {
 
   static create(apiKey: string, apiURL: string): AnalysisService {
     const analysisApiClient = new SOOSAnalysisApiClient(apiKey, apiURL);
+    const attributionApiClient = new SOOSAttributionApiClient(apiKey, apiURL);
     const projectsApiClient = new SOOSProjectsApiClient(
       apiKey,
       apiURL.replace("api.", "api-projects."),
@@ -205,7 +227,13 @@ class AnalysisService {
     const userApiClient = new SOOSUserApiClient(apiKey, apiURL.replace("api.", "api-user."));
     const hooksApiClient = new SOOSHooksApiClient(apiKey, apiURL.replace("api.", "api-hooks."));
 
-    return new AnalysisService(analysisApiClient, projectsApiClient, userApiClient, hooksApiClient);
+    return new AnalysisService(
+      analysisApiClient,
+      attributionApiClient,
+      projectsApiClient,
+      userApiClient,
+      hooksApiClient,
+    );
   }
 
   private logStatusMessage(message: IApplicationStatusMessage | null): void {
@@ -499,34 +527,106 @@ class AnalysisService {
     return output;
   }
 
+  async waitForAttributionToFinish({
+    clientId,
+    projectHash,
+    branchHash,
+    scanId,
+    attributionId,
+  }: IWaitForAttributionToFinishParams): Promise<IAttributionStatusModel> {
+    const attributionStatus = await this.attributionApiClient.getAttributionStatus({
+      clientId,
+      projectHash,
+      branchHash,
+      scanId,
+      attributionId,
+    });
+
+    if (
+      attributionStatus.status === AttributionStatusEnum.Requested ||
+      attributionStatus.status === AttributionStatusEnum.InProgress
+    ) {
+      soosLogger.info(`Waiting for export to complete (${attributionStatus.status})...`);
+      await sleep(SOOS_CONSTANTS.Status.DelayTime);
+      return await this.waitForAttributionToFinish({
+        clientId,
+        projectHash,
+        branchHash,
+        scanId,
+        attributionId,
+      });
+    }
+
+    if (
+      attributionStatus.status === AttributionStatusEnum.CompletedWithProblems ||
+      attributionStatus.status === AttributionStatusEnum.Failed
+    ) {
+      soosLogger.warn(JSON.stringify(attributionStatus.message));
+    }
+
+    return attributionStatus;
+  }
+
   async generateFormattedOutput({
     clientId,
     projectHash,
     projectName,
     branchHash,
-    scanType,
     analysisId,
-    outputFormat,
+    format,
+    fileType,
+    includeDependentProjects,
+    includeVulnerabilities,
+    includeOriginalSbom,
     workingDirectory,
-  }: IGenerateFormattedOutputParams): Promise<void> {
-    soosLogger.info(`Generating ${outputFormat} report ${projectName}...`);
-    const output = await this.analysisApiClient.getFormattedScanResult({
+  }: IGenerateAttributionOutputParams): Promise<void> {
+    soosLogger.info(`Generating ${format} report as ${fileType} for ${projectName}...`);
+
+    const attributionStatus = await this.attributionApiClient.createAttributionRequest({
       clientId: clientId,
       projectHash: projectHash,
       branchHash: branchHash,
-      scanType: scanType,
       scanId: analysisId,
-      outputFormat: outputFormat,
+      format,
+      fileType,
+      includeDependentProjects,
+      includeVulnerabilities,
+      includeOriginalSbom,
     });
-    if (output) {
-      soosLogger.info(`${outputFormat} report generated successfully.`);
-      if (workingDirectory) {
-        const outputFile = Path.join(workingDirectory, SOOS_CONSTANTS.Files.SarifOutput);
-        soosLogger.info(`Writing ${outputFormat} report to ${outputFile}`);
+
+    var finalAttributionStatus = await this.waitForAttributionToFinish({
+      clientId,
+      projectHash,
+      branchHash,
+      scanId: analysisId,
+      attributionId: attributionStatus.id,
+    });
+
+    if (
+      finalAttributionStatus.status === AttributionStatusEnum.Completed ||
+      finalAttributionStatus.status === AttributionStatusEnum.CompletedWithProblems
+    ) {
+      const output = await this.attributionApiClient.getScanAttribution({
+        clientId,
+        projectHash,
+        branchHash,
+        scanId: analysisId,
+        attributionId: finalAttributionStatus.id,
+      });
+
+      if (output && workingDirectory && finalAttributionStatus.filename) {
+        soosLogger.info(`${format} report generated successfully.`);
+
+        const outputFile = Path.join(workingDirectory, finalAttributionStatus.filename);
+        soosLogger.info(`Writing ${format} report to ${outputFile}`);
         FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
+      } else {
+        soosLogger.error(
+          `${format} report was not generated. Verify a working directory was provided and try again.`,
+        );
       }
     } else {
-      soosLogger.error(`${outputFormat} report was not generated.`);
+      soosLogger.error(`${format} report generation failed.`);
     }
   }
 
