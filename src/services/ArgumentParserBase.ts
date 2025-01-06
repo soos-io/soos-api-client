@@ -140,10 +140,12 @@ abstract class ArgumentParserBase {
         return isGeneratedScanType && fileType === AttributionFileTypeEnum.Json;
 
       case AttributionFormatEnum.CycloneDx:
-        return (
+        const isValid =
           isGeneratedScanType &&
-          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml)
-        );
+          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml);
+
+        soosLogger.info(`Valid: (${isValid}) (${fileType === AttributionFileTypeEnum.Json})`);
+        return isValid;
 
       case AttributionFormatEnum.Sarif:
         return fileType === AttributionFileTypeEnum.Json;
