@@ -169,6 +169,7 @@ abstract class ArgumentParserBase {
           (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Text)
         );
       default:
+        soosLogger.warn(`No match for (${format})`);
         return false;
     }
   }
