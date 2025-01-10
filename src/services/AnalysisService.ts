@@ -623,8 +623,12 @@ class AnalysisService {
         if (fileType === AttributionFileTypeEnum.Json) {
           FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
         } else {
-          const text = await output.text();
-          FileSystem.writeFileSync(outputFile, text);
+          var reader = new FileReader();
+          reader.readAsText(output);
+
+          reader.onload = function (e) {
+            FileSystem.writeFileSync(outputFile, (e.target?.result as string) ?? "");
+          };
         }
       } else {
         soosLogger.error(
