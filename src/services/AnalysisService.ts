@@ -623,7 +623,8 @@ class AnalysisService {
         if (fileType === AttributionFileTypeEnum.Json) {
           FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
         } else {
-          FileSystem.writeFileSync(outputFile, await output.text());
+          const text = await output.text();
+          FileSystem.writeFileSync(outputFile, text);
         }
       } else {
         soosLogger.error(
