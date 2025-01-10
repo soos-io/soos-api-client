@@ -619,7 +619,12 @@ class AnalysisService {
 
         const outputFile = Path.join(workingDirectory, finalAttributionStatus.filename);
         soosLogger.info(`Writing ${format} report to ${outputFile}`);
-        FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
+
+        if (fileType === AttributionFileTypeEnum.Json) {
+          FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
+        } else {
+          FileSystem.writeFileSync(outputFile, output as any);
+        }
       } else {
         soosLogger.error(
           `${format} report was not generated. Verify a working directory was provided and try again.`,

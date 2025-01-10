@@ -176,8 +176,20 @@ abstract class ArgumentParserBase {
   }
 
   protected ensureArgumentCombinationsAreValid(args: any): void {
-    if (isNil(args.exportFormat) || isNil(args.exportFileType)) {
+    if (isNil(args.exportFormat) && isNil(args.exportFileType)) {
       return;
+    }
+
+    if (isNil(args.exportFormat) && !isNil(args.exportFileType)) {
+      throw new Error(
+        `Please provide a value for --exportFormat when specifying --exportFileType see https://kb.soos.io/help/soos-reports-for-export for valid options.`,
+      );
+    }
+
+    if (!isNil(args.exportFormat) && isNil(args.exportFileType)) {
+      throw new Error(
+        `Please provide a value for --exportFileType when specifying --exportFormat see https://kb.soos.io/help/soos-reports-for-export for valid options.`,
+      );
     }
 
     const argumentsAreValid = this.isValidExportArguments(
