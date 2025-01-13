@@ -176,19 +176,23 @@ abstract class ArgumentParserBase {
   }
 
   protected ensureArgumentCombinationsAreValid(args: any): void {
-    if (isNil(args.exportFormat) && isNil(args.exportFileType)) {
+    const exportUrl = "https://kb.soos.io/help/soos-reports-for-export";
+    const hasExportFormat = !isNil(args.exportFormat);
+    const hasExportFileType = !isNil(args.exportFileType);
+
+    if (!hasExportFormat && !hasExportFileType) {
       return;
     }
 
-    if (isNil(args.exportFormat) && !isNil(args.exportFileType)) {
+    if (!hasExportFormat && hasExportFileType) {
       throw new Error(
-        `Please provide a value for --exportFormat when specifying --exportFileType see https://kb.soos.io/help/soos-reports-for-export for valid options.`,
+        `Please provide a value for --exportFormat when specifying --exportFileType see ${exportUrl} for valid options.`,
       );
     }
 
-    if (!isNil(args.exportFormat) && isNil(args.exportFileType)) {
+    if (hasExportFormat && !hasExportFileType) {
       throw new Error(
-        `Please provide a value for --exportFileType when specifying --exportFormat see https://kb.soos.io/help/soos-reports-for-export for valid options.`,
+        `Please provide a value for --exportFileType when specifying --exportFormat see ${exportUrl} for valid options.`,
       );
     }
 
@@ -200,7 +204,7 @@ abstract class ArgumentParserBase {
 
     if (!argumentsAreValid) {
       throw new Error(
-        `Invalid argument combination for ${this.scanType}. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (https://kb.soos.io/help/soos-reports-for-export).`,
+        `Invalid argument combination for ${this.scanType}. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (${exportUrl}).`,
       );
     }
   }
