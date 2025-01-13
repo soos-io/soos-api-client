@@ -127,46 +127,61 @@ abstract class ArgumentParserBase {
     return args;
   }
 
-  isValidExportArguments(
-    scanType: ScanType | null | undefined,
+  validateExportArguments(
+    scanType: ScanType | undefined,
     format: AttributionFormatEnum,
     fileType: AttributionFileTypeEnum,
-  ): boolean {
-    const isGeneratedScanType = !isNil(scanType) && generatedScanTypes.includes(scanType);
+  ): string | null {
+    const isGeneratedScanType = scanType && generatedScanTypes.includes(scanType);
+
+    if (
+      [
+        AttributionFormatEnum.CsafVex,
+        AttributionFormatEnum.SoosLicenses,
+        AttributionFormatEnum.SoosPackages,
+        AttributionFormatEnum.SoosVulnerabilities,
+        AttributionFormatEnum.Spdx,
+      ].some((f) => f === format) &&
+      !isGeneratedScanType
+    ) {
+      return `This scan type is not supported for ${format}.`;
+    }
 
     switch (format) {
       case AttributionFormatEnum.CsafVex:
-        return isGeneratedScanType && fileType === AttributionFileTypeEnum.Json;
+        return fileType === AttributionFileTypeEnum.Json
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} export.`;
 
       case AttributionFormatEnum.CycloneDx:
-        return (
-          isGeneratedScanType &&
-          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml)
-        );
+        return fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} or ${AttributionFileTypeEnum.Xml} export.`;
 
       case AttributionFormatEnum.Sarif:
-        return fileType === AttributionFileTypeEnum.Json;
+        return fileType === AttributionFileTypeEnum.Json
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} export.`;
 
       case AttributionFormatEnum.SoosIssues:
-        return (
-          fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
-        );
+        return fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Html} or ${AttributionFileTypeEnum.Csv} export.`;
 
       case AttributionFormatEnum.SoosLicenses:
       case AttributionFormatEnum.SoosPackages:
       case AttributionFormatEnum.SoosVulnerabilities:
-        return (
-          isGeneratedScanType &&
-          (fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv)
-        );
+        return fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Html} or ${AttributionFileTypeEnum.Csv} export.`;
 
       case AttributionFormatEnum.Spdx:
-        return (
-          isGeneratedScanType &&
-          (fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Text)
-        );
+        return fileType === AttributionFileTypeEnum.Json ||
+          fileType === AttributionFileTypeEnum.Text
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} or ${AttributionFileTypeEnum.Text} export.`;
       default:
-        return false;
+        return "Change the export format and file type to a supported combination.";
     }
   }
 
@@ -176,7 +191,8 @@ abstract class ArgumentParserBase {
   }
 
   protected ensureArgumentCombinationsAreValid(args: any): void {
-    const exportUrl = "https://kb.soos.io/help/soos-reports-for-export";
+    const exportKbMessage =
+      "See  https://kb.soos.io/help/soos-reports-for-export for valid options.";
     const hasExportFormat = !isNil(args.exportFormat);
     const hasExportFileType = !isNil(args.exportFileType);
 
@@ -186,26 +202,23 @@ abstract class ArgumentParserBase {
 
     if (!hasExportFormat && hasExportFileType) {
       throw new Error(
-        `Please provide a value for --exportFormat when specifying --exportFileType see ${exportUrl} for valid options.`,
+        `Please provide a value for --exportFormat when specifying --exportFileType. ${exportKbMessage}`,
       );
     }
 
     if (hasExportFormat && !hasExportFileType) {
       throw new Error(
-        `Please provide a value for --exportFileType when specifying --exportFormat see ${exportUrl} for valid options.`,
+        `Please provide a value for --exportFileType when specifying --exportFormat. ${exportKbMessage}`,
       );
     }
 
-    const argumentsAreValid = this.isValidExportArguments(
+    const validationMessage = this.validateExportArguments(
       this.scanType,
       args.exportFormat,
       args.exportFileType,
     );
-
-    if (!argumentsAreValid) {
-      throw new Error(
-        `Invalid argument combination for ${this.scanType}. Change ${args.exportFormat} and ${args.exportFileType} to a supported combination (${exportUrl}).`,
-      );
+    if (validationMessage !== null) {
+      throw new Error(`Invalid export arguments. ${validationMessage} ${exportKbMessage}`);
     }
   }
 
