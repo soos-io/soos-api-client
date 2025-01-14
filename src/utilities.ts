@@ -45,7 +45,7 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
     throw new Error(
       `Invalid value '${inputValue}' for ${
         parameterName ? `'${parameterName}'` : "parameter"
-      }. Valid options are: ${options.map(([, value]) => value).join(", ")}.`,
+      }. Valid options are: ${optionsWithoutExcludedDefault.map(([, value]) => value).join(", ")}.`,
     );
   }
 
