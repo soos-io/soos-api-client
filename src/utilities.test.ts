@@ -1,4 +1,10 @@
-import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus } from "./enums";
+import {
+  AttributionFileTypeEnum,
+  HashEncodingEnum,
+  IntegrationName,
+  OnFailure,
+  ScanStatus,
+} from "./enums";
 import {
   isNil,
   ensureValue,
@@ -86,6 +92,32 @@ describe("ensureEnumValue", () => {
 
   test("should return the enum value for a valid enum value with different case", () => {
     expect(ensureEnumValue({ value: "value" }, "VALUE")).toBe("value");
+  });
+
+  test("should exclude default value", () => {
+    expect(() =>
+      ensureEnumValue(
+        AttributionFileTypeEnum,
+        "TEST",
+        "parameterName",
+        AttributionFileTypeEnum.Unknown,
+      ),
+    ).toThrow(
+      "Invalid value 'TEST' for 'parameterName'. Valid options are: Csv, Html, Json, Text, Xml.",
+    );
+  });
+
+  test("should not allow default value when excluded", () => {
+    expect(() =>
+      ensureEnumValue(
+        AttributionFileTypeEnum,
+        AttributionFileTypeEnum.Unknown,
+        "parameterName",
+        AttributionFileTypeEnum.Unknown,
+      ),
+    ).toThrow(
+      "Invalid value 'Unknown' for 'parameterName'. Valid options are: Csv, Html, Json, Text, Xml.",
+    );
   });
 });
 
