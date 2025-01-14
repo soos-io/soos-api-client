@@ -101,6 +101,7 @@ abstract class ArgumentParserBase {
     enumObject: Record<string, unknown>,
     options = {},
     allowMultipleValues = false,
+    excludeDefault: string | undefined = undefined,
   ): void {
     parser.add_argument(argName, {
       ...options,
@@ -110,10 +111,10 @@ abstract class ArgumentParserBase {
             .split(",")
             .map((v) => v.trim())
             .filter((v) => v !== "")
-            .map((v) => ensureEnumValue(enumObject, v, argName));
+            .map((v) => ensureEnumValue(enumObject, v, argName, excludeDefault));
         }
 
-        return ensureEnumValue(enumObject, value, argName);
+        return ensureEnumValue(enumObject, value, argName, excludeDefault);
       },
     });
   }
