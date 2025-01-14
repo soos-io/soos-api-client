@@ -137,15 +137,29 @@ class AnalysisArgumentParser extends ArgumentParserBase {
       },
     });
 
-    this.addEnumArgument(this.argumentParser, "--exportFormat", AttributionFormatEnum, {
-      help: "The report export format (CyclondDX, SPDX, CsafVEX, SARIF, SoosIssues, SoosPackages, SoosLicences, SoosVulnerabilities)",
-      required: false,
-    });
+    this.addEnumArgument(
+      this.argumentParser,
+      "--exportFormat",
+      AttributionFormatEnum,
+      {
+        help: "The report export format.",
+        required: false,
+      },
+      undefined,
+      AttributionFormatEnum.Unknown,
+    );
 
-    this.addEnumArgument(this.argumentParser, "--exportFileType", AttributionFileTypeEnum, {
-      help: "The report export file type (NOTE not all file types are available for all export formats) (JSON, CSV, TEXT, XML, HTML)",
-      required: false,
-    });
+    this.addEnumArgument(
+      this.argumentParser,
+      "--exportFileType",
+      AttributionFileTypeEnum,
+      {
+        help: "The report export file type (NOTE: not all file types are available for all export formats).",
+        required: false,
+      },
+      undefined,
+      AttributionFileTypeEnum.Unknown,
+    );
   }
 }
 
