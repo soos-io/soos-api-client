@@ -136,15 +136,15 @@ abstract class ArgumentParserBase {
     const isGeneratedScanType = scanType && generatedScanTypes.includes(scanType);
 
     if (
-      ([
+      !isGeneratedScanType &&
+      [
         AttributionFormatEnum.CsafVex,
+        AttributionFormatEnum.CycloneDx,
         AttributionFormatEnum.SoosLicenses,
         AttributionFormatEnum.SoosPackages,
         AttributionFormatEnum.SoosVulnerabilities,
         AttributionFormatEnum.Spdx,
-      ].some((f) => f === format) &&
-        !isGeneratedScanType) ||
-      (format === AttributionFormatEnum.CycloneDx && scanType === ScanType.SAST)
+      ].some((f) => f === format)
     ) {
       return `This scan type is not supported for ${format}.`;
     }
