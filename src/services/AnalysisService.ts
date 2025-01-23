@@ -614,7 +614,7 @@ class AnalysisService {
         attributionId: finalAttributionStatus.id,
       });
 
-      if (output && workingDirectory && finalAttributionStatus.filename) {
+      if (finalAttributionStatus.filename) {
         soosLogger.info(`${format} report generated successfully.`);
 
         const outputFile = Path.join(workingDirectory, finalAttributionStatus.filename);
