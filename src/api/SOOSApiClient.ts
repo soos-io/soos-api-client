@@ -13,9 +13,15 @@ interface IHttpRequestParameters {
 
 interface IHttpClientParameters extends IHttpRequestParameters {
   apiClientName: string;
+  skipDebugResponseLogging?: boolean;
 }
 class SOOSApiClient {
-  private static createHttpClient({ baseUri, apiKey, apiClientName }: IHttpClientParameters) {
+  private static createHttpClient({
+    baseUri,
+    apiKey,
+    apiClientName,
+    skipDebugResponseLogging,
+  }: IHttpClientParameters) {
     const client = axios.create({
       baseURL: baseUri,
       headers: {
@@ -49,7 +55,9 @@ class SOOSApiClient {
 
     client.interceptors.response.use(
       (response) => {
-        soosLogger.debug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
+        if (skipDebugResponseLogging !== true) {
+          soosLogger.debug(apiClientName, `Response Body: ${JSON.stringify(response.data)}`);
+        }
         return response;
       },
       (rejectedResponse) => {

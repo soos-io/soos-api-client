@@ -47,14 +47,18 @@ class SOOSAttributionApiClient {
   private readonly apiKey: string;
   private readonly client: AxiosInstance;
 
-  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Analysis) {
-    this.apiKey = apiKey;
-    this.baseUri = baseUri;
-    this.client = SOOSApiClient.create({
+  private createApiClient = (skipDebugResponseLogging: boolean): AxiosInstance =>
+    SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
       apiClientName: "Analysis Attribution API",
+      skipDebugResponseLogging,
     });
+
+  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Analysis) {
+    this.apiKey = apiKey;
+    this.baseUri = baseUri;
+    this.client = this.createApiClient(false);
   }
 
   async createAttributionRequest({
@@ -103,7 +107,8 @@ class SOOSAttributionApiClient {
     scanId,
     attributionId,
   }: IGetAnalysisAttributionRequest): Promise<Blob> {
-    const response = await this.client.get<Blob>(
+    const client = this.createApiClient(true); // these responses are huge, don't log them
+    const response = await client.get<Blob>(
       `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scans/${scanId}/attributions/${attributionId}`,
     );
 
