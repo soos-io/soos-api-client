@@ -72,6 +72,7 @@ export enum ManifestStatus {
   UnsupportedManifestVersion = "UnsupportedManifestVersion",
   ParsingError = "ParsingError",
   Empty = "Empty",
+  Duplicate = "Duplicate",
 }
 
 export enum ScanStatus {
