@@ -339,7 +339,6 @@ class AnalysisService {
     projectHash,
     analysisId,
     scanType,
-    scanUrl,
   }: IStartScanParams): Promise<void> {
     soosLogger.info(`Starting ${scanType} Analysis scan`);
     await this.analysisApiClient.startScan({
@@ -347,34 +346,23 @@ class AnalysisService {
       projectHash: projectHash,
       analysisId: analysisId,
     });
-    soosLogger.info(`Analysis scan started successfully, to see the results visit: ${scanUrl}`);
+    soosLogger.info("Analysis scan started successfully... waiting for the scan");
   }
 
   async waitForScanToFinish({
     scanStatusUrl,
     scanUrl,
     scanType,
-    isFirstCheckComplete = false,
   }: IWaitForScanToFinishParams): Promise<ScanStatus> {
+    await sleep(SOOS_CONSTANTS.Status.DelayTime);
+
     const scanStatus = await this.analysisApiClient.getScanStatus({
       scanStatusUrl: scanStatusUrl,
     });
 
     if (!scanStatus.isComplete) {
       soosLogger.info(`${StringUtilities.fromCamelToTitleCase(scanStatus.status)}...`);
-      await sleep(SOOS_CONSTANTS.Status.DelayTime);
-      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType });
-    }
-
-    // TODO - ensure stats via PA-12747
-    if (!isFirstCheckComplete) {
-      await sleep(SOOS_CONSTANTS.Status.DelayTime);
-      return await this.waitForScanToFinish({
-        scanStatusUrl,
-        scanUrl,
-        scanType,
-        isFirstCheckComplete: true,
-      });
+      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType }); // recursion
     }
 
     if (scanStatus.errors.length > 0) {
@@ -594,7 +582,7 @@ class AnalysisService {
       includeOriginalSbom,
     });
 
-    var finalAttributionStatus = await this.waitForAttributionToFinish({
+    const finalAttributionStatus = await this.waitForAttributionToFinish({
       clientId,
       projectHash,
       branchHash,
@@ -618,11 +606,12 @@ class AnalysisService {
         soosLogger.info(`${format} report generated successfully.`);
 
         const outputFile = Path.join(workingDirectory, finalAttributionStatus.filename);
-        soosLogger.info(`Writing ${format} report to ${outputFile}`);
 
+        soosLogger.info(`Writing ${format} report to ${outputFile}`);
         if (fileType === AttributionFileTypeEnum.Json) {
           FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
         } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           FileSystem.writeFileSync(outputFile, output as any);
         }
       } else {
@@ -768,7 +757,7 @@ class AnalysisService {
       projectHash,
     });
 
-    var manifestFormats = !runManifestMatching
+    const manifestFormats = !runManifestMatching
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
           return {
@@ -801,7 +790,7 @@ class AnalysisService {
           sourceCodePath,
         });
 
-    var archiveHashFormats = !runFileHashing
+    const archiveHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
           const hashableFiles = fpm.hashableFiles ?? [];
@@ -835,7 +824,7 @@ class AnalysisService {
             directoriesToExclude,
           });
 
-    var contentHashFormats = !runFileHashing
+    const contentHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
           const hashableFiles = fpm.hashableFiles ?? [];
@@ -1040,7 +1029,7 @@ class AnalysisService {
             return absolutePathFiles.flat().map((filePath): ISoosFileHash => {
               const filename = Path.basename(filePath);
 
-              var fileDigests = fileFormat.hashAlgorithms.map((ha) => {
+              const fileDigests = fileFormat.hashAlgorithms.map((ha) => {
                 const digest = generateFileHash(
                   ha.hashAlgorithm,
                   ha.bufferEncoding,

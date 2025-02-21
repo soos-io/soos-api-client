@@ -147,7 +147,8 @@ class GitHubApiClient {
     client: AxiosInstance,
   ): Promise<AxiosResponse> {
     let data = response.data;
-    let nextUrl = GitHubApiClient.getNextPageUrl(response);
+
+    const nextUrl = GitHubApiClient.getNextPageUrl(response);
     if (nextUrl) {
       soosLogger.debug("Fetching next page", nextUrl);
       const nextPageResponse = await client.get(nextUrl);

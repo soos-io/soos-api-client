@@ -110,6 +110,7 @@ class SOOSAttributionApiClient {
     const client = this.createApiClient(true); // these responses are huge, don't log them
     const response = await client.get<Blob>(
       `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scans/${scanId}/attributions/${attributionId}`,
+      { responseType: "blob" },
     );
 
     return response.data;

@@ -42,18 +42,20 @@ const DataMappingUtilities = {
 
     return acc;
   },
-  mergeContributors(contributorsArray: IContributorAuditRepositories[][]): any[] {
+  mergeContributors(
+    contributorsArray: IContributorAuditRepositories[][],
+  ): IContributorAuditRepositories[] {
     const flattenedContributors = contributorsArray.flat();
 
-    const mergedContributors = new Map<string, any>();
+    const mergedContributors = new Map<string, IContributorAuditRepositories>();
 
     flattenedContributors.forEach((contributor) => {
       const existingContributor = mergedContributors.get(contributor.username);
 
       if (existingContributor) {
-        contributor.repositories.forEach((repo: any) => {
-          if (!existingContributor.repositories.find((r: any) => r.id === repo.id)) {
-            existingContributor.repositories.push(repo);
+        contributor.repositories.forEach((repository) => {
+          if (!existingContributor.repositories.find((r) => r.id === repository.id)) {
+            existingContributor.repositories.push(repository);
           }
         });
       } else {
