@@ -339,7 +339,6 @@ class AnalysisService {
     projectHash,
     analysisId,
     scanType,
-    scanUrl,
   }: IStartScanParams): Promise<void> {
     soosLogger.info(`Starting ${scanType} Analysis scan`);
     await this.analysisApiClient.startScan({
@@ -347,7 +346,7 @@ class AnalysisService {
       projectHash: projectHash,
       analysisId: analysisId,
     });
-    soosLogger.info(`Analysis scan started successfully, to see the results visit: ${scanUrl}`);
+    soosLogger.info("Analysis scan started successfully... waiting for the scan");
   }
 
   async waitForScanToFinish({
