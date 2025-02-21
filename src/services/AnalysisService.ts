@@ -607,12 +607,13 @@ class AnalysisService {
         soosLogger.info(`${format} report generated successfully.`);
 
         const outputFile = Path.join(workingDirectory, finalAttributionStatus.filename);
-        soosLogger.info(`Writing ${format} report to ${outputFile}`);
 
+        soosLogger.info(`Writing ${format} report to ${outputFile}`);
+        const text = await output.text();
         if (fileType === AttributionFileTypeEnum.Json) {
-          FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
+          FileSystem.writeFileSync(outputFile, JSON.stringify(text, null, 2));
         } else {
-          FileSystem.writeFileSync(outputFile, await output.text());
+          FileSystem.writeFileSync(outputFile, text);
         }
       } else {
         soosLogger.error(
