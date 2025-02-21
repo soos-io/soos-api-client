@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform. Register for a free trial today at https://app.soos.io/register",
   "main": "dist/index.js",
   "scripts": {
@@ -12,10 +12,12 @@
     "build:clean": "npx rimraf build",
     "format": "prettier ./src --check",
     "format:fix": "prettier ./src --write",
+    "lint": "eslint --max-warnings 0",
+    "lint:fix": "eslint --max-warnings 0 --fix",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "knip": "knip",
-    "check": "npm run format && npm run typecheck && npm run test && (npm outdated || exit 0)",
+    "check": "npm run format && npm run lint && npm run typecheck && npm run test && (npm outdated || exit 0)",
     "patch": "npm version patch --no-git-tag-version",
     "build:link": "npm run build && npm link"
   },
@@ -62,13 +64,17 @@
     "glob": "^11.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.20.0",
     "@types/argparse": "^2.0.17",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.19",
+    "eslint": "^9.20.1",
+    "globals": "^16.0.0",
     "jest": "^29.1.2",
-    "knip": "^5.44.1",
+    "knip": "^5.44.4",
     "prettier": "^3.5.1",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1"
   }
 }

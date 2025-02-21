@@ -187,11 +187,13 @@ abstract class ArgumentParserBase {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected ensureRequiredArguments(args: any): void {
     ensureNonEmptyValue(args.clientId, "clientId");
     ensureNonEmptyValue(args.apiKey, "apiKey");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected ensureArgumentCombinationsAreValid(args: any): void {
     const exportKbMessage =
       "See  https://kb.soos.io/help/soos-reports-for-export for valid options.";
@@ -224,8 +226,9 @@ abstract class ArgumentParserBase {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   protected checkDeprecatedArguments(_args: any): void {
-    // NOTE: add any deprecated args here and print a warning if they are referenced - remove _ from args param
+    // NOTE: add any deprecated args here and print a warning if they are referenced - update method params
   }
 }
 

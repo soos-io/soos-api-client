@@ -210,7 +210,7 @@ class BitbucketCloudApiClient {
     client: AxiosInstance,
     dateToFilter: string,
   ): Promise<AxiosResponse> {
-    let data = response.data;
+    const data = response.data;
     let nextUrl = data.next;
     let isWithinDateRange = data.values.every((repo) =>
       DateUtilities.isWithinDateRange(new Date(repo.updated_on), new Date(dateToFilter)),
@@ -234,7 +234,7 @@ class BitbucketCloudApiClient {
     client: AxiosInstance,
     dateToFilter: string,
   ): Promise<AxiosResponse> {
-    let data = response.data;
+    const data = response.data;
     let nextUrl = data.next;
     let lastCommitDate = new Date(data.values[data.values.length - 1].date);
     let isWithinDateRange = DateUtilities.isWithinDateRange(lastCommitDate, new Date(dateToFilter));

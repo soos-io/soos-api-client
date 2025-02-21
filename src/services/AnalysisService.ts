@@ -354,27 +354,16 @@ class AnalysisService {
     scanStatusUrl,
     scanUrl,
     scanType,
-    isFirstCheckComplete = false,
   }: IWaitForScanToFinishParams): Promise<ScanStatus> {
+    await sleep(SOOS_CONSTANTS.Status.DelayTime);
+
     const scanStatus = await this.analysisApiClient.getScanStatus({
       scanStatusUrl: scanStatusUrl,
     });
 
     if (!scanStatus.isComplete) {
       soosLogger.info(`${StringUtilities.fromCamelToTitleCase(scanStatus.status)}...`);
-      await sleep(SOOS_CONSTANTS.Status.DelayTime);
-      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType });
-    }
-
-    // TODO - ensure stats via PA-12747
-    if (!isFirstCheckComplete) {
-      await sleep(SOOS_CONSTANTS.Status.DelayTime);
-      return await this.waitForScanToFinish({
-        scanStatusUrl,
-        scanUrl,
-        scanType,
-        isFirstCheckComplete: true,
-      });
+      return await this.waitForScanToFinish({ scanStatusUrl, scanUrl, scanType }); // recursion
     }
 
     if (scanStatus.errors.length > 0) {
@@ -594,7 +583,7 @@ class AnalysisService {
       includeOriginalSbom,
     });
 
-    var finalAttributionStatus = await this.waitForAttributionToFinish({
+    const finalAttributionStatus = await this.waitForAttributionToFinish({
       clientId,
       projectHash,
       branchHash,
@@ -623,7 +612,7 @@ class AnalysisService {
         if (fileType === AttributionFileTypeEnum.Json) {
           FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
         } else {
-          FileSystem.writeFileSync(outputFile, output as any);
+          FileSystem.writeFileSync(outputFile, await output.text());
         }
       } else {
         soosLogger.error(
@@ -768,7 +757,7 @@ class AnalysisService {
       projectHash,
     });
 
-    var manifestFormats = !runManifestMatching
+    const manifestFormats = !runManifestMatching
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
           return {
@@ -801,7 +790,7 @@ class AnalysisService {
           sourceCodePath,
         });
 
-    var archiveHashFormats = !runFileHashing
+    const archiveHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
           const hashableFiles = fpm.hashableFiles ?? [];
@@ -835,7 +824,7 @@ class AnalysisService {
             directoriesToExclude,
           });
 
-    var contentHashFormats = !runFileHashing
+    const contentHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
           const hashableFiles = fpm.hashableFiles ?? [];
@@ -1040,7 +1029,7 @@ class AnalysisService {
             return absolutePathFiles.flat().map((filePath): ISoosFileHash => {
               const filename = Path.basename(filePath);
 
-              var fileDigests = fileFormat.hashAlgorithms.map((ha) => {
+              const fileDigests = fileFormat.hashAlgorithms.map((ha) => {
                 const digest = generateFileHash(
                   ha.hashAlgorithm,
                   ha.bufferEncoding,

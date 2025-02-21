@@ -24,7 +24,7 @@ class SOOSLogger {
     return `${timestamp}`;
   }
 
-  private logWithTimestamp(level: LogLevel, message?: any, ...optionalParams: any[]): void {
+  private logWithTimestamp(level: LogLevel, message?: unknown, ...optionalParams: unknown[]): void {
     if (this.shouldLog(level)) {
       const logLevelKey = LogLevel[level];
       const timestamp = this.getTimeStamp();
@@ -42,23 +42,23 @@ class SOOSLogger {
     this.minLogLevel = minLogLevel;
   }
 
-  debug(message?: any, ...optionalParams: any[]): void {
+  debug(message?: unknown, ...optionalParams: unknown[]): void {
     this.logWithTimestamp(LogLevel.DEBUG, message, ...optionalParams);
   }
 
-  info(message?: any, ...optionalParams: any[]): void {
+  info(message?: unknown, ...optionalParams: unknown[]): void {
     this.logWithTimestamp(LogLevel.INFO, message, ...optionalParams);
   }
 
-  warn(message?: any, ...optionalParams: any[]): void {
+  warn(message?: unknown, ...optionalParams: unknown[]): void {
     this.logWithTimestamp(LogLevel.WARN, message, ...optionalParams);
   }
 
-  error(message?: any, ...optionalParams: any[]): void {
+  error(message?: unknown, ...optionalParams: unknown[]): void {
     this.logWithTimestamp(LogLevel.ERROR, message, ...optionalParams);
   }
 
-  group(...label: any[]): void {
+  group(...label: unknown[]): void {
     this.console.group(...label);
   }
 
@@ -67,7 +67,7 @@ class SOOSLogger {
     this.console.log("\n");
   }
 
-  always(message?: any, ...optionalParams: any[]): void {
+  always(message?: unknown, ...optionalParams: unknown[]): void {
     const timestamp = this.getTimeStamp();
     const logMessage = `${timestamp} UTC [SOOS] ${message}`;
     this.console.log(logMessage, ...optionalParams);
