@@ -195,8 +195,7 @@ abstract class ArgumentParserBase {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected ensureArgumentCombinationsAreValid(args: any): void {
-    const exportKbMessage =
-      "See  https://kb.soos.io/help/soos-reports-for-export for valid options.";
+    const exportKbMessage = "See https://kb.soos.io/project-exports-and-reports for valid options.";
     const hasExportFormat = !isNil(args.exportFormat);
     const hasExportFileType = !isNil(args.exportFileType);
 
