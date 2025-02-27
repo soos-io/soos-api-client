@@ -604,16 +604,10 @@ class AnalysisService {
 
       if (finalAttributionStatus.filename) {
         soosLogger.info(`${format} report generated successfully.`);
-
         const outputFile = Path.join(workingDirectory, finalAttributionStatus.filename);
-
         soosLogger.info(`Writing ${format} report to ${outputFile}`);
-        if (fileType === AttributionFileTypeEnum.Json) {
-          FileSystem.writeFileSync(outputFile, JSON.stringify(output, null, 2));
-        } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          FileSystem.writeFileSync(outputFile, output as any);
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        FileSystem.writeFileSync(outputFile, output as any);
       } else {
         soosLogger.error(
           `${format} report was not generated. Verify a working directory was provided and try again.`,
