@@ -14,6 +14,7 @@ interface IHttpRequestParameters {
 interface IHttpClientParameters extends IHttpRequestParameters {
   apiClientName: string;
   skipDebugResponseLogging?: boolean;
+  skipDebugRequestLogging?: boolean;
 }
 class SOOSApiClient {
   private static createHttpClient({
@@ -21,6 +22,7 @@ class SOOSApiClient {
     apiKey,
     apiClientName,
     skipDebugResponseLogging,
+    skipDebugRequestLogging,
   }: IHttpClientParameters) {
     const client = axios.create({
       baseURL: baseUri,
@@ -44,7 +46,10 @@ class SOOSApiClient {
           if (request.params) {
             soosLogger.debug(apiClientName, `Request Params: ${JSON.stringify(request.params)}`);
           }
-          soosLogger.debug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
+
+          if (!skipDebugRequestLogging) {
+            soosLogger.debug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
+          }
         }
         return request;
       },
