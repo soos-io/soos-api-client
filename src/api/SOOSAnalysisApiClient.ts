@@ -171,14 +171,18 @@ class SOOSAnalysisApiClient {
   private readonly apiKey: string;
   private readonly client: AxiosInstance;
 
-  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Analysis) {
-    this.apiKey = apiKey;
-    this.baseUri = baseUri;
-    this.client = SOOSApiClient.create({
+  private createApiClient = (skipDebugRequestLogging: boolean): AxiosInstance =>
+    SOOSApiClient.create({
       baseUri: this.baseUri,
       apiKey: this.apiKey,
       apiClientName: "Analysis API",
+      skipDebugRequestLogging,
     });
+
+  constructor(apiKey: string, baseUri: string = SOOS_CONSTANTS.Urls.API.Analysis) {
+    this.apiKey = apiKey;
+    this.baseUri = baseUri;
+    this.client = this.createApiClient(false);
   }
 
   async createScan({
@@ -300,7 +304,8 @@ class SOOSAnalysisApiClient {
     resultFile,
     hasMoreThanMaximumFiles,
   }: IUploadScanToolResultRequest): Promise<void> {
-    await this.client.put(
+    const client = this.createApiClient(true); // these requests are huge, don't log them
+    await client.put(
       `clients/${clientId}/projects/${projectHash}/branches/${branchHash}/scan-types/${scanType}/scans/${scanId}`,
       resultFile,
       {
