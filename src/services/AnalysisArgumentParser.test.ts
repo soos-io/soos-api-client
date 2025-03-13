@@ -34,4 +34,25 @@ describe("AnalysisArgumentParser", () => {
     expect(options.clientId).not.toBeUndefined();
     expect(options.apiKey).not.toBeUndefined();
   });
+
+  test("Can parse args twice", () => {
+    const argumentParser = getSut();
+
+    const argv = ["node", "soos-csa", "--clientId=123", "--apiKey", "xxxxxx"];
+
+    const optionsFirst = argumentParser.parseArguments(argv);
+
+    expect(optionsFirst).not.toBeNull();
+    console.log(optionsFirst);
+    expect(optionsFirst.clientId).not.toBeUndefined();
+
+    argumentParser.addBaseScanArguments();
+
+    const options = argumentParser.parseArguments<ICommonArguments>(argv);
+
+    expect(options).not.toBeNull();
+    console.log(options);
+    expect(options.clientId).not.toBeUndefined();
+    expect(options.apiKey).not.toBeUndefined();
+  });
 });

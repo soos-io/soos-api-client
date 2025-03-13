@@ -37,6 +37,8 @@ abstract class ArgumentParserBase {
     this.scriptVersion = scriptVersion ?? "0.0.0";
     this.integrationName = integrationName;
     this.integrationType = integrationType;
+
+    this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
   }
 
   protected addCommonArguments(
@@ -160,7 +162,6 @@ abstract class ArgumentParserBase {
   }
 
   parseArguments<T extends OptionValues>(argv?: string[]) {
-    this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
     const args = this.argumentParser.parse(argv ?? process.argv, { from: "node" }).opts<T>();
     return args;
   }
