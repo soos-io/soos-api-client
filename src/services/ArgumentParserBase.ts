@@ -74,12 +74,6 @@ abstract class ArgumentParserBase {
       integrationName,
     );
 
-    this.argumentParser.option(
-      "--integrationName",
-      "Integration Name - Intended for internal use only.",
-      integrationName,
-    );
-
     this.addEnumArgument(
       "--integrationType",
       IntegrationType,
