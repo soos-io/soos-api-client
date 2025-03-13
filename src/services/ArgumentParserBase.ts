@@ -70,14 +70,14 @@ abstract class ArgumentParserBase {
 
     this.argumentParser.option(
       "--integrationName",
-      "Integration Name - Intended for internal use only.",
+      "Integration Name - Intended for internal use only, do not modify.",
       integrationName,
     );
 
     this.addEnumArgument(
       "--integrationType",
       IntegrationType,
-      "Integration Type - Intended for internal use only.",
+      "Integration Type - Intended for internal use only, do not modify.",
       integrationType,
     );
 
@@ -90,7 +90,7 @@ abstract class ArgumentParserBase {
 
     this.argumentParser.option(
       "--scriptVersion",
-      "Script Version - Intended for internal use only.",
+      "Script Version - Intended for internal use only, do not modify.",
       scriptVersion,
     );
   }
