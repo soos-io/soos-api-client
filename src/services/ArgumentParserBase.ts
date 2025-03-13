@@ -8,7 +8,7 @@ import {
   getEnvVariable,
   isNil,
 } from "../utilities";
-import { Command, OptionValues } from "commander";
+import { Command, Option, OptionValues } from "commander";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -24,20 +24,21 @@ interface ICommonArguments {
 }
 
 abstract class ArgumentParserBase {
-  public argumentParser: Command;
+  private argumentParser: Command;
+
   protected scanType?: ScanType;
   protected scriptVersion: string = "0.0.0";
   protected integrationName?: IntegrationName;
   protected integrationType?: IntegrationType;
 
   protected constructor(
-    argumentParser: Command,
+    description: string,
     scanType?: ScanType,
     scriptVersion?: string,
     integrationName?: IntegrationName,
     integrationType?: IntegrationType,
   ) {
-    this.argumentParser = argumentParser;
+    this.argumentParser = new Command().description(description);
     this.scanType = scanType;
     this.scriptVersion = scriptVersion ?? "0.0.0";
     this.integrationName = integrationName;
@@ -49,50 +50,72 @@ abstract class ArgumentParserBase {
     integrationName?: IntegrationName,
     integrationType?: IntegrationType,
   ): void {
-    this.argumentParser.option(
+    this.addArgument(
       "--apiKey",
       `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`,
       getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
     );
-
-    this.argumentParser.option(
-      "--apiURL",
-      "SOOS API URL - Intended for internal use only, do not modify.",
-      (value: string) => ensureNonEmptyValue(value, "apiURL"),
+    this.addArgument(
+      "--apiURL, --apiUrl",
+      "SOOS API URL",
       SOOS_CONSTANTS.Urls.API.Analysis,
+      (value: string) => ensureNonEmptyValue(value, "apiURL"),
     );
-
-    this.argumentParser.option(
+    this.addArgument(
       "--clientId",
       `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
       getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId) ?? undefined,
     );
-
-    this.argumentParser.option(
-      "--integrationName",
-      "Integration Name - Intended for internal use only, do not modify.",
-      integrationName,
-    );
-
+    this.addInternalArgument("--integrationName", "Integration Name", integrationName);
     this.addEnumArgument(
       "--integrationType",
       IntegrationType,
-      "Integration Type - Intended for internal use only, do not modify.",
+      "Integration Type",
       integrationType,
+      {
+        internal: true,
+      },
     );
-
     this.addEnumArgument(
       "--logLevel",
       LogLevel,
       "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
       LogLevel.INFO,
     );
+    this.addInternalArgument("--scriptVersion", "Script Version", scriptVersion);
+  }
 
-    this.argumentParser.option(
-      "--scriptVersion",
-      "Script Version - Intended for internal use only, do not modify.",
-      scriptVersion,
-    );
+  addArgument(
+    flags: string,
+    description: string,
+    defaultValue?: unknown,
+    argParser?: (value: string) => unknown,
+  ): void {
+    const option = new Option(flags, description);
+    if (defaultValue) {
+      option.default(defaultValue);
+    }
+    if (argParser) {
+      option.argParser(argParser);
+    }
+
+    this.argumentParser.addOption(option);
+  }
+
+  addInternalArgument(
+    flags: string,
+    description: string,
+    defaultValue?: unknown,
+    argParser?: (value: string) => unknown,
+  ): void {
+    const option = new Option(flags, description);
+    option.hideHelp(); // internal args don't show in the help context
+    if (defaultValue) {
+      option.default(defaultValue);
+    }
+    if (argParser) {
+      option.argParser(argParser);
+    }
   }
 
   addEnumArgument(
@@ -100,35 +123,37 @@ abstract class ArgumentParserBase {
     enumObject: Record<string, unknown>,
     description: string,
     defaultValue: unknown,
-    allowMultipleValues = false,
-    excludeDefault: string | undefined = undefined,
+    options?: {
+      allowMultipleValues?: boolean;
+      excludeDefault?: string;
+      internal?: boolean;
+    },
   ): void {
-    this.argumentParser.option(
-      flags,
-      description,
-      (value: string) => {
-        if (allowMultipleValues) {
-          return value
-            .split(",")
-            .map((v) => v.trim())
-            .filter((v) => v !== "")
-            .map((v) => ensureEnumValue(enumObject, v, flags, excludeDefault));
-        }
+    const option = new Option(flags, description).default(defaultValue);
+    option.argParser((value: string) => {
+      if (options?.allowMultipleValues) {
+        return value
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => v !== "")
+          .map((v) => ensureEnumValue(enumObject, v, flags, options?.excludeDefault));
+      }
 
-        return ensureEnumValue(enumObject, value, flags, excludeDefault);
-      },
-      defaultValue,
-    );
+      return ensureEnumValue(enumObject, value, flags, options?.excludeDefault);
+    });
+    if (options?.internal) {
+      option.hideHelp();
+    }
+    this.argumentParser.addOption(option);
   }
 
   parseArguments<T extends OptionValues>() {
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
-    const args = this.argumentParser.parse(process.argv);
-    const opts = args.opts<T>();
-    this.ensureRequiredArguments(opts);
-    this.ensureArgumentCombinationsAreValid(opts);
-    this.checkDeprecatedArguments(opts);
-    return opts;
+    const args = this.argumentParser.parse(process.argv).opts<T>();
+    this.ensureRequiredArguments(args);
+    this.ensureArgumentCombinationsAreValid(args);
+    this.checkDeprecatedArguments(args);
+    return args;
   }
 
   validateExportArguments(
