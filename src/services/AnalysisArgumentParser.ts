@@ -1,3 +1,4 @@
+import { OptionValues } from "commander";
 import {
   AttributionFileTypeEnum,
   AttributionFormatEnum,
@@ -7,7 +8,7 @@ import {
   OnFailure,
   ScanType,
 } from "../enums";
-import { ensureNonEmptyValue } from "../utilities";
+import { ensureNonEmptyValue, generatedScanTypes, isNil } from "../utilities";
 import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
 
 interface IBaseScanArguments extends ICommonArguments {
@@ -105,6 +106,104 @@ class AnalysisArgumentParser extends ArgumentParserBase {
         return ensureNonEmptyValue(value, "projectName");
       },
     );
+  }
+
+  validateExportArguments(
+    scanType: ScanType | undefined,
+    format: AttributionFormatEnum,
+    fileType: AttributionFileTypeEnum,
+  ): string | null {
+    const isGeneratedScanType = scanType && generatedScanTypes.includes(scanType);
+
+    if (
+      !isGeneratedScanType &&
+      [
+        AttributionFormatEnum.CsafVex,
+        AttributionFormatEnum.CycloneDx,
+        AttributionFormatEnum.SoosLicenses,
+        AttributionFormatEnum.SoosPackages,
+        AttributionFormatEnum.SoosVulnerabilities,
+        AttributionFormatEnum.Spdx,
+      ].some((f) => f === format)
+    ) {
+      return `This scan type is not supported for ${format}.`;
+    }
+
+    switch (format) {
+      case AttributionFormatEnum.CsafVex:
+        return fileType === AttributionFileTypeEnum.Json
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} export.`;
+
+      case AttributionFormatEnum.CycloneDx:
+        return fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} or ${AttributionFileTypeEnum.Xml} export.`;
+
+      case AttributionFormatEnum.Sarif:
+        return fileType === AttributionFileTypeEnum.Json
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} export.`;
+
+      case AttributionFormatEnum.SoosIssues:
+        return fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Html} or ${AttributionFileTypeEnum.Csv} export.`;
+
+      case AttributionFormatEnum.SoosLicenses:
+      case AttributionFormatEnum.SoosPackages:
+      case AttributionFormatEnum.SoosVulnerabilities:
+        return fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Html} or ${AttributionFileTypeEnum.Csv} export.`;
+
+      case AttributionFormatEnum.Spdx:
+        return fileType === AttributionFileTypeEnum.Json ||
+          fileType === AttributionFileTypeEnum.Text
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} or ${AttributionFileTypeEnum.Text} export.`;
+      default:
+        return "Change the export format and file type to a supported combination.";
+    }
+  }
+
+  protected ensureValidExportArguments<T extends OptionValues>(args: T): void {
+    const exportKbMessage = "See https://kb.soos.io/project-exports-and-reports for valid options.";
+    const hasExportFormat =
+      !isNil(args.exportFormat) && args.exportFormat !== AttributionFormatEnum.Unknown;
+    const hasExportFileType =
+      !isNil(args.exportFileType) && args.exportFormat !== AttributionFileTypeEnum.Unknown;
+
+    if (!hasExportFormat && !hasExportFileType) {
+      return;
+    }
+
+    if (!hasExportFormat && hasExportFileType) {
+      throw new Error(
+        `Please provide a value for --exportFormat when specifying --exportFileType. ${exportKbMessage}`,
+      );
+    }
+
+    if (hasExportFormat && !hasExportFileType) {
+      throw new Error(
+        `Please provide a value for --exportFileType when specifying --exportFormat. ${exportKbMessage}`,
+      );
+    }
+
+    const validationMessage = this.validateExportArguments(
+      this.scanType,
+      args.exportFormat,
+      args.exportFileType,
+    );
+    if (validationMessage !== null) {
+      throw new Error(`Invalid export arguments. ${validationMessage} ${exportKbMessage}`);
+    }
+  }
+
+  override parseArguments<T extends OptionValues>(argv?: string[]) {
+    const args = super.parseArguments<T>(argv);
+    this.ensureValidExportArguments(args);
+    return args;
   }
 }
 
