@@ -8,7 +8,7 @@ import {
   getEnvVariable,
   isNil,
 } from "../utilities";
-import { Command } from "commander";
+import { Command, OptionValues } from "commander";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -127,13 +127,14 @@ abstract class ArgumentParserBase {
     );
   }
 
-  parseArguments() {
+  parseArguments<T extends OptionValues>() {
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
     const args = this.argumentParser.parse(process.argv);
-    this.ensureRequiredArguments(args);
-    this.ensureArgumentCombinationsAreValid(args);
-    this.checkDeprecatedArguments(args);
-    return args;
+    const opts = args.opts<T>();
+    this.ensureRequiredArguments(opts);
+    this.ensureArgumentCombinationsAreValid(opts);
+    this.checkDeprecatedArguments(opts);
+    return opts;
   }
 
   validateExportArguments(
@@ -195,14 +196,12 @@ abstract class ArgumentParserBase {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected ensureRequiredArguments(args: any): void {
+  protected ensureRequiredArguments<T extends OptionValues>(args: T): void {
     ensureNonEmptyValue(args.clientId, "clientId");
     ensureNonEmptyValue(args.apiKey, "apiKey");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected ensureArgumentCombinationsAreValid(args: any): void {
+  protected ensureArgumentCombinationsAreValid<T extends OptionValues>(args: T): void {
     const exportKbMessage = "See https://kb.soos.io/project-exports-and-reports for valid options.";
     const hasExportFormat = !isNil(args.exportFormat);
     const hasExportFileType = !isNil(args.exportFileType);
@@ -233,8 +232,8 @@ abstract class ArgumentParserBase {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-  protected checkDeprecatedArguments(_args: any): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected checkDeprecatedArguments<T extends OptionValues>(_args: T): void {
     // NOTE: add any deprecated args here and print a warning if they are referenced - update method params
   }
 }
