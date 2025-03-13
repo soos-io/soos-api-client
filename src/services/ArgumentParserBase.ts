@@ -1,5 +1,4 @@
 import { AttributionFileTypeEnum, AttributionFormatEnum, IntegrationType } from "../enums";
-import { ArgumentParser } from "argparse";
 import { SOOS_CONSTANTS } from "../constants";
 import { IntegrationName, LogLevel, ScanType } from "../enums";
 import {
@@ -9,6 +8,7 @@ import {
   getEnvVariable,
   isNil,
 } from "../utilities";
+import { Command } from "commander";
 
 const getIntegrateUrl = (scanType?: ScanType): string =>
   `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
@@ -24,14 +24,14 @@ interface ICommonArguments {
 }
 
 abstract class ArgumentParserBase {
-  public argumentParser: ArgumentParser;
+  public argumentParser: Command;
   protected scanType?: ScanType;
   protected scriptVersion: string = "0.0.0";
   protected integrationName?: IntegrationName;
   protected integrationType?: IntegrationType;
 
   protected constructor(
-    argumentParser: ArgumentParser,
+    argumentParser: Command,
     scanType?: ScanType,
     scriptVersion?: string,
     integrationName?: IntegrationName,
@@ -49,79 +49,87 @@ abstract class ArgumentParserBase {
     integrationName?: IntegrationName,
     integrationType?: IntegrationType,
   ): void {
-    this.argumentParser.add_argument("--apiKey", {
-      help: `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`,
-      default: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey),
-      required: false,
-    });
+    this.argumentParser.option(
+      "--apiKey",
+      `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`,
+      getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
+    );
 
-    this.argumentParser.add_argument("--apiURL", {
-      help: "SOOS API URL - Intended for internal use only, do not modify.",
-      default: SOOS_CONSTANTS.Urls.API.Analysis,
-      required: false,
-      type: (value: string) => {
-        return ensureNonEmptyValue(value, "apiURL");
-      },
-    });
+    this.argumentParser.option(
+      "--apiURL",
+      "SOOS API URL - Intended for internal use only, do not modify.",
+      (value: string) => ensureNonEmptyValue(value, "apiURL"),
+      SOOS_CONSTANTS.Urls.API.Analysis,
+    );
 
-    this.argumentParser.add_argument("--clientId", {
-      help: `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
-      default: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId),
-      required: false,
-    });
+    this.argumentParser.option(
+      "--clientId",
+      `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
+      getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId) ?? undefined,
+    );
 
-    this.addEnumArgument(this.argumentParser, "--integrationName", IntegrationName, {
-      help: "Integration Name - Intended for internal use only.",
-      required: false,
-      default: integrationName,
-    });
+    this.argumentParser.option(
+      "--integrationName",
+      "Integration Name - Intended for internal use only.",
+      integrationName,
+    );
 
-    this.addEnumArgument(this.argumentParser, "--integrationType", IntegrationType, {
-      help: "Integration Type - Intended for internal use only.",
-      required: false,
-      default: integrationType,
-    });
+    this.argumentParser.option(
+      "--integrationName",
+      "Integration Name - Intended for internal use only.",
+      integrationName,
+    );
 
-    this.addEnumArgument(this.argumentParser, "--logLevel", LogLevel, {
-      help: "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
-      default: LogLevel.INFO,
-      required: false,
-    });
+    this.addEnumArgument(
+      "--integrationType",
+      IntegrationType,
+      "Integration Type - Intended for internal use only.",
+      integrationType,
+    );
 
-    this.argumentParser.add_argument("--scriptVersion", {
-      help: "Script Version - Intended for internal use only.",
-      required: false,
-      default: scriptVersion,
-    });
+    this.addEnumArgument(
+      "--logLevel",
+      LogLevel,
+      "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
+      LogLevel.INFO,
+    );
+
+    this.argumentParser.option(
+      "--scriptVersion",
+      "Script Version - Intended for internal use only.",
+      scriptVersion,
+    );
   }
 
   addEnumArgument(
-    parser: ArgumentParser,
-    argName: string,
+    flags: string,
     enumObject: Record<string, unknown>,
-    options = {},
+    description: string,
+    defaultValue: unknown,
     allowMultipleValues = false,
     excludeDefault: string | undefined = undefined,
   ): void {
-    parser.add_argument(argName, {
-      ...options,
-      type: (value: string) => {
+    this.argumentParser.option(
+      flags,
+      description,
+      (value: string) => {
         if (allowMultipleValues) {
           return value
             .split(",")
             .map((v) => v.trim())
             .filter((v) => v !== "")
-            .map((v) => ensureEnumValue(enumObject, v, argName, excludeDefault));
+            .map((v) => ensureEnumValue(enumObject, v, flags, excludeDefault));
         }
 
-        return ensureEnumValue(enumObject, value, argName, excludeDefault);
+        return ensureEnumValue(enumObject, value, flags, excludeDefault);
       },
-    });
+      defaultValue,
+    );
   }
 
   parseArguments() {
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
-    const args = this.argumentParser.parse_args();
+    const args = this.argumentParser.parse(process.argv);
     this.ensureRequiredArguments(args);
     this.ensureArgumentCombinationsAreValid(args);
     this.checkDeprecatedArguments(args);

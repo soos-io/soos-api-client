@@ -1,4 +1,4 @@
-import { ArgumentParser } from "argparse";
+import { Command, program } from "commander";
 import {
   AttributionFileTypeEnum,
   AttributionFormatEnum,
@@ -37,7 +37,7 @@ class AnalysisArgumentParser extends ArgumentParserBase {
   public integrationType: IntegrationType;
 
   constructor(
-    argumentParser: ArgumentParser,
+    argumentParser: Command,
     integrationName: IntegrationName,
     integrationType: IntegrationType,
     scanType: ScanType,
@@ -56,9 +56,8 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     scanType: ScanType,
     scriptVersion: string,
   ): AnalysisArgumentParser {
-    const parser = new ArgumentParser({ description: `SOOS ${scanType}` });
     return new AnalysisArgumentParser(
-      parser,
+      program.description(`SOOS ${scanType}`),
       integrationName,
       integrationType,
       scanType,
@@ -67,97 +66,55 @@ class AnalysisArgumentParser extends ArgumentParserBase {
   }
 
   addBaseScanArguments() {
-    this.argumentParser.add_argument("--appVersion", {
-      help: "App Version - Intended for internal use only.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--branchName", {
-      help: "The name of the branch from the SCM System.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--branchURI", {
-      help: "The URI to the branch from the SCM System.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--buildURI", {
-      help: "URI to CI build info.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--buildVersion", {
-      help: "Version of application build artifacts.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--commitHash", {
-      help: "The commit hash value from the SCM System.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--contributingDeveloperId", {
-      help: "Contributing Developer ID - Intended for internal use only.",
-      required: false,
-    });
-
+    this.argumentParser.option("--appVersion", "App Version - Intended for internal use only.");
+    this.argumentParser.option("--branchName", "The name of the branch from the SCM System.");
+    this.argumentParser.option("--branchURI", "The URI to the branch from the SCM System.");
+    this.argumentParser.option("--buildURI", "URI to CI build info.");
+    this.argumentParser.option("--buildVersion", "Version of application build artifacts.");
+    this.argumentParser.option("--commitHash", "The commit hash value from the SCM System.");
+    this.argumentParser.option(
+      "--contributingDeveloperId",
+      "Contributing Developer ID - Intended for internal use only.",
+    );
     this.addEnumArgument(
-      this.argumentParser,
       "--contributingDeveloperSource",
       ContributingDeveloperSource,
-      {
-        help: "Contributing Developer Source - Intended for internal use only.",
-        required: false,
-        default: ContributingDeveloperSource.Unknown,
+      "Contributing Developer Source - Intended for internal use only.",
+      ContributingDeveloperSource.Unknown,
+    );
+    this.argumentParser.option(
+      "--contributingDeveloperSourceName",
+      "Contributing Developer Source Name - Intended for internal use only.",
+    );
+    this.addEnumArgument(
+      "--onFailure",
+      OnFailure,
+      "Action to perform when the scan fails. Options: fail_the_build, continue_on_failure.",
+      OnFailure.Continue,
+    );
+    this.argumentParser.option(
+      "--operatingEnvironment",
+      "Set Operating environment for information purposes only.",
+    );
+    this.argumentParser.option(
+      "--projectName",
+      "Project Name - this is what will be displayed in the SOOS app.",
+      (value: string) => {
+        return ensureNonEmptyValue(value, "projectName");
       },
     );
 
-    this.argumentParser.add_argument("--contributingDeveloperSourceName", {
-      help: "Contributing Developer Source Name - Intended for internal use only.",
-      required: false,
-    });
-
-    this.addEnumArgument(this.argumentParser, "--onFailure", OnFailure, {
-      help: "Action to perform when the scan fails. Options: fail_the_build, continue_on_failure.",
-      default: OnFailure.Continue,
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--operatingEnvironment", {
-      help: "Set Operating environment for information purposes only.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--projectName", {
-      help: "Project Name - this is what will be displayed in the SOOS app.",
-      required: true,
-      type: (value: string) => {
-        return ensureNonEmptyValue(value, "projectName");
-      },
-    });
-
     this.addEnumArgument(
-      this.argumentParser,
       "--exportFormat",
       AttributionFormatEnum,
-      {
-        help: "The report export format.",
-        required: false,
-      },
-      undefined,
+      "The report export format.",
       AttributionFormatEnum.Unknown,
     );
 
     this.addEnumArgument(
-      this.argumentParser,
       "--exportFileType",
       AttributionFileTypeEnum,
-      {
-        help: "The report export file type (NOTE: not all file types are available for all export formats).",
-        required: false,
-      },
-      undefined,
+      "The report export file type (NOTE: not all file types are available for all export formats).",
       AttributionFileTypeEnum.Unknown,
     );
   }

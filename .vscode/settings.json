@@ -1,15 +1,16 @@
 {
-    "editor.tabSize": 2,
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "prettier.configPath": "./.prettierrc",
-    "cSpell.words": [
-      "Csa",
-      "Dast",
-      "SARIF",
-      "SAST",
-      "Sca",
-      "SOOS"
-    ],
-    "sarif-viewer.connectToGithubCodeScanning": "off",
-  }
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.configPath": "./.prettierrc",
+  "cSpell.words": [
+    "Csa",
+    "Csaf",
+    "Dast",
+    "SARIF",
+    "SAST",
+    "Sca",
+    "SOOS"
+  ],
+  "sarif-viewer.connectToGithubCodeScanning": "off",
+}
