@@ -13,28 +13,31 @@ interface ICommonArguments {
   apiKey: string;
   apiURL: string;
   clientId: string;
+  integrationName: IntegrationName;
+  integrationType: IntegrationType;
   logLevel: LogLevel;
+  scanType: ScanType;
   scriptVersion: string;
 }
 
 abstract class ArgumentParserBase {
   private argumentParser: Command;
 
-  protected scanType?: ScanType;
-  protected scriptVersion: string = "0.0.0";
-  protected integrationName?: IntegrationName;
-  protected integrationType?: IntegrationType;
+  public scanType: ScanType;
+  public scriptVersion: string;
+  public integrationName: IntegrationName;
+  public integrationType: IntegrationType;
 
   protected constructor(
     description: string,
-    scanType?: ScanType,
-    scriptVersion?: string,
-    integrationName?: IntegrationName,
-    integrationType?: IntegrationType,
+    scanType: ScanType,
+    scriptVersion: string,
+    integrationName: IntegrationName,
+    integrationType: IntegrationType,
   ) {
     this.argumentParser = new Command().description(description);
     this.scanType = scanType;
-    this.scriptVersion = scriptVersion ?? "0.0.0";
+    this.scriptVersion = scriptVersion;
     this.integrationName = integrationName;
     this.integrationType = integrationType;
 
@@ -42,9 +45,9 @@ abstract class ArgumentParserBase {
   }
 
   protected addCommonArguments(
-    scriptVersion?: string,
-    integrationName?: IntegrationName,
-    integrationType?: IntegrationType,
+    scriptVersion: string,
+    integrationName: IntegrationName,
+    integrationType: IntegrationType,
   ): void {
     this.addArgument("apiKey", `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`, {
       defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
@@ -111,7 +114,7 @@ abstract class ArgumentParserBase {
     }
 
     if (options?.required) {
-      option.required = true;
+      option.makeOptionMandatory(true);
     }
 
     if (options?.argParser) {

@@ -21,8 +21,6 @@ interface IBaseScanArguments extends ICommonArguments {
   contributingDeveloperId: string;
   contributingDeveloperSource: ContributingDeveloperSource;
   contributingDeveloperSourceName: string;
-  integrationName: IntegrationName;
-  integrationType: IntegrationType;
   onFailure: OnFailure;
   operatingEnvironment: string;
   projectName: string;
@@ -31,23 +29,13 @@ interface IBaseScanArguments extends ICommonArguments {
 }
 
 class AnalysisArgumentParser extends ArgumentParserBase {
-  public scanType: ScanType;
-  public scriptVersion: string;
-  public integrationName: IntegrationName;
-  public integrationType: IntegrationType;
-
   constructor(
     integrationName: IntegrationName,
     integrationType: IntegrationType,
     scanType: ScanType,
     scriptVersion: string,
   ) {
-    super(`SOOS ${scanType}`);
-
-    this.integrationName = integrationName;
-    this.integrationType = integrationType;
-    this.scanType = scanType;
-    this.scriptVersion = scriptVersion;
+    super(`SOOS ${scanType}`, scanType, scriptVersion, integrationName, integrationType);
 
     this.addBaseScanArguments();
   }
@@ -62,7 +50,7 @@ class AnalysisArgumentParser extends ArgumentParserBase {
   }
 
   addBaseScanArguments() {
-    this.addArgument("appVersion", "App Version", { internal: true, required: true });
+    this.addArgument("appVersion", "App Version", { internal: true });
     this.addArgument("branchName", "The name of the branch from the SCM System.");
     this.addArgument("branchURI", "The URI to the branch from the SCM System.");
     this.addArgument("buildURI", "URI to CI build info.");

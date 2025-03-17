@@ -20,6 +20,7 @@ export enum IntegrationName {
   SoosSast = "SoosSast",
   SoosSca = "SoosSca",
   SoosSbom = "SoosSbom",
+  SoosScmAudit = "SoosScmAudit",
   TeamCity = "TeamCity",
   TravisCI = "TravisCI",
   VisualStudio = "VisualStudio",

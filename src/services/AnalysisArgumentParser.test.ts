@@ -25,6 +25,8 @@ describe("AnalysisArgumentParser", () => {
       "--clientId=123",
       "--apiKey",
       "xxxxxx",
+      "--projectName",
+      "TEST",
       "--integrationType=Webhook",
       "--logLevel",
       "DEBUG",
@@ -45,7 +47,15 @@ describe("AnalysisArgumentParser", () => {
   test("Can parse args twice", () => {
     const argumentParser = getSut();
 
-    const argv = ["node", "soos-csa", "--clientId=123", "--apiKey", "xxxxxx", "--logLevel=ERROR"];
+    const argv = [
+      "node",
+      "soos-csa",
+      "--clientId=123",
+      "--projectName=doh",
+      "--apiKey",
+      "xxxxxx",
+      "--logLevel=ERROR",
+    ];
 
     const optionsFirst = argumentParser.parseArguments(argv);
 
