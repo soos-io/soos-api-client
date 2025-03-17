@@ -27,12 +27,17 @@ describe("AnalysisArgumentParser", () => {
       "--clientId=123",
       "--apiKey",
       "xxxxxx",
+      "--logLevel=DEBUG",
     ]);
 
     expect(options).not.toBeNull();
     console.log(options);
     expect(options.clientId).not.toBeUndefined();
+    expect(options.clientId).toBe("123");
     expect(options.apiKey).not.toBeUndefined();
+    expect(options.apiKey).toBe("xxxxxx");
+    expect(options.logLevel).not.toBeUndefined();
+    expect(options.logLevel).toBe("DEBUG");
   });
 
   test("Can parse args twice", () => {
@@ -45,6 +50,7 @@ describe("AnalysisArgumentParser", () => {
     expect(optionsFirst).not.toBeNull();
     console.log(optionsFirst);
     expect(optionsFirst.clientId).not.toBeUndefined();
+    expect(optionsFirst.clientId).toBe("123");
 
     argumentParser.addBaseScanArguments();
 
@@ -53,6 +59,10 @@ describe("AnalysisArgumentParser", () => {
     expect(options).not.toBeNull();
     console.log(options);
     expect(options.clientId).not.toBeUndefined();
+    expect(options.clientId).toBe("123");
     expect(options.apiKey).not.toBeUndefined();
+    expect(options.apiKey).toBe("xxxxxx");
+    expect(options.apiURL).not.toBeUndefined();
+    expect(options.apiURL).toBe("https://api.soos.io/api/");
   });
 });

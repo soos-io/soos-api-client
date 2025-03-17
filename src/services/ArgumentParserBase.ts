@@ -52,7 +52,7 @@ abstract class ArgumentParserBase {
       getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
     );
     this.addArgument(
-      "--apiURL, --apiUrl",
+      "--apiURL",
       "SOOS API URL",
       SOOS_CONSTANTS.Urls.API.Analysis,
       (value: string) => ensureNonEmptyValue(value, "apiURL"),
