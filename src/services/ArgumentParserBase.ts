@@ -46,48 +46,42 @@ abstract class ArgumentParserBase {
     integrationName?: IntegrationName,
     integrationType?: IntegrationType,
   ): void {
-    this.addArgument(
-      "--apiKey",
-      `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`,
-      {
-        defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
-        required: true,
-      },
-    );
-    this.addArgument("--apiURL", "SOOS API URL", {
+    this.addArgument("apiKey", `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`, {
+      defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
+      required: true,
+    });
+    this.addArgument("apiURL", "SOOS API URL", {
       defaultValue: SOOS_CONSTANTS.Urls.API.Analysis,
       argParser: (value: string) => ensureNonEmptyValue(value, "apiURL"),
       internal: true,
     });
     this.addArgument(
-      "--clientId",
+      "clientId",
       `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
       {
         defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId) ?? undefined,
         required: true,
       },
     );
-    this.addArgument("--integrationName", "Integration Name", {
+    this.addArgument("integrationName", "Integration Name", {
       defaultValue: integrationName,
       required: true,
       internal: true,
     });
-    this.addEnumArgument("--integrationType", IntegrationType, "Integration Type", {
+    this.addEnumArgument("integrationType", IntegrationType, "Integration Type", {
       defaultValue: integrationType,
       internal: true,
       required: true,
     });
 
-    // NOTE: logLevel is "special" in the underlying handler, so we can't use our addArgument method
+    // NOTE: "logLevel" is "special" in the underlying implementation, so we can't use our addArgument method
     this.argumentParser.addOption(
-      new Option(
-        "--logLevel <level>",
-        "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
-      )
+      new Option("--logLevel <logLevel>", "Minimum log level to display.")
         .choices([LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.FAIL, LogLevel.ERROR])
         .default(LogLevel.INFO),
     );
-    this.addArgument("--scriptVersion", "Script Version", {
+
+    this.addArgument("scriptVersion", "Script Version", {
       defaultValue: scriptVersion,
       internal: true,
       required: true,
@@ -105,7 +99,8 @@ abstract class ArgumentParserBase {
       choices?: string[];
     },
   ): void {
-    const option = new Option(name, description);
+    const flags = `--${name} <${name}>`;
+    const option = new Option(flags, description);
 
     if (options?.defaultValue) {
       option.default(options.defaultValue);
