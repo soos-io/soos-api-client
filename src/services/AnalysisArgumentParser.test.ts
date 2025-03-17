@@ -1,14 +1,5 @@
 import { IntegrationName, IntegrationType, LogLevel, ScanType } from "../enums";
-import AnalysisArgumentParser from "./AnalysisArgumentParser";
-
-interface IParsedArguments {
-  apiKey: string;
-  apiURL: string;
-  clientId: string;
-  logLevel: LogLevel;
-  scriptVersion: string;
-  integrationType: IntegrationType;
-}
+import AnalysisArgumentParser, { IBaseScanArguments } from "./AnalysisArgumentParser";
 
 const getSut = () => {
   return AnalysisArgumentParser.create(
@@ -28,7 +19,7 @@ describe("AnalysisArgumentParser", () => {
   test("Can parse args", () => {
     const argumentParser = getSut();
 
-    const options = argumentParser.parseArguments<IParsedArguments>([
+    const options = argumentParser.parseArguments<IBaseScanArguments>([
       "/path/to/node",
       "/path/to/soos-csa",
       "--clientId=123",
@@ -47,12 +38,14 @@ describe("AnalysisArgumentParser", () => {
     expect(options.apiKey).toBe("xxxxxx");
     expect(options.integrationType).not.toBeUndefined();
     expect(options.integrationType).toBe(IntegrationType.Webhook);
+    expect(options.logLevel).not.toBeUndefined();
+    expect(options.logLevel).toBe(LogLevel.DEBUG);
   });
 
   test("Can parse args twice", () => {
     const argumentParser = getSut();
 
-    const argv = ["node", "soos-csa", "--clientId=123", "--apiKey", "xxxxxx"];
+    const argv = ["node", "soos-csa", "--clientId=123", "--apiKey", "xxxxxx", "--logLevel=ERROR"];
 
     const optionsFirst = argumentParser.parseArguments(argv);
 
@@ -71,5 +64,7 @@ describe("AnalysisArgumentParser", () => {
     expect(options.apiKey).toBe("xxxxxx");
     expect(options.apiURL).not.toBeUndefined();
     expect(options.apiURL).toBe("https://api.soos.io/api/");
+    expect(options.logLevel).not.toBeUndefined();
+    expect(options.logLevel).toBe(LogLevel.ERROR);
   });
 });

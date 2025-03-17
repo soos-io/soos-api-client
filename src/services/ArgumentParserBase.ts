@@ -77,11 +77,15 @@ abstract class ArgumentParserBase {
       internal: true,
       required: true,
     });
-    this.addEnumArgument(
-      "--logLevel",
-      LogLevel,
-      "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
-      { defaultValue: LogLevel.INFO },
+
+    // NOTE: logLevel is "special" in the underlying handler, so we can't use our addArgument method
+    this.argumentParser.addOption(
+      new Option(
+        "--logLevel <level>",
+        "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
+      )
+        .choices([LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.FAIL, LogLevel.ERROR])
+        .default(LogLevel.INFO),
     );
     this.addArgument("--scriptVersion", "Script Version", {
       defaultValue: scriptVersion,
