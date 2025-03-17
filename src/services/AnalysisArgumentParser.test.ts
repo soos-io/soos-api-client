@@ -1,5 +1,14 @@
-import { IntegrationName, IntegrationType, ScanType } from "../enums";
-import AnalysisArgumentParser, { ICommonArguments } from "./AnalysisArgumentParser";
+import { IntegrationName, IntegrationType, LogLevel, ScanType } from "../enums";
+import AnalysisArgumentParser from "./AnalysisArgumentParser";
+
+interface IParsedArguments {
+  apiKey: string;
+  apiURL: string;
+  clientId: string;
+  logLevel: LogLevel;
+  scriptVersion: string;
+  integrationType: IntegrationType;
+}
 
 const getSut = () => {
   return AnalysisArgumentParser.create(
@@ -19,15 +28,15 @@ describe("AnalysisArgumentParser", () => {
   test("Can parse args", () => {
     const argumentParser = getSut();
 
-    argumentParser.addBaseScanArguments();
-
-    const options = argumentParser.parseArguments<ICommonArguments>([
-      "node",
-      "soos-csa",
+    const options = argumentParser.parseArguments<IParsedArguments>([
+      "/path/to/node",
+      "/path/to/soos-csa",
       "--clientId=123",
       "--apiKey",
       "xxxxxx",
-      "--logLevel=DEBUG",
+      "--integrationType=Webhook",
+      "--logLevel",
+      "DEBUG",
     ]);
 
     expect(options).not.toBeNull();
@@ -36,8 +45,8 @@ describe("AnalysisArgumentParser", () => {
     expect(options.clientId).toBe("123");
     expect(options.apiKey).not.toBeUndefined();
     expect(options.apiKey).toBe("xxxxxx");
-    expect(options.logLevel).not.toBeUndefined();
-    expect(options.logLevel).toBe("DEBUG");
+    expect(options.integrationType).not.toBeUndefined();
+    expect(options.integrationType).toBe(IntegrationType.Webhook);
   });
 
   test("Can parse args twice", () => {
@@ -52,9 +61,7 @@ describe("AnalysisArgumentParser", () => {
     expect(optionsFirst.clientId).not.toBeUndefined();
     expect(optionsFirst.clientId).toBe("123");
 
-    argumentParser.addBaseScanArguments();
-
-    const options = argumentParser.parseArguments<ICommonArguments>(argv);
+    const options = argumentParser.parseArguments(argv);
 
     expect(options).not.toBeNull();
     console.log(options);

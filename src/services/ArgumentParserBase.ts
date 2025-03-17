@@ -46,123 +46,126 @@ abstract class ArgumentParserBase {
     integrationName?: IntegrationName,
     integrationType?: IntegrationType,
   ): void {
-    this.addRequiredArgument(
+    this.addArgument(
       "--apiKey",
       `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`,
-      getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
-    );
-    this.addArgument(
-      "--apiURL",
-      "SOOS API URL",
-      SOOS_CONSTANTS.Urls.API.Analysis,
-      (value: string) => ensureNonEmptyValue(value, "apiURL"),
-    );
-    this.addRequiredArgument(
-      "--clientId",
-      `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
-      getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId) ?? undefined,
-    );
-    this.addInternalArgument("--integrationName", "Integration Name", integrationName);
-    this.addEnumArgument(
-      "--integrationType",
-      IntegrationType,
-      "Integration Type",
-      integrationType,
       {
-        internal: true,
+        defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
+        required: true,
       },
     );
+    this.addArgument("--apiURL", "SOOS API URL", {
+      defaultValue: SOOS_CONSTANTS.Urls.API.Analysis,
+      argParser: (value: string) => ensureNonEmptyValue(value, "apiURL"),
+      internal: true,
+    });
+    this.addArgument(
+      "--clientId",
+      `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
+      {
+        defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId) ?? undefined,
+        required: true,
+      },
+    );
+    this.addArgument("--integrationName", "Integration Name", {
+      defaultValue: integrationName,
+      required: true,
+      internal: true,
+    });
+    this.addEnumArgument("--integrationType", IntegrationType, "Integration Type", {
+      defaultValue: integrationType,
+      internal: true,
+      required: true,
+    });
     this.addEnumArgument(
       "--logLevel",
       LogLevel,
       "Minimum level to show logs: DEBUG, INFO, WARN, FAIL, ERROR.",
-      LogLevel.INFO,
+      { defaultValue: LogLevel.INFO },
     );
-    this.addInternalArgument("--scriptVersion", "Script Version", scriptVersion);
+    this.addArgument("--scriptVersion", "Script Version", {
+      defaultValue: scriptVersion,
+      internal: true,
+      required: true,
+    });
   }
 
   addArgument(
-    flags: string,
+    name: string,
     description: string,
-    defaultValue?: unknown,
-    argParser?: (value: string) => unknown,
-  ): void {
-    const option = new Option(flags, description);
-    if (defaultValue) {
-      option.default(defaultValue);
-    }
-    if (argParser) {
-      option.argParser(argParser);
-    }
-
-    this.argumentParser.addOption(option);
-  }
-
-  addRequiredArgument(
-    flags: string,
-    description: string,
-    defaultValue?: unknown,
-    argParser?: (value: string) => unknown,
-  ): void {
-    const option = new Option(flags, description);
-    option.required = true;
-    if (defaultValue) {
-      option.default(defaultValue);
-    }
-    if (argParser) {
-      option.argParser(argParser);
-    }
-
-    this.argumentParser.addOption(option);
-  }
-
-  addInternalArgument(
-    flags: string,
-    description: string,
-    defaultValue?: unknown,
-    argParser?: (value: string) => unknown,
-  ): void {
-    const option = new Option(flags, description);
-    option.hideHelp(); // internal args don't show in the help context
-    if (defaultValue) {
-      option.default(defaultValue);
-    }
-    if (argParser) {
-      option.argParser(argParser);
-    }
-  }
-
-  addEnumArgument(
-    flags: string,
-    enumObject: Record<string, unknown>,
-    description: string,
-    defaultValue: unknown,
     options?: {
-      allowMultipleValues?: boolean;
-      excludeDefault?: string;
+      defaultValue?: unknown;
       internal?: boolean;
+      required?: boolean;
+      argParser?: (value: string) => unknown;
+      choices?: string[];
     },
   ): void {
-    const option = new Option(flags, description).default(defaultValue);
-    option.argParser((value: string) => {
-      if (options?.allowMultipleValues) {
-        return value
-          .split(",")
-          .map((v) => v.trim())
-          .filter((v) => v !== "")
-          .map((v) => ensureEnumValue(enumObject, v, flags, options?.excludeDefault));
-      }
+    const option = new Option(name, description);
 
-      return ensureEnumValue(enumObject, value, flags, options?.excludeDefault);
-    });
+    if (options?.defaultValue) {
+      option.default(options.defaultValue);
+    }
+
     if (options?.internal) {
       option.hideHelp();
     }
+
+    if (options?.required) {
+      option.required = true;
+    }
+
+    if (options?.argParser) {
+      option.argParser(options.argParser);
+    }
+
+    if (options?.choices) {
+      option.choices(options.choices);
+    }
+
     this.argumentParser.addOption(option);
   }
 
+  addEnumArgument<T, TEnumObject extends Record<string, T>>(
+    name: string,
+    enumObject: TEnumObject,
+    description: string,
+    options: {
+      defaultValue: T;
+      allowMultipleValues?: boolean;
+      excludeDefault?: string;
+      internal?: boolean;
+      required?: boolean;
+    },
+  ): void {
+    const argParser = options?.allowMultipleValues
+      ? (value: string): T[] => {
+          return value
+            .split(",")
+            .map((v) => v.trim())
+            .filter((v) => v !== "")
+            .map(
+              (v) =>
+                ensureEnumValue(enumObject, v, name, options?.excludeDefault) ??
+                options.defaultValue,
+            );
+        }
+      : (value: string): T => {
+          return (
+            ensureEnumValue(enumObject, value, name, options?.excludeDefault) ??
+            options.defaultValue
+          );
+        };
+    this.addArgument(name, description, {
+      defaultValue: options?.defaultValue,
+      argParser,
+      internal: options?.internal,
+      required: options?.required,
+    });
+  }
+
   parseArguments<T extends OptionValues>(argv?: string[]) {
-    const args = this.argumentParser.parse(argv ?? process.argv, { from: "node" }).opts<T>();
+    const args = this.argumentParser.parse(argv ?? process.argv).opts<T>();
     return args;
   }
 }

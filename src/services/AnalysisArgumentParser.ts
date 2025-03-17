@@ -43,10 +43,13 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     scriptVersion: string,
   ) {
     super(`SOOS ${scanType}`);
+
     this.integrationName = integrationName;
     this.integrationType = integrationType;
     this.scanType = scanType;
     this.scriptVersion = scriptVersion;
+
+    this.addBaseScanArguments();
   }
 
   static create(
@@ -59,41 +62,36 @@ class AnalysisArgumentParser extends ArgumentParserBase {
   }
 
   addBaseScanArguments() {
-    this.addInternalArgument("--appVersion", "App Version");
+    this.addArgument("--appVersion", "App Version", { internal: true, required: true });
     this.addArgument("--branchName", "The name of the branch from the SCM System.");
     this.addArgument("--branchURI", "The URI to the branch from the SCM System.");
     this.addArgument("--buildURI", "URI to CI build info.");
     this.addArgument("--buildVersion", "Version of application build artifacts.");
     this.addArgument("--commitHash", "The commit hash value from the SCM System.");
-    this.addInternalArgument("--contributingDeveloperId", "Contributing Developer ID");
+    this.addArgument("--contributingDeveloperId", "Contributing Developer ID", { internal: true });
     this.addEnumArgument(
       "--contributingDeveloperSource",
       ContributingDeveloperSource,
       "Contributing Developer Source",
-      ContributingDeveloperSource.Unknown,
-      { internal: true },
+      { defaultValue: ContributingDeveloperSource.Unknown, internal: true },
     );
-    this.addInternalArgument(
-      "--contributingDeveloperSourceName",
-      "Contributing Developer Source Name",
-    );
+    this.addArgument("--contributingDeveloperSourceName", "Contributing Developer Source Name", {
+      internal: true,
+    });
     this.addEnumArgument(
       "--exportFileType",
       AttributionFileTypeEnum,
       "The report export file type (NOTE: not all file types are available for all export formats).",
-      AttributionFileTypeEnum.Unknown,
+      { defaultValue: AttributionFileTypeEnum.Unknown },
     );
-    this.addEnumArgument(
-      "--exportFormat",
-      AttributionFormatEnum,
-      "The report export format.",
-      AttributionFormatEnum.Unknown,
-    );
+    this.addEnumArgument("--exportFormat", AttributionFormatEnum, "The report export format.", {
+      defaultValue: AttributionFormatEnum.Unknown,
+    });
     this.addEnumArgument(
       "--onFailure",
       OnFailure,
       "Action to perform when the scan fails. Options: fail_the_build, continue_on_failure.",
-      OnFailure.Continue,
+      { defaultValue: OnFailure.Continue },
     );
     this.addArgument(
       "--operatingEnvironment",
@@ -102,8 +100,11 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     this.addArgument(
       "--projectName",
       "Project Name - this is what will be displayed in the SOOS app.",
-      (value: string) => {
-        return ensureNonEmptyValue(value, "projectName");
+      {
+        required: true,
+        argParser: (value: string) => {
+          return ensureNonEmptyValue(value, "projectName");
+        },
       },
     );
   }

@@ -15,7 +15,7 @@
     "lint": "eslint --max-warnings 0",
     "lint:fix": "eslint --max-warnings 0 --fix",
     "typecheck": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --runInBand",
     "knip": "knip",
     "check": "npm run format && npm run lint && npm run typecheck && npm run test && (npm outdated || exit 0)",
     "patch": "npm version patch --no-git-tag-version",
