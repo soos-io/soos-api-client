@@ -20,6 +20,14 @@ const ensureNonEmptyValue = (value: string | null | undefined, propertyName: str
   return value;
 };
 
+const getEnumOptions = <T, TEnumObject extends Record<string, T> = Record<string, T>>(
+  enumObject: TEnumObject,
+  excludeDefault?: keyof TEnumObject,
+): Array<[string, string | number]> => {
+  const options = Object.entries(enumObject) as unknown as Array<[string, string | number]>;
+  return excludeDefault === undefined ? options : options.filter((o) => o.at(0) !== excludeDefault);
+};
+
 const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<string, T>>(
   enumObject: TEnumObject,
   inputValue: string | null | undefined,
@@ -31,10 +39,8 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
     return undefined;
   }
 
-  const options = Object.entries(enumObject) as unknown as Array<[string, string | number]>;
-  const optionsWithoutExcludedDefault =
-    excludeDefault === undefined ? options : options.filter((o) => o.at(0) !== excludeDefault);
-  const option = optionsWithoutExcludedDefault.find(([, value]) => {
+  const options = getEnumOptions<T, TEnumObject>(enumObject, excludeDefault);
+  const option = options.find(([, value]) => {
     const stringValue = value.toLocaleString();
     return ignoreCase
       ? stringValue.toLocaleLowerCase() === inputValue.toLocaleLowerCase()
@@ -45,7 +51,7 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
     throw new Error(
       `Invalid value '${inputValue}' for ${
         parameterName ? `'${parameterName}'` : "parameter"
-      }. Valid options are: ${optionsWithoutExcludedDefault.map(([, value]) => value).join(", ")}.`,
+      }. Valid options are: ${options.map(([, value]) => value).join(", ")}.`,
     );
   }
 
@@ -228,6 +234,7 @@ export {
   formatBytes,
   generateFileHash,
   getAnalysisExitCodeWithMessage,
+  getEnumOptions,
   DateUtilities,
   StringUtilities,
   isScanDone,

@@ -1,7 +1,7 @@
 import { IntegrationType } from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
 import { IntegrationName, LogLevel, ScanType } from "../enums";
-import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
+import { ensureEnumValue, getEnumOptions, getEnvVariable } from "../utilities";
 import { Command, createCommand, Option } from "commander";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +61,6 @@ abstract class ArgumentParserBase {
     });
     this.addArgument("apiURL", "SOOS API URL", {
       defaultValue: SOOS_CONSTANTS.Urls.API.Analysis,
-      argParser: (value: string) => ensureNonEmptyValue(value, "apiURL"),
       internal: true,
     });
     this.addArgument(
@@ -146,6 +145,12 @@ abstract class ArgumentParserBase {
       required?: boolean;
     },
   ): void {
+    const descriptionWithOptions = `${description} Options: ${getEnumOptions<T, TEnumObject>(
+      enumObject,
+      options.excludeDefault,
+    )
+      .map(([, value]) => value)
+      .join(", ")}`;
     const argParser = options?.allowMultipleValues
       ? (value: string): T[] => {
           return value
@@ -164,7 +169,7 @@ abstract class ArgumentParserBase {
             options.defaultValue
           );
         };
-    this.addArgument(name, description, {
+    this.addArgument(name, descriptionWithOptions, {
       defaultValue: options?.defaultValue,
       argParser,
       internal: options?.internal,

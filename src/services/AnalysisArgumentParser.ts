@@ -7,7 +7,7 @@ import {
   OnFailure,
   ScanType,
 } from "../enums";
-import { ensureNonEmptyValue, generatedScanTypes, isNil } from "../utilities";
+import { generatedScanTypes, isNil } from "../utilities";
 import { ArgumentParserBase, ICommonArguments, ParsedOptions } from "./ArgumentParserBase";
 
 interface IBaseScanArguments extends ICommonArguments {
@@ -74,12 +74,9 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     this.addEnumArgument("exportFormat", AttributionFormatEnum, "The report export format.", {
       defaultValue: AttributionFormatEnum.Unknown,
     });
-    this.addEnumArgument(
-      "onFailure",
-      OnFailure,
-      "Action to perform when the scan fails. Options: fail_the_build, continue_on_failure.",
-      { defaultValue: OnFailure.Continue },
-    );
+    this.addEnumArgument("onFailure", OnFailure, "Action to perform when the scan fails.", {
+      defaultValue: OnFailure.Continue,
+    });
     this.addArgument(
       "operatingEnvironment",
       "Set Operating environment for information purposes only.",
@@ -89,9 +86,6 @@ class AnalysisArgumentParser extends ArgumentParserBase {
       "Project Name - this is what will be displayed in the SOOS app.",
       {
         required: true,
-        argParser: (value: string) => {
-          return ensureNonEmptyValue(value, "projectName");
-        },
       },
     );
   }
