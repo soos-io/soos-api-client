@@ -121,4 +121,28 @@ describe("AnalysisArgumentParser", () => {
     expect(options.logLevel).toBe(LogLevel.ERROR);
     expect(options.target).toBe("bobNoKey");
   });
+
+  test("Can parse flags", () => {
+    const argumentParser = getSut();
+
+    argumentParser.addArgument("myFlag", "description of myFlag argument", {
+      isFlag: true,
+    });
+
+    const options = argumentParser.parseArguments([
+      "/path/to/node",
+      "/path/to/soos-csa",
+      "--clientId=123",
+      "--apiKey",
+      "xxxxxx",
+      "--projectName",
+      "TEST",
+      "--myFlag",
+    ]);
+
+    expect(options).not.toBeNull();
+    console.log(options);
+    expect(options.myFlag).not.toBeUndefined();
+    expect(options.myFlag).toBe(true);
+  });
 });

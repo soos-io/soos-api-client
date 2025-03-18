@@ -124,6 +124,7 @@ abstract class ArgumentParserBase {
       argParser?: (value: string) => unknown;
       choices?: string[];
       useNoOptionKey?: boolean;
+      isFlag?: boolean;
     },
   ): void {
     if (options?.useNoOptionKey) {
@@ -150,11 +151,15 @@ abstract class ArgumentParserBase {
         argument.choices(options.choices);
       }
 
+      if (options?.isFlag) {
+        throw new Error("isFlag is not applicable");
+      }
+
       this.argumentParser.addArgument(argument);
       return;
     }
 
-    const flags = `--${name} <${name}>`;
+    const flags = options?.isFlag ? `--${name}` : `--${name} <${name}>`;
     const option = createOption(flags, description);
 
     if (options?.defaultValue) {
@@ -170,10 +175,18 @@ abstract class ArgumentParserBase {
     }
 
     if (options?.argParser) {
+      if (options?.isFlag) {
+        throw new Error("argParser is not applicable");
+      }
+
       option.argParser(options.argParser);
     }
 
     if (options?.choices) {
+      if (options?.isFlag) {
+        throw new Error("choices is not applicable");
+      }
+
       option.choices(options.choices);
     }
 
