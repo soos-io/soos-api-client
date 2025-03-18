@@ -18,11 +18,6 @@ interface ICommonArguments {
   scriptVersion: string;
 }
 
-const getIntegrateUrl = (scanType?: ScanType): string =>
-  `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
-    scanType == ScanType.CSA ? "containers" : (scanType ?? ScanType.SCA).toLowerCase()
-  }`;
-
 abstract class ArgumentParserBase {
   private argumentParser: Command;
 
@@ -50,6 +45,12 @@ abstract class ArgumentParserBase {
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
   }
 
+  private getIntegrateUrl(scanType?: ScanType): string {
+    return `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
+      scanType == ScanType.CSA ? "containers" : (scanType ?? ScanType.SCA).toLowerCase()
+    }`;
+  }
+
   private parseCommanderOptions<T extends ParsedOptions>(argv?: string[]) {
     return this.argumentParser.parse(argv ?? process.argv).opts<T>();
   }
@@ -63,8 +64,9 @@ abstract class ArgumentParserBase {
   }
 
   private getCombinedCommanderOptionsAndArguments<T extends ParsedOptions>(argv?: string[]) {
-    const args = this.parseCommanderArguments();
+    // NOTE: options must be before args
     const options = this.parseCommanderOptions<T>(argv);
+    const args = this.parseCommanderArguments();
     return { ...args, ...options };
   }
 
@@ -73,17 +75,21 @@ abstract class ArgumentParserBase {
     integrationName: IntegrationName,
     integrationType: IntegrationType,
   ): void {
-    this.addArgument("apiKey", `SOOS API Key - get yours from ${getIntegrateUrl(this.scanType)}`, {
-      defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
-      required: true,
-    });
+    this.addArgument(
+      "apiKey",
+      `SOOS API Key - get yours from ${this.getIntegrateUrl(this.scanType)}`,
+      {
+        defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ApiKey) ?? undefined,
+        required: true,
+      },
+    );
     this.addArgument("apiURL", "SOOS API URL", {
       defaultValue: SOOS_CONSTANTS.Urls.API.Analysis,
       internal: true,
     });
     this.addArgument(
       "clientId",
-      `SOOS Client ID - get yours from ${getIntegrateUrl(this.scanType)}`,
+      `SOOS Client ID - get yours from ${this.getIntegrateUrl(this.scanType)}`,
       {
         defaultValue: getEnvVariable(SOOS_CONSTANTS.EnvironmentVariables.ClientId) ?? undefined,
         required: true,

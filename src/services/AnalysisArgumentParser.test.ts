@@ -90,6 +90,7 @@ describe("AnalysisArgumentParser", () => {
       "soos-csa",
       "--clientId=123",
       "--projectName=doh",
+      "--debug",
       "--apiKey",
       "xxxxxx",
       "--logLevel=ERROR",
@@ -102,6 +103,10 @@ describe("AnalysisArgumentParser", () => {
     console.log(preOptions);
     expect(preOptions.clientId).not.toBeUndefined();
     expect(preOptions.clientId).toBe("123");
+
+    argumentParser.addArgument("debug", "description of debug argument", {
+      isFlag: true,
+    });
 
     argumentParser.addArgument("targetURL", "description of target argument", {
       required: true,
@@ -119,6 +124,8 @@ describe("AnalysisArgumentParser", () => {
     expect(options.apiURL).not.toBeUndefined();
     expect(options.apiURL).toBe("https://api.soos.io/api/");
     expect(options.logLevel).not.toBeUndefined();
+    expect(options.debug).not.toBeUndefined();
+    expect(options.debug).toBe(true);
     expect(options.logLevel).toBe(LogLevel.ERROR);
     expect(options.targetURL).toBe("https://target.com/site");
   });
