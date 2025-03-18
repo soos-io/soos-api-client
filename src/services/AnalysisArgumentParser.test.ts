@@ -153,4 +153,62 @@ describe("AnalysisArgumentParser", () => {
     expect(options.myFlag).not.toBeUndefined();
     expect(options.myFlag).toBe(true);
   });
+
+  test("Can parse enum multiple values", () => {
+    const argumentParser = getSut();
+
+    argumentParser.addEnumArgument(
+      "myMultiple",
+      IntegrationName,
+      "description of myMultiple argument",
+      {
+        allowMultipleValues: true,
+      },
+    );
+
+    const options = argumentParser.parseArguments([
+      "/path/to/node",
+      "/path/to/soos-csa",
+      "--clientId=123",
+      "--apiKey",
+      "xxxxxx",
+      "--projectName",
+      "TEST",
+      "--myMultiple=GitLab,Jenkins",
+    ]);
+
+    expect(options).not.toBeNull();
+    console.log(options);
+    expect(options.myMultiple).not.toBeUndefined();
+    expect(options.myMultiple).toMatchObject([IntegrationName.GitLab, IntegrationName.Jenkins]);
+  });
+
+  test("Can parse enum multiple values with a default", () => {
+    const argumentParser = getSut();
+
+    argumentParser.addEnumArgument(
+      "myMultiple",
+      IntegrationName,
+      "description of myMultiple argument",
+      {
+        allowMultipleValues: true,
+        defaultValue: [IntegrationName.Bamboo, IntegrationName.CircleCI],
+      },
+    );
+
+    const options = argumentParser.parseArguments([
+      "/path/to/node",
+      "/path/to/soos-csa",
+      "--clientId=123",
+      "--apiKey",
+      "xxxxxx",
+      "--projectName",
+      "TEST",
+    ]);
+
+    expect(options).not.toBeNull();
+    console.log(options);
+    expect(options.myMultiple).not.toBeUndefined();
+    expect(options.myMultiple).toMatchObject([IntegrationName.Bamboo, IntegrationName.CircleCI]);
+  });
 });

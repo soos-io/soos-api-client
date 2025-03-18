@@ -40,7 +40,9 @@ abstract class ArgumentParserBase {
     this.integrationName = integrationName;
     this.integrationType = integrationType;
 
-    this.argumentParser = createCommand().description(this.description).version(this.scriptVersion);
+    this.argumentParser = createCommand()
+      .description(`${this.description} v${this.scriptVersion}`)
+      .version(this.scriptVersion);
 
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
   }
@@ -203,13 +205,21 @@ abstract class ArgumentParserBase {
     name: string,
     enumObject: TEnumObject,
     description: string,
-    options: {
-      defaultValue: T;
-      allowMultipleValues?: boolean;
-      excludeDefault?: string;
-      internal?: boolean;
-      required?: boolean;
-    },
+    options:
+      | {
+          defaultValue: T;
+          allowMultipleValues?: false;
+          excludeDefault?: string;
+          internal?: boolean;
+          required?: boolean;
+        }
+      | {
+          defaultValue?: T[];
+          allowMultipleValues: true;
+          excludeDefault?: string;
+          internal?: boolean;
+          required?: boolean;
+        },
   ): void {
     const descriptionWithOptions = `${description} Options: ${getEnumOptions<T, TEnumObject>(
       enumObject,
@@ -219,15 +229,18 @@ abstract class ArgumentParserBase {
       .join(", ")}`;
     const argParser = options?.allowMultipleValues
       ? (value: string): T[] => {
-          return value
-            .split(",")
-            .map((v) => v.trim())
-            .filter((v) => v !== "")
-            .map(
-              (v) =>
-                ensureEnumValue(enumObject, v, name, options?.excludeDefault) ??
-                options.defaultValue,
-            );
+          return (
+            value
+              .split(",")
+              .map((v) => v.trim())
+              .filter((v) => v !== "")
+              .map((v) =>
+                ensureEnumValue<T, TEnumObject>(enumObject, v, name, options?.excludeDefault),
+              )
+              .filter((v) => v !== undefined) ??
+            options.defaultValue ??
+            []
+          );
         }
       : (value: string): T => {
           return (
