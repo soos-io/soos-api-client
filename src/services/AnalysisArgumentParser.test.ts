@@ -44,7 +44,7 @@ describe("AnalysisArgumentParser", () => {
     expect(options.logLevel).toBe(LogLevel.DEBUG);
   });
 
-  test("Can parse args twice", () => {
+  test("Can parse args twice by using pre-process", () => {
     const argumentParser = getSut();
 
     const argv = [
@@ -55,14 +55,18 @@ describe("AnalysisArgumentParser", () => {
       "--apiKey",
       "xxxxxx",
       "--logLevel=ERROR",
+      "--another",
+      "bob",
     ];
 
-    const optionsFirst = argumentParser.parseArguments(argv);
+    const preOptions = argumentParser.preParseArguments(argv);
 
-    expect(optionsFirst).not.toBeNull();
-    console.log(optionsFirst);
-    expect(optionsFirst.clientId).not.toBeUndefined();
-    expect(optionsFirst.clientId).toBe("123");
+    expect(preOptions).not.toBeNull();
+    console.log(preOptions);
+    expect(preOptions.clientId).not.toBeUndefined();
+    expect(preOptions.clientId).toBe("123");
+
+    argumentParser.addArgument("another", "description of another argument", { required: true });
 
     const options = argumentParser.parseArguments(argv);
 

@@ -1,4 +1,3 @@
-import { OptionValues } from "commander";
 import {
   AttributionFileTypeEnum,
   AttributionFormatEnum,
@@ -9,7 +8,7 @@ import {
   ScanType,
 } from "../enums";
 import { ensureNonEmptyValue, generatedScanTypes, isNil } from "../utilities";
-import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
+import { ArgumentParserBase, ICommonArguments, ParsedOptions } from "./ArgumentParserBase";
 
 interface IBaseScanArguments extends ICommonArguments {
   appVersion: string;
@@ -156,7 +155,7 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     }
   }
 
-  protected ensureValidExportArguments<T extends OptionValues>(args: T): void {
+  protected ensureValidExportArguments<T extends ParsedOptions>(args: T): void {
     const exportKbMessage = "See https://kb.soos.io/project-exports-and-reports for valid options.";
     const hasExportFormat =
       !isNil(args.exportFormat) && args.exportFormat !== AttributionFormatEnum.Unknown;
@@ -189,7 +188,7 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     }
   }
 
-  override parseArguments<T extends OptionValues>(argv?: string[]) {
+  override parseArguments<T extends ParsedOptions>(argv?: string[]) {
     const args = super.parseArguments<T>(argv);
     this.ensureValidExportArguments(args);
     return args;

@@ -2,12 +2,10 @@ import { IntegrationType } from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
 import { IntegrationName, LogLevel, ScanType } from "../enums";
 import { ensureEnumValue, ensureNonEmptyValue, getEnvVariable } from "../utilities";
-import { Command, Option, OptionValues } from "commander";
+import { Command, createCommand, Option } from "commander";
 
-const getIntegrateUrl = (scanType?: ScanType): string =>
-  `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
-    scanType == ScanType.CSA ? "containers" : (scanType ?? ScanType.SCA).toLowerCase()
-  }`;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ParsedOptions = Record<string, any>;
 
 interface ICommonArguments {
   apiKey: string;
@@ -20,9 +18,15 @@ interface ICommonArguments {
   scriptVersion: string;
 }
 
+const getIntegrateUrl = (scanType?: ScanType): string =>
+  `${SOOS_CONSTANTS.Urls.App.Home}integrate/${
+    scanType == ScanType.CSA ? "containers" : (scanType ?? ScanType.SCA).toLowerCase()
+  }`;
+
 abstract class ArgumentParserBase {
   private argumentParser: Command;
 
+  public description: string;
   public scanType: ScanType;
   public scriptVersion: string;
   public integrationName: IntegrationName;
@@ -35,11 +39,13 @@ abstract class ArgumentParserBase {
     integrationName: IntegrationName,
     integrationType: IntegrationType,
   ) {
-    this.argumentParser = new Command().description(description);
+    this.description = description;
     this.scanType = scanType;
     this.scriptVersion = scriptVersion;
     this.integrationName = integrationName;
     this.integrationType = integrationType;
+
+    this.argumentParser = createCommand().description(this.description).version(this.scriptVersion);
 
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
   }
@@ -166,10 +172,23 @@ abstract class ArgumentParserBase {
     });
   }
 
-  parseArguments<T extends OptionValues>(argv?: string[]) {
+  /**
+   * Does a cursory parse of the command line, allowing unknown options to flow through
+   */
+  preParseArguments<T extends ParsedOptions>(argv?: string[]) {
+    this.argumentParser.allowUnknownOption().allowExcessArguments();
+    const args = this.parseArguments<T>(argv);
+    this.argumentParser.allowUnknownOption(false).allowExcessArguments(false);
+    return args;
+  }
+
+  /**
+   * Parse of the command line, does not allow unknown options
+   */
+  parseArguments<T extends ParsedOptions>(argv?: string[]) {
     const args = this.argumentParser.parse(argv ?? process.argv).opts<T>();
     return args;
   }
 }
 
-export { ArgumentParserBase, ICommonArguments };
+export { ArgumentParserBase, ICommonArguments, ParsedOptions };
