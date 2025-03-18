@@ -90,10 +90,10 @@ describe("AnalysisArgumentParser", () => {
       "soos-csa",
       "--clientId=123",
       "--projectName=doh",
-      "bobNoKey",
       "--apiKey",
       "xxxxxx",
       "--logLevel=ERROR",
+      "https://target.com/site",
     ];
 
     const preOptions = argumentParser.preParseArguments(argv);
@@ -103,7 +103,8 @@ describe("AnalysisArgumentParser", () => {
     expect(preOptions.clientId).not.toBeUndefined();
     expect(preOptions.clientId).toBe("123");
 
-    argumentParser.addArgument("target", "description of target argument", {
+    argumentParser.addArgument("targetURL", "description of target argument", {
+      required: true,
       useNoOptionKey: true,
     });
 
@@ -119,7 +120,7 @@ describe("AnalysisArgumentParser", () => {
     expect(options.apiURL).toBe("https://api.soos.io/api/");
     expect(options.logLevel).not.toBeUndefined();
     expect(options.logLevel).toBe(LogLevel.ERROR);
-    expect(options.target).toBe("bobNoKey");
+    expect(options.targetURL).toBe("https://target.com/site");
   });
 
   test("Can parse flags", () => {

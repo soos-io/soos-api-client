@@ -140,7 +140,7 @@ abstract class ArgumentParserBase {
       }
 
       if (options?.required) {
-        throw new Error("required is not applicable");
+        argument.argRequired();
       }
 
       if (options?.argParser) {
