@@ -9,7 +9,6 @@ import {
   isNil,
   ensureValue,
   ensureEnumValue,
-  ensureNonEmptyValue,
   getAnalysisExitCodeWithMessage,
   StringUtilities,
   generateFileHash,
@@ -40,28 +39,6 @@ describe("ensureValue", () => {
 
   test("should return the value for a non-nil value", () => {
     expect(ensureValue("value", "property")).toBe("value");
-  });
-});
-
-describe("ensureNonEmptyValue", () => {
-  test("should throw an error for null", () => {
-    expect(() => ensureNonEmptyValue(null, "property")).toThrow("'property' is required.");
-  });
-
-  test("should throw an error for undefined", () => {
-    expect(() => ensureNonEmptyValue(undefined, "property")).toThrow("'property' is required.");
-  });
-
-  test("should throw an error for an empty string", () => {
-    expect(() => ensureNonEmptyValue("", "property")).toThrow("'property' is required.");
-  });
-
-  test("should throw an error for a string with only spaces", () => {
-    expect(() => ensureNonEmptyValue("   ", "property")).toThrow("'property' is required.");
-  });
-
-  test("should return the value for a non-empty string", () => {
-    expect(ensureNonEmptyValue("value", "property")).toBe("value");
   });
 });
 

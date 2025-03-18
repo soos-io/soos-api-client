@@ -14,12 +14,6 @@ const ensureValue = <T>(value: T | null | undefined, propertyName: string): T =>
   return value;
 };
 
-const ensureNonEmptyValue = (value: string | null | undefined, propertyName: string): string => {
-  if (isNil(value) || StringUtilities.isEmptyString(value))
-    throw new Error(`'${propertyName}' is required.`);
-  return value;
-};
-
 const getEnumOptions = <T, TEnumObject extends Record<string, T> = Record<string, T>>(
   enumObject: TEnumObject,
   excludeDefault?: keyof TEnumObject,
@@ -225,7 +219,6 @@ export {
   isNil,
   ensureValue,
   ensureEnumValue,
-  ensureNonEmptyValue,
   sleep,
   isUrlAvailable,
   obfuscateProperties,
