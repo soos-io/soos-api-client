@@ -177,7 +177,7 @@ abstract class ArgumentParserBase {
    */
   preParseArguments<T extends ParsedOptions>(argv?: string[]) {
     this.argumentParser.allowUnknownOption().allowExcessArguments();
-    const args = this.parseArguments<T>(argv);
+    const args = this.argumentParser.parse(argv ?? process.argv).opts<T>();
     this.argumentParser.allowUnknownOption(false).allowExcessArguments(false);
     return args;
   }
