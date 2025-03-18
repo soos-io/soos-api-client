@@ -154,7 +154,7 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     const hasExportFormat =
       !isNil(args.exportFormat) && args.exportFormat !== AttributionFormatEnum.Unknown;
     const hasExportFileType =
-      !isNil(args.exportFileType) && args.exportFormat !== AttributionFileTypeEnum.Unknown;
+      !isNil(args.exportFileType) && args.exportFileType !== AttributionFileTypeEnum.Unknown;
 
     if (!hasExportFormat && !hasExportFileType) {
       return;
