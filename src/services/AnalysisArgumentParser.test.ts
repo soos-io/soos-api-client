@@ -81,4 +81,44 @@ describe("AnalysisArgumentParser", () => {
     expect(options.logLevel).not.toBeUndefined();
     expect(options.logLevel).toBe(LogLevel.ERROR);
   });
+
+  test("Can parse args with no option key", () => {
+    const argumentParser = getSut();
+
+    const argv = [
+      "node",
+      "soos-csa",
+      "--clientId=123",
+      "--projectName=doh",
+      "bobNoKey",
+      "--apiKey",
+      "xxxxxx",
+      "--logLevel=ERROR",
+    ];
+
+    const preOptions = argumentParser.preParseArguments(argv);
+
+    expect(preOptions).not.toBeNull();
+    console.log(preOptions);
+    expect(preOptions.clientId).not.toBeUndefined();
+    expect(preOptions.clientId).toBe("123");
+
+    argumentParser.addArgument("target", "description of target argument", {
+      useNoOptionKey: true,
+    });
+
+    const options = argumentParser.parseArguments(argv);
+
+    expect(options).not.toBeNull();
+    console.log(options);
+    expect(options.clientId).not.toBeUndefined();
+    expect(options.clientId).toBe("123");
+    expect(options.apiKey).not.toBeUndefined();
+    expect(options.apiKey).toBe("xxxxxx");
+    expect(options.apiURL).not.toBeUndefined();
+    expect(options.apiURL).toBe("https://api.soos.io/api/");
+    expect(options.logLevel).not.toBeUndefined();
+    expect(options.logLevel).toBe(LogLevel.ERROR);
+    expect(options.target).toBe("bobNoKey");
+  });
 });

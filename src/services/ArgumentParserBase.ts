@@ -2,7 +2,7 @@ import { IntegrationType } from "../enums";
 import { SOOS_CONSTANTS } from "../constants";
 import { IntegrationName, LogLevel, ScanType } from "../enums";
 import { ensureEnumValue, getEnumOptions, getEnvVariable } from "../utilities";
-import { Command, createCommand, Option } from "commander";
+import { Command, createArgument, createCommand, createOption, Option } from "commander";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ParsedOptions = Record<string, any>;
@@ -48,6 +48,24 @@ abstract class ArgumentParserBase {
     this.argumentParser = createCommand().description(this.description).version(this.scriptVersion);
 
     this.addCommonArguments(this.scriptVersion, this.integrationName, this.integrationType);
+  }
+
+  private parseCommanderOptions<T extends ParsedOptions>(argv?: string[]) {
+    return this.argumentParser.parse(argv ?? process.argv).opts<T>();
+  }
+
+  private parseCommanderArguments() {
+    return Object.fromEntries(
+      this.argumentParser.registeredArguments
+        .map((a) => a.name())
+        .map((name, index) => [name, this.argumentParser.args[index]]),
+    );
+  }
+
+  private getCombinedCommanderOptionsAndArguments<T extends ParsedOptions>(argv?: string[]) {
+    const args = this.parseCommanderArguments();
+    const options = this.parseCommanderOptions<T>(argv);
+    return { ...args, ...options };
   }
 
   protected addCommonArguments(
@@ -105,10 +123,39 @@ abstract class ArgumentParserBase {
       required?: boolean;
       argParser?: (value: string) => unknown;
       choices?: string[];
+      useNoOptionKey?: boolean;
     },
   ): void {
+    if (options?.useNoOptionKey) {
+      // we are actually using a commander argument
+      const argument = createArgument(name, description);
+
+      if (options?.defaultValue) {
+        argument.default(options.defaultValue);
+      }
+
+      if (options?.internal) {
+        throw new Error("internal is not applicable");
+      }
+
+      if (options?.required) {
+        throw new Error("required is not applicable");
+      }
+
+      if (options?.argParser) {
+        argument.argParser(options.argParser);
+      }
+
+      if (options?.choices) {
+        argument.choices(options.choices);
+      }
+
+      this.argumentParser.addArgument(argument);
+      return;
+    }
+
     const flags = `--${name} <${name}>`;
-    const option = new Option(flags, description);
+    const option = createOption(flags, description);
 
     if (options?.defaultValue) {
       option.default(options.defaultValue);
@@ -182,17 +229,17 @@ abstract class ArgumentParserBase {
    */
   preParseArguments<T extends ParsedOptions>(argv?: string[]) {
     this.argumentParser.allowUnknownOption().allowExcessArguments();
-    const args = this.argumentParser.parse(argv ?? process.argv).opts<T>();
+    const all = this.getCombinedCommanderOptionsAndArguments<T>(argv);
     this.argumentParser.allowUnknownOption(false).allowExcessArguments(false);
-    return args;
+    return all;
   }
 
   /**
    * Parse of the command line, does not allow unknown options
    */
   parseArguments<T extends ParsedOptions>(argv?: string[]) {
-    const args = this.argumentParser.parse(argv ?? process.argv).opts<T>();
-    return args;
+    const all = this.getCombinedCommanderOptionsAndArguments<T>(argv);
+    return all;
   }
 }
 
