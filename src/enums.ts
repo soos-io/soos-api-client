@@ -20,6 +20,7 @@ export enum IntegrationName {
   SoosSast = "SoosSast",
   SoosSca = "SoosSca",
   SoosSbom = "SoosSbom",
+  SoosScmAudit = "SoosScmAudit",
   TeamCity = "TeamCity",
   TravisCI = "TravisCI",
   VisualStudio = "VisualStudio",
@@ -95,16 +96,6 @@ export enum ScanType {
   SAST = "Sast",
   SBOM = "Sbom",
   SCA = "Sca",
-}
-
-export enum ScmResultsFormat {
-  JSON = "JSON",
-  TXT = "TXT",
-}
-
-export enum ScmType {
-  GitHub = "GitHub",
-  BitbucketCloud = "BitbucketCloud",
 }
 
 export enum SeverityEnum {

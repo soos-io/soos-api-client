@@ -1,4 +1,3 @@
-import { ArgumentParser } from "argparse";
 import {
   AttributionFileTypeEnum,
   AttributionFormatEnum,
@@ -8,8 +7,8 @@ import {
   OnFailure,
   ScanType,
 } from "../enums";
-import { ensureNonEmptyValue } from "../utilities";
-import { ArgumentParserBase, ICommonArguments } from "./ArgumentParserBase";
+import { generatedScanTypes, isNil } from "../utilities";
+import { ArgumentParserBase, ICommonArguments, ParsedOptions } from "./ArgumentParserBase";
 
 interface IBaseScanArguments extends ICommonArguments {
   appVersion: string;
@@ -21,8 +20,6 @@ interface IBaseScanArguments extends ICommonArguments {
   contributingDeveloperId: string;
   contributingDeveloperSource: ContributingDeveloperSource;
   contributingDeveloperSourceName: string;
-  integrationName: IntegrationName;
-  integrationType: IntegrationType;
   onFailure: OnFailure;
   operatingEnvironment: string;
   projectName: string;
@@ -31,23 +28,15 @@ interface IBaseScanArguments extends ICommonArguments {
 }
 
 class AnalysisArgumentParser extends ArgumentParserBase {
-  public scanType: ScanType;
-  public scriptVersion: string;
-  public integrationName: IntegrationName;
-  public integrationType: IntegrationType;
-
   constructor(
-    argumentParser: ArgumentParser,
     integrationName: IntegrationName,
     integrationType: IntegrationType,
     scanType: ScanType,
     scriptVersion: string,
   ) {
-    super(argumentParser);
-    this.integrationName = integrationName;
-    this.integrationType = integrationType;
-    this.scanType = scanType;
-    this.scriptVersion = scriptVersion;
+    super(`SOOS ${scanType}`, scanType, scriptVersion, integrationName, integrationType);
+
+    this.addBaseScanArguments();
   }
 
   static create(
@@ -56,110 +45,147 @@ class AnalysisArgumentParser extends ArgumentParserBase {
     scanType: ScanType,
     scriptVersion: string,
   ): AnalysisArgumentParser {
-    const parser = new ArgumentParser({ description: `SOOS ${scanType}` });
-    return new AnalysisArgumentParser(
-      parser,
-      integrationName,
-      integrationType,
-      scanType,
-      scriptVersion,
-    );
+    return new AnalysisArgumentParser(integrationName, integrationType, scanType, scriptVersion);
   }
 
   addBaseScanArguments() {
-    this.argumentParser.add_argument("--appVersion", {
-      help: "App Version - Intended for internal use only.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--branchName", {
-      help: "The name of the branch from the SCM System.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--branchURI", {
-      help: "The URI to the branch from the SCM System.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--buildURI", {
-      help: "URI to CI build info.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--buildVersion", {
-      help: "Version of application build artifacts.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--commitHash", {
-      help: "The commit hash value from the SCM System.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--contributingDeveloperId", {
-      help: "Contributing Developer ID - Intended for internal use only.",
-      required: false,
-    });
-
+    this.addArgument("appVersion", "App Version", { internal: true });
+    this.addArgument("branchName", "The name of the branch from the SCM System.");
+    this.addArgument("branchURI", "The URI to the branch from the SCM System.");
+    this.addArgument("buildURI", "URI to CI build info.");
+    this.addArgument("buildVersion", "Version of application build artifacts.");
+    this.addArgument("commitHash", "The commit hash value from the SCM System.");
+    this.addArgument("contributingDeveloperId", "Contributing Developer ID", { internal: true });
     this.addEnumArgument(
-      this.argumentParser,
-      "--contributingDeveloperSource",
+      "contributingDeveloperSource",
       ContributingDeveloperSource,
-      {
-        help: "Contributing Developer Source - Intended for internal use only.",
-        required: false,
-        default: ContributingDeveloperSource.Unknown,
-      },
+      "Contributing Developer Source",
+      { defaultValue: ContributingDeveloperSource.Unknown, internal: true },
     );
-
-    this.argumentParser.add_argument("--contributingDeveloperSourceName", {
-      help: "Contributing Developer Source Name - Intended for internal use only.",
-      required: false,
+    this.addArgument("contributingDeveloperSourceName", "Contributing Developer Source Name", {
+      internal: true,
     });
-
-    this.addEnumArgument(this.argumentParser, "--onFailure", OnFailure, {
-      help: "Action to perform when the scan fails. Options: fail_the_build, continue_on_failure.",
-      default: OnFailure.Continue,
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--operatingEnvironment", {
-      help: "Set Operating environment for information purposes only.",
-      required: false,
-    });
-
-    this.argumentParser.add_argument("--projectName", {
-      help: "Project Name - this is what will be displayed in the SOOS app.",
-      required: true,
-      type: (value: string) => {
-        return ensureNonEmptyValue(value, "projectName");
-      },
-    });
-
     this.addEnumArgument(
-      this.argumentParser,
-      "--exportFormat",
-      AttributionFormatEnum,
-      {
-        help: "The report export format.",
-        required: false,
-      },
-      undefined,
-      AttributionFormatEnum.Unknown,
-    );
-
-    this.addEnumArgument(
-      this.argumentParser,
-      "--exportFileType",
+      "exportFileType",
       AttributionFileTypeEnum,
-      {
-        help: "The report export file type (NOTE: not all file types are available for all export formats).",
-        required: false,
-      },
-      undefined,
-      AttributionFileTypeEnum.Unknown,
+      "The report export file type (NOTE: not all file types are available for all export formats).",
+      { defaultValue: AttributionFileTypeEnum.Unknown },
     );
+    this.addEnumArgument("exportFormat", AttributionFormatEnum, "The report export format.", {
+      defaultValue: AttributionFormatEnum.Unknown,
+    });
+    this.addEnumArgument("onFailure", OnFailure, "Action to perform when the scan fails.", {
+      defaultValue: OnFailure.Continue,
+    });
+    this.addArgument(
+      "operatingEnvironment",
+      "Set Operating environment for information purposes only.",
+    );
+    this.addArgument(
+      "projectName",
+      "Project Name - this is what will be displayed in the SOOS app.",
+      {
+        required: true,
+      },
+    );
+  }
+
+  validateExportArguments(
+    scanType: ScanType | undefined,
+    format: AttributionFormatEnum,
+    fileType: AttributionFileTypeEnum,
+  ): string | null {
+    const isGeneratedScanType = scanType && generatedScanTypes.includes(scanType);
+
+    if (
+      !isGeneratedScanType &&
+      [
+        AttributionFormatEnum.CsafVex,
+        AttributionFormatEnum.CycloneDx,
+        AttributionFormatEnum.SoosLicenses,
+        AttributionFormatEnum.SoosPackages,
+        AttributionFormatEnum.SoosVulnerabilities,
+        AttributionFormatEnum.Spdx,
+      ].some((f) => f === format)
+    ) {
+      return `This scan type is not supported for ${format}.`;
+    }
+
+    switch (format) {
+      case AttributionFormatEnum.CsafVex:
+        return fileType === AttributionFileTypeEnum.Json
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} export.`;
+
+      case AttributionFormatEnum.CycloneDx:
+        return fileType === AttributionFileTypeEnum.Json || fileType === AttributionFileTypeEnum.Xml
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} or ${AttributionFileTypeEnum.Xml} export.`;
+
+      case AttributionFormatEnum.Sarif:
+        return fileType === AttributionFileTypeEnum.Json
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} export.`;
+
+      case AttributionFormatEnum.SoosIssues:
+        return fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Html} or ${AttributionFileTypeEnum.Csv} export.`;
+
+      case AttributionFormatEnum.SoosLicenses:
+      case AttributionFormatEnum.SoosPackages:
+      case AttributionFormatEnum.SoosVulnerabilities:
+        return fileType === AttributionFileTypeEnum.Html || fileType === AttributionFileTypeEnum.Csv
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Html} or ${AttributionFileTypeEnum.Csv} export.`;
+
+      case AttributionFormatEnum.Spdx:
+        return fileType === AttributionFileTypeEnum.Json ||
+          fileType === AttributionFileTypeEnum.Text
+          ? null
+          : `${format} only supports ${AttributionFileTypeEnum.Json} or ${AttributionFileTypeEnum.Text} export.`;
+      default:
+        return "Change the export format and file type to a supported combination.";
+    }
+  }
+
+  protected ensureValidExportArguments<T extends ParsedOptions>(args: T): void {
+    const exportKbMessage = "See https://kb.soos.io/project-exports-and-reports for valid options.";
+    const hasExportFormat =
+      !isNil(args.exportFormat) && args.exportFormat !== AttributionFormatEnum.Unknown;
+    const hasExportFileType =
+      !isNil(args.exportFileType) && args.exportFileType !== AttributionFileTypeEnum.Unknown;
+
+    if (!hasExportFormat && !hasExportFileType) {
+      return;
+    }
+
+    if (!hasExportFormat && hasExportFileType) {
+      throw new Error(
+        `Please provide a value for --exportFormat when specifying --exportFileType. ${exportKbMessage}`,
+      );
+    }
+
+    if (hasExportFormat && !hasExportFileType) {
+      throw new Error(
+        `Please provide a value for --exportFileType when specifying --exportFormat. ${exportKbMessage}`,
+      );
+    }
+
+    const validationMessage = this.validateExportArguments(
+      this.scanType,
+      args.exportFormat,
+      args.exportFileType,
+    );
+    if (validationMessage !== null) {
+      throw new Error(`Invalid export arguments. ${validationMessage} ${exportKbMessage}`);
+    }
+  }
+
+  override parseArguments<T extends ParsedOptions>(argv?: string[]) {
+    const args = super.parseArguments<T>(argv);
+    this.ensureValidExportArguments(args);
+    return args;
   }
 }
 

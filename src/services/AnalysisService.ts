@@ -281,14 +281,16 @@ class AnalysisService {
     commandLine,
     scanMode,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
-    soosLogger.info("Checking status...");
+    soosLogger.info("Checking SOOS App status...");
     const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
     this.logStatusMessage(applicationStatus.statusMessage);
     this.logStatusMessage(applicationStatus.clientMessage);
     soosLogger.logLineSeparator();
     soosLogger.info(`Starting SOOS ${scanType} Analysis`);
     soosLogger.info(`Creating scan for project '${projectName}'...`);
-    soosLogger.info(`Branch Name: ${branchName}`);
+    if (branchName) {
+      soosLogger.info(`Branch Name: ${branchName}`);
+    }
 
     if (contributingDeveloperAudit === undefined || contributingDeveloperAudit.length === 0) {
       contributingDeveloperAudit = contributingDeveloperEnvironmentVariables
