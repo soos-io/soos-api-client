@@ -60,7 +60,11 @@ class AnalysisArgumentParser extends ArgumentParserBase {
       "contributingDeveloperSource",
       ContributingDeveloperSource,
       "Contributing Developer Source",
-      { defaultValue: ContributingDeveloperSource.Unknown, internal: true },
+      {
+        defaultValue: ContributingDeveloperSource.Unknown,
+        excludeDefault: ContributingDeveloperSource.Unknown,
+        internal: true,
+      },
     );
     this.addArgument("contributingDeveloperSourceName", "Contributing Developer Source Name", {
       internal: true,
@@ -69,10 +73,14 @@ class AnalysisArgumentParser extends ArgumentParserBase {
       "exportFileType",
       AttributionFileTypeEnum,
       "The report export file type (NOTE: not all file types are available for all export formats).",
-      { defaultValue: AttributionFileTypeEnum.Unknown },
+      {
+        defaultValue: AttributionFileTypeEnum.Unknown,
+        excludeDefault: AttributionFileTypeEnum.Unknown,
+      },
     );
     this.addEnumArgument("exportFormat", AttributionFormatEnum, "The report export format.", {
       defaultValue: AttributionFormatEnum.Unknown,
+      excludeDefault: AttributionFormatEnum.Unknown,
     });
     this.addEnumArgument("onFailure", OnFailure, "Action to perform when the scan fails.", {
       defaultValue: OnFailure.Continue,
