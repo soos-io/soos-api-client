@@ -12,7 +12,7 @@ export enum IntegrationName {
   BitBucket = "BitBucket",
   CircleCI = "CircleCI",
   CodeShip = "CodeShip",
-  GithubActions = "GitHub",
+  GitHub = "GitHub",
   GitLab = "GitLab",
   Jenkins = "Jenkins",
   SoosCsa = "SoosCsa",
