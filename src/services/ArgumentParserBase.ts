@@ -97,10 +97,10 @@ abstract class ArgumentParserBase {
         required: true,
       },
     );
-    this.addArgument("integrationName", "Integration Name", {
+    this.addEnumArgument("integrationName", IntegrationName, "Integration Name", {
       defaultValue: integrationName,
-      required: true,
       internal: true,
+      required: true,
     });
     this.addEnumArgument("integrationType", IntegrationType, "Integration Type", {
       defaultValue: integrationType,
