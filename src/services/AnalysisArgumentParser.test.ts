@@ -231,7 +231,7 @@ describe("AnalysisArgumentParser", () => {
     }
 
     expect(message).not.toBeNull();
-    expect(message).toBe("clientId cannot be empty.");
+    expect(message).toBe("clientId cannot be empty");
     console.log(message);
   });
 });

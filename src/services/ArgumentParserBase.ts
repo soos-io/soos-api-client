@@ -67,7 +67,7 @@ abstract class ArgumentParserBase {
 
   private ensureNoEmptyArgument(name: string, value: string) {
     if (!value.trim()) {
-      throw new Error(`${name} cannot be empty.`);
+      throw new Error(`${name} cannot be empty`);
     }
     return value;
   }
