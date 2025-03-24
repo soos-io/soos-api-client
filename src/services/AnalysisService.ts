@@ -25,14 +25,7 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import {
-  StringUtilities,
-  formatBytes,
-  generateFileHash,
-  isNil,
-  obfuscateProperties,
-  sleep,
-} from "../utilities";
+import { StringUtilities, formatBytes, generateFileHash, isNil, sleep } from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
