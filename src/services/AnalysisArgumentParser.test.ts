@@ -211,4 +211,27 @@ describe("AnalysisArgumentParser", () => {
     expect(options.myMultiple).not.toBeUndefined();
     expect(options.myMultiple).toMatchObject([IntegrationName.Bamboo, IntegrationName.CircleCI]);
   });
+
+  test("Requires required options", () => {
+    const argumentParser = getSut();
+
+    let message = "";
+    try {
+      argumentParser.parseArguments([
+        "/path/to/node",
+        "/path/to/soos-csa",
+        "--clientId=",
+        "--apiKey",
+        "xxxxxx",
+        "--projectName",
+        "TEST",
+      ]);
+    } catch (e: unknown) {
+      message = (e as Error).message;
+    }
+
+    expect(message).not.toBeNull();
+    expect(message).toBe("clientId cannot be empty.");
+    console.log(message);
+  });
 });
