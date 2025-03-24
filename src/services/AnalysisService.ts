@@ -281,6 +281,8 @@ class AnalysisService {
     commandLine,
     scanMode,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
+    soosLogger.always(`Starting SOOS ${scanType} Analysis`);
+    soosLogger.logLineSeparator();
     soosLogger.info("Checking SOOS App status...");
     const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
     this.logStatusMessage(applicationStatus.statusMessage);
