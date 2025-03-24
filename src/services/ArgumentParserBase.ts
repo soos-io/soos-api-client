@@ -72,6 +72,13 @@ abstract class ArgumentParserBase {
     return { ...args, ...options };
   }
 
+  protected ensureNoEmptyArgument(name: string, value: string) {
+    if (!value.trim()) {
+      throw new Error(`${name} cannot be empty`);
+    }
+    return value;
+  }
+
   protected addCommonArguments(
     scriptVersion: string,
     integrationName: IntegrationName,
@@ -149,6 +156,9 @@ abstract class ArgumentParserBase {
 
       if (options?.required) {
         argument.argRequired();
+        if (!options?.argParser) {
+          argument.argParser((value) => this.ensureNoEmptyArgument(name, value));
+        }
       }
 
       if (options?.argParser) {
@@ -180,6 +190,9 @@ abstract class ArgumentParserBase {
 
     if (options?.required) {
       option.makeOptionMandatory(true);
+      if (!options?.argParser) {
+        option.argParser((value) => this.ensureNoEmptyArgument(name, value));
+      }
     }
 
     if (options?.argParser) {
