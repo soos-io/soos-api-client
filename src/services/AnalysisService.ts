@@ -286,7 +286,6 @@ class AnalysisService {
     this.logStatusMessage(applicationStatus.statusMessage);
     this.logStatusMessage(applicationStatus.clientMessage);
     soosLogger.logLineSeparator();
-    soosLogger.info(`Starting SOOS ${scanType} Analysis`);
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     if (branchName) {
       soosLogger.info(`Branch Name: ${branchName}`);
@@ -342,7 +341,7 @@ class AnalysisService {
     analysisId,
     scanType,
   }: IStartScanParams): Promise<void> {
-    soosLogger.info(`Starting ${scanType} Analysis scan`);
+    soosLogger.info(`Starting ${scanType} Analysis Scan`);
     await this.analysisApiClient.startScan({
       clientId: clientId,
       projectHash: projectHash,
