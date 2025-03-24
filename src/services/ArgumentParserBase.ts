@@ -65,18 +65,18 @@ abstract class ArgumentParserBase {
     );
   }
 
-  private ensureNoEmptyArgument(name: string, value: string) {
-    if (!value.trim()) {
-      throw new Error(`${name} cannot be empty`);
-    }
-    return value;
-  }
-
   private getCombinedCommanderOptionsAndArguments<T extends ParsedOptions>(argv?: string[]) {
     // NOTE: options must be before args
     const options = this.parseCommanderOptions<T>(argv);
     const args = this.parseCommanderArguments();
     return { ...args, ...options };
+  }
+
+  protected ensureNoEmptyArgument(name: string, value: string) {
+    if (!value.trim()) {
+      throw new Error(`${name} cannot be empty`);
+    }
+    return value;
   }
 
   protected addCommonArguments(
