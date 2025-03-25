@@ -4,7 +4,6 @@ export const SOOS_CONSTANTS = {
     ClientId: "SOOS_CLIENT_ID",
   },
   FileUploads: {
-    Encoding: "utf8" as BufferEncoding,
     MaxManifests: 50,
   },
   Files: {
