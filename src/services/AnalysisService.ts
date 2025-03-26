@@ -1083,9 +1083,7 @@ class AnalysisService {
       const parentFolder =
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
       const suffix = index > 0 ? index : "";
-      const fileReadStream = FileSystem.createReadStream(analysisFile.path, {
-        encoding: SOOS_CONSTANTS.FileUploads.Encoding,
-      });
+      const fileReadStream = FileSystem.createReadStream(analysisFile.path);
       formDataAcc.append(`file${suffix}`, fileReadStream);
       formDataAcc.append(`parentFolder${suffix}`, parentFolder);
 
