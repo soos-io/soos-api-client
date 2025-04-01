@@ -94,6 +94,32 @@ const obfuscateProperties = <T extends Record<string, unknown> = Record<string, 
   }, {} as T);
 };
 
+const obfuscateCommandLine = (
+  input: string,
+  argumentsToObfuscate: string[],
+  replacement: string = "*********",
+): string => {
+  const args = input.match(/(--\w+(?:="[^"]+"|=\S+)?|--\w+|"[^"]+"|\S+)/g) || [];
+
+  const loweredArgumentsToObfuscate = argumentsToObfuscate.map((a) => a.toLocaleLowerCase());
+
+  let obfuscating = false;
+  return args
+    .map((arg) => {
+      if (arg.startsWith("--")) {
+        const [key, value] = arg.includes("=") ? arg.split("=") : [arg, undefined];
+
+        if (loweredArgumentsToObfuscate.find((a) => a === key.toLocaleLowerCase())) {
+          return value === undefined ? ((obfuscating = true), key) : `${key}=${replacement}`;
+        }
+
+        obfuscating = false;
+      }
+      return obfuscating ? replacement : arg;
+    })
+    .join(" ");
+};
+
 const convertStringToBase64 = (content: string): string => {
   const messageBytes = Buffer.from(content, "utf-8");
   const base64Message = messageBytes.toString("base64");
@@ -222,6 +248,7 @@ export {
   sleep,
   isUrlAvailable,
   obfuscateProperties,
+  obfuscateCommandLine,
   convertStringToBase64,
   getEnvVariable,
   formatBytes,

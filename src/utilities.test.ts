@@ -12,6 +12,7 @@ import {
   getAnalysisExitCodeWithMessage,
   StringUtilities,
   generateFileHash,
+  obfuscateCommandLine,
 } from "./utilities";
 
 describe("isNil", () => {
@@ -95,6 +96,22 @@ describe("ensureEnumValue", () => {
     ).toThrow(
       "Invalid value 'Unknown' for 'parameterName'. Valid options are: Csv, Html, Json, Text, Xml.",
     );
+  });
+});
+
+describe("obfuscateCommandLine", () => {
+  test("should obfuscate command line", () => {
+    const commandLine =
+      '--superSecret value --anotherSecret=value --notSecret "another thing" --alsoSecret "this is secret" --REALLYSecret="this is secret too" --debug';
+    const argumentsToObfuscate = [
+      "--superSecret",
+      "--anotherSecret",
+      "--alsoSecret",
+      "--reallySecret",
+    ];
+    const expectedOutput =
+      '--superSecret ********* --anotherSecret=********* --notSecret "another thing" --alsoSecret ********* --REALLYSecret=********* --debug';
+    expect(obfuscateCommandLine(commandLine, argumentsToObfuscate)).toEqual(expectedOutput);
   });
 });
 
