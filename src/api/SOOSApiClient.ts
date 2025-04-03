@@ -1,7 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { ICodedMessageModel } from "../models/CodedMessageModel";
 import { soosLogger } from "../logging/SOOSLogger";
-import { isNil } from "../utilities";
 
 const isAxiosError = <T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> =>
   (e as AxiosError<T, D>)?.isAxiosError === true;
@@ -36,27 +34,22 @@ class SOOSApiClient {
       maxContentLength: 1024 * 5000 * 50,
     });
 
-    client.interceptors.request.use(
-      (request) => {
-        if (request.data) {
-          soosLogger.debug(
-            apiClientName,
-            `Request URL: ${request.method?.toLocaleUpperCase()} ${request.url}`,
-          );
-          if (request.params) {
-            soosLogger.debug(apiClientName, `Request Params: ${JSON.stringify(request.params)}`);
-          }
-
-          if (!skipDebugRequestLogging) {
-            soosLogger.debug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
-          }
+    client.interceptors.request.use((request) => {
+      if (request.data) {
+        soosLogger.debug(
+          apiClientName,
+          `Request URL: ${request.method?.toLocaleUpperCase()} ${request.url}`,
+        );
+        if (request.params) {
+          soosLogger.debug(apiClientName, `Request Params: ${JSON.stringify(request.params)}`);
         }
-        return request;
-      },
-      (rejectedRequest) => {
-        return Promise.reject(rejectedRequest);
-      },
-    );
+
+        if (!skipDebugRequestLogging) {
+          soosLogger.debug(apiClientName, `Request Body: ${JSON.stringify(request.data)}`);
+        }
+      }
+      return request;
+    });
 
     client.interceptors.response.use(
       (response) => {
@@ -65,35 +58,38 @@ class SOOSApiClient {
         }
         return response;
       },
-      (rejectedResponse) => {
-        if (isAxiosError<ICodedMessageModel | undefined>(rejectedResponse)) {
-          const isCodedMessageModel = !isNil(rejectedResponse.response?.data?.code);
-          if (!isCodedMessageModel) {
-            switch (rejectedResponse.response?.status) {
+      (error) => {
+        if (axios.isAxiosError(error)) {
+          const { config, response } = error;
+          if (config && response) {
+            switch (response.status) {
+              case 401:
+                throw new Error(
+                  `Please Verify your API Key and Client ID. (Unauthorized - ${apiClientName} - ${config.method} ${config.url})`,
+                );
               case 403:
                 throw new Error(
-                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: Your request may have been blocked. (Forbidden)`,
+                  `Your request may have been blocked. (Forbidden - ${apiClientName} - ${config.method} ${config.url})`,
                 );
               case 503:
                 throw new Error(
-                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: We are down for maintenance. Please try again in a few minutes. (Service Unavailable)`,
+                  `We are down for maintenance. Please try again in a few minutes. (Service Unavailable - ${apiClientName} - ${config.method} ${config.url})`,
                 );
               default:
                 throw new Error(
-                  `${apiClientName} ${rejectedResponse.request?.method} ${rejectedResponse.config?.url}: Unexpected response ${rejectedResponse.response?.status}.`,
+                  `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
                 );
             }
           }
-
+        } else if (error.code && error.message) {
           throw new Error(
-            `${apiClientName} ${rejectedResponse.request?.method?.toLocaleUpperCase()} ${
-              rejectedResponse.config?.url
-            }: ${rejectedResponse.response?.data?.message} (${
-              rejectedResponse.response?.data?.code
-            })`,
+            `An unexpected, coded non-Axios error occurred: ${error.code} ${error.message}`,
+            error,
           );
+        } else if (error.message) {
+          throw new Error(`An unexpected, non-Axios error occurred: ${error.message}`, error);
         }
-        return Promise.reject(rejectedResponse);
+        return Promise.reject(error);
       },
     );
 
