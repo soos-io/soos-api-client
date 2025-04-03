@@ -32,11 +32,25 @@ class SOOSUserApiClient {
   }
 
   async getApplicationStatus(clientHash: string): Promise<IApplicationStatusModel> {
-    const response = await this.client.get<IApplicationStatusModel>(
-      `clients/${clientHash}/application-status`,
-    );
+    try {
+      const response = await this.client.get<IApplicationStatusModel>(
+        `clients/${clientHash}/application-status`,
+      );
 
-    return response.data;
+      return response.data;
+    } catch {
+      return {
+        clientMessage: null,
+        statusMessage: {
+          message:
+            "Please verify your API Key and Client ID. Contact support@soos.io if you continue to receive this error.",
+          severity: SeverityEnum.High,
+          isDismissible: false,
+          linkText: "",
+          url: "",
+        },
+      };
+    }
   }
 }
 
