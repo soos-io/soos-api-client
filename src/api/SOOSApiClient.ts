@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "../logging/SOOSLogger";
+import { isCodedMessageModel } from "../utilities";
 
 const isAxiosError = <T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> =>
   (e as AxiosError<T, D>)?.isAxiosError === true;
@@ -81,10 +82,9 @@ class SOOSApiClient {
                 );
             }
 
-            // ICodedMessageModel
-            if (error.code && error.message) {
+            if (isCodedMessageModel(error.response)) {
               throw new Error(
-                `${error.message} (${response.status} ${error.code} - ${apiClientName} - ${config.method} ${config.url})`,
+                `${error.response.message} (${response.status} ${error.response.code} - ${apiClientName} - ${config.method} ${config.url})`,
                 error,
               );
             }
@@ -93,14 +93,12 @@ class SOOSApiClient {
               `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
             );
           }
-        } else if (error.code && error.message) {
-          throw new Error(
-            `An unexpected, coded non-Axios error occurred: ${error.code} ${error.message}`,
-            error,
-          );
+        } else if (isCodedMessageModel(error)) {
+          throw new Error(`An unexpected coded error occurred: ${error.code} ${error.message}`);
         } else if (error.message) {
-          throw new Error(`An unexpected, non-Axios error occurred: ${error.message}`, error);
+          throw new Error(`An unexpected error occurred: ${error.message}`, error);
         }
+
         return Promise.reject(error);
       },
     );
