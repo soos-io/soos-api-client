@@ -89,6 +89,8 @@ class SOOSApiClient {
               );
             }
 
+            soosLogger.error(error);
+            soosLogger.error(error.response);
             throw new Error(
               `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
             );
