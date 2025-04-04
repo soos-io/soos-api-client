@@ -108,5 +108,4 @@ class SOOSApiClient {
   }
 }
 
-export { isAxiosError };
 export default SOOSApiClient;
