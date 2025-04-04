@@ -1,8 +1,5 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { soosLogger } from "../logging/SOOSLogger";
-
-const isAxiosError = <T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> =>
-  (e as AxiosError<T, D>)?.isAxiosError === true;
 
 interface IHttpRequestParameters {
   baseUri: string;
@@ -71,24 +68,38 @@ class SOOSApiClient {
                 throw new Error(
                   `Your request may have been blocked. (Forbidden - ${apiClientName} - ${config.method} ${config.url})`,
                 );
+              case 429:
+                throw new Error(
+                  `You have been rate limited. (TooManyRequests - ${apiClientName} - ${config.method} ${config.url})`,
+                );
+              case 502:
+                throw new Error(
+                  `Unable to connect to SOOS. Please verify your connection and try again in a few minutes. (BadGateway - ${apiClientName} - ${config.method} ${config.url})`,
+                );
               case 503:
                 throw new Error(
-                  `We are down for maintenance. Please try again in a few minutes. (Service Unavailable - ${apiClientName} - ${config.method} ${config.url})`,
-                );
-              default:
-                throw new Error(
-                  `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
+                  `We are down for maintenance. Please try again in a few minutes. (ServiceUnavailable - ${apiClientName} - ${config.method} ${config.url})`,
                 );
             }
+
+            // API ICodedMessageModel
+            if (response.data && response.data.code && response.data.message) {
+              throw new Error(
+                `${response.data.message} (${response.status} ${response.data.code} - ${apiClientName} - ${config.method} ${config.url})`,
+                error,
+              );
+            }
+
+            throw new Error(
+              `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
+            );
           }
         } else if (error.code && error.message) {
-          throw new Error(
-            `An unexpected, coded non-Axios error occurred: ${error.code} ${error.message}`,
-            error,
-          );
+          throw new Error(`An unexpected coded error occurred: ${error.code} ${error.message}`);
         } else if (error.message) {
-          throw new Error(`An unexpected, non-Axios error occurred: ${error.message}`, error);
+          throw new Error(`An unexpected error occurred: ${error.message}`, error);
         }
+
         return Promise.reject(error);
       },
     );
@@ -101,5 +112,4 @@ class SOOSApiClient {
   }
 }
 
-export { isAxiosError };
 export default SOOSApiClient;
