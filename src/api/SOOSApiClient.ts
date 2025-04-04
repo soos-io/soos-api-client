@@ -71,15 +71,27 @@ class SOOSApiClient {
                 throw new Error(
                   `Your request may have been blocked. (Forbidden - ${apiClientName} - ${config.method} ${config.url})`,
                 );
+              case 429:
+                throw new Error(
+                  `You have been rate limited. (TooManyRequests - ${apiClientName} - ${config.method} ${config.url})`,
+                );
               case 503:
                 throw new Error(
                   `We are down for maintenance. Please try again in a few minutes. (Service Unavailable - ${apiClientName} - ${config.method} ${config.url})`,
                 );
-              default:
-                throw new Error(
-                  `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
-                );
             }
+
+            // ICodedMessageModel
+            if (error.code && error.message) {
+              throw new Error(
+                `${error.message} (${response.status} ${error.code} - ${apiClientName} - ${config.method} ${config.url})`,
+                error,
+              );
+            }
+
+            throw new Error(
+              `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
+            );
           }
         } else if (error.code && error.message) {
           throw new Error(
