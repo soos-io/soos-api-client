@@ -72,9 +72,13 @@ class SOOSApiClient {
                 throw new Error(
                   `You have been rate limited. (TooManyRequests - ${apiClientName} - ${config.method} ${config.url})`,
                 );
+              case 502:
+                throw new Error(
+                  `Unable to connect to SOOS. Please verify your connection and try again in a few minutes. (BadGateway - ${apiClientName} - ${config.method} ${config.url})`,
+                );
               case 503:
                 throw new Error(
-                  `We are down for maintenance. Please try again in a few minutes. (Service Unavailable - ${apiClientName} - ${config.method} ${config.url})`,
+                  `We are down for maintenance. Please try again in a few minutes. (ServiceUnavailable - ${apiClientName} - ${config.method} ${config.url})`,
                 );
             }
 
