@@ -1,9 +1,5 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { soosLogger } from "../logging/SOOSLogger";
-import { isCodedMessageModel } from "../utilities";
-
-const isAxiosError = <T = unknown, D = unknown>(e: unknown): e is AxiosError<T, D> =>
-  (e as AxiosError<T, D>)?.isAxiosError === true;
 
 interface IHttpRequestParameters {
   baseUri: string;
@@ -82,20 +78,19 @@ class SOOSApiClient {
                 );
             }
 
-            if (isCodedMessageModel(error.response)) {
+            // API ICodedMessageModel
+            if (response.data && response.data.code && response.data.message) {
               throw new Error(
-                `${error.response.message} (${response.status} ${error.response.code} - ${apiClientName} - ${config.method} ${config.url})`,
+                `${response.data.message} (${response.status} ${response.data.code} - ${apiClientName} - ${config.method} ${config.url})`,
                 error,
               );
             }
 
-            soosLogger.error(error);
-            soosLogger.error(error.response);
             throw new Error(
               `Unexpected error response. (${response.status} - ${apiClientName} - ${config.method} ${config.url})`,
             );
           }
-        } else if (isCodedMessageModel(error)) {
+        } else if (error.code && error.message) {
           throw new Error(`An unexpected coded error occurred: ${error.code} ${error.message}`);
         } else if (error.message) {
           throw new Error(`An unexpected error occurred: ${error.message}`, error);

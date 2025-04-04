@@ -4,7 +4,6 @@ import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus, ScanType } fr
 import fs from "fs";
 import crypto from "node:crypto";
 import { BinaryToTextEncoding } from "crypto";
-import { ICodedMessageModel } from "./models";
 
 const generatedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
@@ -55,19 +54,6 @@ const ensureEnumValue = <T, TEnumObject extends Record<string, T> = Record<strin
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const isObject = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && !Array.isArray(value) && value !== null;
-};
-
-const isCodedMessageModel = (value: unknown): value is ICodedMessageModel => {
-  return (
-    isObject(value) &&
-    typeof value.code === "string" &&
-    typeof value.message === "string" &&
-    typeof value.statusCode === "number"
-  );
-};
 
 const isUrlAvailable = async (url: string): Promise<boolean> => {
   const delay = 5000;
@@ -272,6 +258,4 @@ export {
   DateUtilities,
   StringUtilities,
   isScanDone,
-  isObject,
-  isCodedMessageModel,
 };
