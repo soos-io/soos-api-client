@@ -13,6 +13,7 @@ import {
   StringUtilities,
   generateFileHash,
   obfuscateCommandLine,
+  reassembleCommandLine,
 } from "./utilities";
 
 describe("isNil", () => {
@@ -113,6 +114,59 @@ describe("obfuscateCommandLine", () => {
     const expectedOutput =
       '--superSecret ********* --anotherSecret=********* --notSecret "another thing" --alsoSecret ********* --REALLYSecret=********* --debug --requestHeaders=*********';
     expect(obfuscateCommandLine(commandLine, argumentsToObfuscate)).toEqual(expectedOutput);
+  });
+});
+
+describe("reassembleCommandLine", () => {
+  test("should reassemble command line", () => {
+    const argv = [
+      "node",
+      "index.js",
+      "--apiKey",
+      "aaa",
+      "--debug",
+      "--requestHeaders",
+      "some header: string, another-header: string",
+      "--oAuthParams=this, another",
+      "https://bob.com",
+    ];
+    const expectedCommandLine =
+      '--apiKey aaa --debug --requestHeaders "some header: string, another-header: string" --oAuthParams "this, another" https://bob.com';
+
+    expect(reassembleCommandLine(argv.slice(2))).toEqual(expectedCommandLine);
+  });
+});
+
+describe("reassembleCommandLine then obfuscateCommandLine", () => {
+  test("should reassemble command line", () => {
+    const argv = [
+      "node",
+      "index.js",
+      "--superSecret",
+      "value",
+      "--anotherSecret=value",
+      "--notSecret",
+      "another thing",
+      "--alsoSecret",
+      "this is secret",
+      "--REALLYSecret=this is secret too",
+      "--debug",
+      "--requestHeaders=Ocp-Apim-Subscription-Key:12345, Content-Type:application/json",
+      "https://bob.com",
+    ];
+    const argumentsToObfuscate = [
+      "--superSecret",
+      "--anotherSecret",
+      "--alsoSecret",
+      "--reallySecret",
+      "--requestHeaders",
+    ];
+
+    const expectedCommandLine =
+      '--superSecret ********* --anotherSecret ********* --notSecret "another thing" --alsoSecret ********* --REALLYSecret ********* --debug --requestHeaders ********* https://bob.com';
+
+    const commandLine = reassembleCommandLine(argv.slice(2));
+    expect(obfuscateCommandLine(commandLine, argumentsToObfuscate)).toEqual(expectedCommandLine);
   });
 });
 

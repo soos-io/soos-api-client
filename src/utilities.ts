@@ -115,7 +115,28 @@ const obfuscateCommandLine = (
 
         obfuscating = false;
       }
-      return obfuscating ? replacement : arg;
+
+      if (obfuscating) {
+        obfuscating = false;
+        return replacement;
+      }
+
+      return arg;
+    })
+    .join(" ");
+};
+
+const reassembleCommandLine = (argv: string[]): string => {
+  const escapeQuotes = (s: string) => s.replace(/"/g, '\\"');
+  return argv
+    .map((arg) => {
+      const [key, value] = arg.split("=", 2);
+      const needsQuotes = /[\s"']/.test(value ?? arg);
+      if (value !== undefined) {
+        return `${key} ${needsQuotes ? `"${escapeQuotes(value)}"` : value}`;
+      }
+
+      return needsQuotes ? `"${escapeQuotes(arg)}"` : arg;
     })
     .join(" ");
 };
@@ -249,6 +270,7 @@ export {
   isUrlAvailable,
   obfuscateProperties,
   obfuscateCommandLine,
+  reassembleCommandLine,
   convertStringToBase64,
   getEnvVariable,
   formatBytes,
