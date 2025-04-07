@@ -102,15 +102,16 @@ describe("ensureEnumValue", () => {
 describe("obfuscateCommandLine", () => {
   test("should obfuscate command line", () => {
     const commandLine =
-      '--superSecret value --anotherSecret=value --notSecret "another thing" --alsoSecret "this is secret" --REALLYSecret="this is secret too" --debug';
+      '--superSecret value --anotherSecret=value --notSecret "another thing" --alsoSecret "this is secret" --REALLYSecret="this is secret too" --debug --requestHeaders="Ocp-Apim-Subscription-Key:12345, Content-Type:application/json"';
     const argumentsToObfuscate = [
       "--superSecret",
       "--anotherSecret",
       "--alsoSecret",
       "--reallySecret",
+      "--requestHeaders",
     ];
     const expectedOutput =
-      '--superSecret ********* --anotherSecret=********* --notSecret "another thing" --alsoSecret ********* --REALLYSecret=********* --debug';
+      '--superSecret ********* --anotherSecret=********* --notSecret "another thing" --alsoSecret ********* --REALLYSecret=********* --debug --requestHeaders=*********';
     expect(obfuscateCommandLine(commandLine, argumentsToObfuscate)).toEqual(expectedOutput);
   });
 });
