@@ -33,7 +33,7 @@ describe("AnalysisArgumentParser", () => {
     ]);
 
     expect(options).not.toBeNull();
-    console.log(options);
+    // console.log(options);
     expect(options.clientId).not.toBeUndefined();
     expect(options.clientId).toBe("123");
     expect(options.apiKey).not.toBeUndefined();
@@ -62,7 +62,7 @@ describe("AnalysisArgumentParser", () => {
     const preOptions = argumentParser.preParseArguments(argv);
 
     expect(preOptions).not.toBeNull();
-    console.log(preOptions);
+    // console.log(preOptions);
     expect(preOptions.clientId).not.toBeUndefined();
     expect(preOptions.clientId).toBe("123");
 
@@ -71,7 +71,7 @@ describe("AnalysisArgumentParser", () => {
     const options = argumentParser.parseArguments(argv);
 
     expect(options).not.toBeNull();
-    console.log(options);
+    // console.log(options);
     expect(options.clientId).not.toBeUndefined();
     expect(options.clientId).toBe("123");
     expect(options.apiKey).not.toBeUndefined();
@@ -100,7 +100,7 @@ describe("AnalysisArgumentParser", () => {
     const preOptions = argumentParser.preParseArguments(argv);
 
     expect(preOptions).not.toBeNull();
-    console.log(preOptions);
+    // console.log(preOptions);
     expect(preOptions.clientId).not.toBeUndefined();
     expect(preOptions.clientId).toBe("123");
 
@@ -116,7 +116,7 @@ describe("AnalysisArgumentParser", () => {
     const options = argumentParser.parseArguments(argv);
 
     expect(options).not.toBeNull();
-    console.log(options);
+    // console.log(options);
     expect(options.clientId).not.toBeUndefined();
     expect(options.clientId).toBe("123");
     expect(options.apiKey).not.toBeUndefined();
@@ -149,7 +149,7 @@ describe("AnalysisArgumentParser", () => {
     ]);
 
     expect(options).not.toBeNull();
-    console.log(options);
+    // console.log(options);
     expect(options.myFlag).not.toBeUndefined();
     expect(options.myFlag).toBe(true);
   });
@@ -178,7 +178,7 @@ describe("AnalysisArgumentParser", () => {
     ]);
 
     expect(options).not.toBeNull();
-    console.log(options);
+    // console.log(options);
     expect(options.myMultiple).not.toBeUndefined();
     expect(options.myMultiple).toMatchObject([IntegrationName.GitLab, IntegrationName.Jenkins]);
   });
@@ -207,7 +207,7 @@ describe("AnalysisArgumentParser", () => {
     ]);
 
     expect(options).not.toBeNull();
-    console.log(options);
+    // console.log(options);
     expect(options.myMultiple).not.toBeUndefined();
     expect(options.myMultiple).toMatchObject([IntegrationName.Bamboo, IntegrationName.CircleCI]);
   });
@@ -232,6 +232,6 @@ describe("AnalysisArgumentParser", () => {
 
     expect(message).not.toBeNull();
     expect(message).toBe("clientId cannot be empty");
-    console.log(message);
+    // console.log(message);
   });
 });
