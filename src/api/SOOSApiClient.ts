@@ -66,7 +66,7 @@ class SOOSApiClient {
                 );
               case 403:
                 throw new Error(
-                  `Your request may have been blocked. (Forbidden - ${apiClientName} - ${config.method} ${config.url})`,
+                  `Please Verify your API Key and Client ID, ensuring they align with an appropriate Role within SOOS to run scans. (Forbidden - ${apiClientName} - ${config.method} ${config.url})`,
                 );
               case 429:
                 throw new Error(
