@@ -59,6 +59,19 @@ class SOOSApiClient {
         if (axios.isAxiosError(error)) {
           const { config, response } = error;
           if (config && response) {
+            // API ICodedMessageModel
+            if (
+              ![401, 403].includes(response.status) &&
+              response.data &&
+              response.data.code &&
+              response.data.message
+            ) {
+              throw new Error(
+                `${response.data.message} (${response.status} ${response.data.code} - ${apiClientName} - ${config.method} ${config.url})`,
+                error,
+              );
+            }
+
             switch (response.status) {
               case 401:
                 throw new Error(
@@ -80,14 +93,6 @@ class SOOSApiClient {
                 throw new Error(
                   `We are down for maintenance. Please try again in a few minutes. (ServiceUnavailable - ${apiClientName} - ${config.method} ${config.url})`,
                 );
-            }
-
-            // API ICodedMessageModel
-            if (response.data && response.data.code && response.data.message) {
-              throw new Error(
-                `${response.data.message} (${response.status} ${response.data.code} - ${apiClientName} - ${config.method} ${config.url})`,
-                error,
-              );
             }
 
             throw new Error(
