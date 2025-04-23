@@ -633,7 +633,9 @@ class AnalysisService {
       const scanStatus = await this.analysisApiClient.getScanStatus({
         scanStatusUrl: scanStatusUrl,
       });
-      if (scanStatus.isComplete) return;
+      if (scanStatus.isComplete) {
+        return;
+      }
     }
 
     await this.analysisApiClient.updateScanStatus({
@@ -645,7 +647,10 @@ class AnalysisService {
       status: status,
       message: message,
     });
-    if (status === ScanStatus.Incomplete || status === ScanStatus.Error) soosLogger.error(message);
+
+    if (status === ScanStatus.Incomplete || status === ScanStatus.Error) {
+      soosLogger.error(message);
+    }
   }
 
   async findAnalysisFiles(
