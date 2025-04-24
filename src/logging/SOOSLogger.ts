@@ -1,6 +1,8 @@
 import { LogLevel } from "../enums";
 
 class SOOSLogger {
+  private static orderedLogLevels = Object.keys(LogLevel);
+
   private console: Console;
   private minLogLevel: LogLevel;
 
@@ -26,16 +28,18 @@ class SOOSLogger {
 
   private logWithTimestamp(level: LogLevel, message?: unknown, ...optionalParams: unknown[]): void {
     if (this.shouldLog(level)) {
-      const logLevelKey = LogLevel[level];
-      const timestamp = this.getTimeStamp();
-      const logMessage = `${timestamp} UTC [${logLevelKey}] ${message}`;
-      this.console.log(logMessage, ...optionalParams);
+      this.console.log(
+        `${this.getTimeStamp()} UTC [${LogLevel[level]}] ${message}`,
+        ...optionalParams,
+      );
     }
   }
 
   private shouldLog(level: LogLevel): boolean {
-    const orderedKeys = Object.keys(LogLevel);
-    return orderedKeys.indexOf(level) >= orderedKeys.indexOf(this.minLogLevel);
+    return (
+      SOOSLogger.orderedLogLevels.indexOf(level) >=
+      SOOSLogger.orderedLogLevels.indexOf(this.minLogLevel)
+    );
   }
 
   setMinLogLevel(minLogLevel: LogLevel) {
@@ -68,14 +72,13 @@ class SOOSLogger {
   }
 
   always(message?: unknown, ...optionalParams: unknown[]): void {
-    const timestamp = this.getTimeStamp();
-    const logMessage = `${timestamp} UTC [SOOS] ${message}`;
-    this.console.log(logMessage, ...optionalParams);
+    this.console.log(`${this.getTimeStamp()} UTC [SOOS] ${message}`, ...optionalParams);
   }
 
   logLineSeparator(): void {
-    const separator = "-".repeat(80);
-    this.console.log(`${separator}\n`);
+    if (this.minLogLevel === LogLevel.DEBUG || this.minLogLevel === LogLevel.INFO) {
+      this.console.log(`${"-".repeat(80)}\n`);
+    }
   }
 }
 
