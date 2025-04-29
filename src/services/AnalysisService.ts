@@ -285,7 +285,7 @@ class AnalysisService {
     const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
     this.logStatusMessage(applicationStatus.statusMessage);
     this.logStatusMessage(applicationStatus.clientMessage);
-    soosLogger.logLineSeparator();
+
     soosLogger.info(`Creating scan for project '${projectName}'...`);
     if (branchName) {
       soosLogger.info(`Branch Name: ${branchName}`);
@@ -374,9 +374,7 @@ class AnalysisService {
 
     const output = this.getFinalScanStatusMessage(scanType, scanStatus, scanUrl, true);
 
-    soosLogger.logLineSeparator();
     output.map((o) => soosLogger.always(o));
-    soosLogger.logLineSeparator();
 
     return scanStatus.status;
   }

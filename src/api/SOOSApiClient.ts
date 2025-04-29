@@ -61,10 +61,11 @@ class SOOSApiClient {
           if (config && response) {
             // API ICodedMessageModel
             if (
-              ![401, 403].includes(response.status) &&
+              response.status !== 401 &&
               response.data &&
               response.data.code &&
-              response.data.message
+              response.data.message &&
+              (response.status !== 403 || response.data.code === "ClientLimitRequired")
             ) {
               throw new Error(
                 `${response.data.message} (${response.status} ${response.data.code} - ${apiClientName} - ${config.method} ${config.url})`,

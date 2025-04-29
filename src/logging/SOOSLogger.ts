@@ -74,12 +74,6 @@ class SOOSLogger {
   always(message?: unknown, ...optionalParams: unknown[]): void {
     this.console.log(`${this.getTimeStamp()} UTC [SOOS] ${message}`, ...optionalParams);
   }
-
-  logLineSeparator(): void {
-    if (this.minLogLevel === LogLevel.DEBUG || this.minLogLevel === LogLevel.INFO) {
-      this.console.log(`${"-".repeat(80)}\n`);
-    }
-  }
 }
 
 export default SOOSLogger;
