@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform. Register for a free trial today at https://app.soos.io/register",
   "main": "dist/index.js",
   "scripts": {
@@ -64,17 +64,17 @@
     "glob": "^11.0.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.25.1",
+    "@eslint/js": "^9.26.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.32",
-    "eslint": "^9.25.1",
-    "globals": "^16.0.0",
+    "eslint": "^9.26.0",
+    "globals": "^16.1.0",
     "jest": "^29.1.2",
-    "knip": "^5.52.0",
+    "knip": "^5.55.1",
     "prettier": "^3.5.3",
     "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.31.1"
+    "typescript-eslint": "^8.32.0"
   }
 }
