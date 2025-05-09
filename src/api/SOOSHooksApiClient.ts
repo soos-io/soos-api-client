@@ -22,6 +22,7 @@ interface IContributorAuditRepository {
   id: string;
   name: string;
   lastCommit: string;
+  numberOfCommits: number;
   isPrivate: boolean;
 }
 
