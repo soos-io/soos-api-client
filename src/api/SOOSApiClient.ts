@@ -65,7 +65,15 @@ class SOOSApiClient {
               response.data &&
               response.data.code &&
               response.data.message &&
-              (response.status !== 403 || response.data.code === "ClientLimitRequired")
+              (response.status !== 403 ||
+                [
+                  "ClientLimitRequired",
+                  "InvalidClientContext",
+                  "InvalidLicense",
+                  "LicenseExpired",
+                  "LicenseScanTypeRequired",
+                  "TrialExpired",
+                ].some((c) => response.data.code === c))
             ) {
               throw new Error(
                 `${response.data.message} (${response.status} ${response.data.code} - ${apiClientName} - ${config.method} ${config.url})`,
