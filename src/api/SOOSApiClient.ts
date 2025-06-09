@@ -73,7 +73,7 @@ class SOOSApiClient {
                   "LicenseExpired",
                   "LicenseScanTypeRequired",
                   "TrialExpired",
-                ].some((c) => response.data.code === c))
+                ].includes(response.data.code))
             ) {
               throw new Error(
                 `${response.data.message} (${response.status} ${response.data.code} - ${apiClientName} - ${config.method} ${config.url})`,
