@@ -112,12 +112,11 @@ interface IScanStatusApiResponse {
 }
 
 interface IIssuesModel {
+  Dast: { count: number; maxSeverity: string } | null;
+  MaliciousPackage: { count: number; maxSeverity: string } | null;
+  Sast: { count: number; maxSeverity: string } | null;
   Violation: { count: number; maxSeverity: string } | null;
   Vulnerability: { count: number; maxSeverity: string } | null;
-  DependencyTypo: { count: number; maxSeverity: string } | null;
-  DependencySubstitution: { count: number; maxSeverity: string } | null;
-  Dast: { count: number; maxSeverity: string } | null;
-  Sast: { count: number; maxSeverity: string } | null;
   UnknownPackage: { count: number; maxSeverity: string } | null;
 }
 
