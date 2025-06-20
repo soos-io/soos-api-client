@@ -484,28 +484,16 @@ class AnalysisService {
         )}${this.getColorBySeverity(scanStatus.issues?.UnknownPackage?.maxSeverity, colorize)}${unknownPackageCount}${this.getResetColor(colorize)}`,
       );
 
-      const dependencyTypoCount = scanStatus.issues?.DependencyTypo?.count ?? 0;
+      const maliciousPackageCount = scanStatus.issues?.MaliciousPackage?.count ?? 0;
       output.push(
         `${StringUtilities.pluralizeWord(
-          dependencyTypoCount,
-          "Dependency Typo:",
-          "Dependency Typos:",
+          maliciousPackageCount,
+          "Malicious Package:",
+          "Malicious Packages:",
         ).padEnd(
           maxLengthOfIssueText,
           padChar,
-        )}${this.getColorBySeverity(scanStatus.issues?.DependencyTypo?.maxSeverity, colorize)}${dependencyTypoCount}${this.getResetColor(colorize)}`,
-      );
-
-      const dependencySubstitutionCount = scanStatus.issues?.DependencySubstitution?.count ?? 0;
-      output.push(
-        `${StringUtilities.pluralizeWord(
-          dependencySubstitutionCount,
-          "Dependency Substitution:",
-          "Dependency Substitutions:",
-        ).padEnd(
-          maxLengthOfIssueText,
-          padChar,
-        )}${this.getColorBySeverity(scanStatus.issues?.DependencySubstitution?.maxSeverity, colorize)}${dependencySubstitutionCount}${this.getResetColor(colorize)}`,
+        )}${this.getColorBySeverity(scanStatus.issues?.MaliciousPackage?.maxSeverity, colorize)}${maliciousPackageCount}${this.getResetColor(colorize)}`,
       );
     }
 
