@@ -188,7 +188,6 @@ const contributingDeveloperEnvironmentVariables: Array<string> = [
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
-const NoneColor = "\x1b[32m";
 const InfoColor = "\x1b[34m";
 const LowColor = "\x1b[90m";
 const MediumColor = "\x1b[33m";
@@ -240,7 +239,6 @@ class AnalysisService {
     if (message) {
       switch (message.severity) {
         case SeverityEnum.Unknown:
-        case SeverityEnum.None:
         case SeverityEnum.Info:
         case SeverityEnum.Low:
           soosLogger.info(message.message);
@@ -388,8 +386,6 @@ class AnalysisService {
       default:
       case "unknown":
         return "";
-      case "none":
-        return colorize ? NoneColor : "";
       case "info":
         return colorize ? InfoColor : "";
       case "low":
