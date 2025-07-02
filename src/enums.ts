@@ -98,7 +98,6 @@ export enum ScanType {
 
 export enum SeverityEnum {
   Unknown = "Unknown",
-  None = "None",
   Info = "Info",
   Low = "Low",
   Medium = "Medium",
