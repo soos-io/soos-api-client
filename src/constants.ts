@@ -30,4 +30,13 @@ export const SOOS_CONSTANTS = {
   Status: {
     DelayTime: 5000,
   },
+  TerminalColors: {
+    Success: "\x1b[32m",
+    Info: "\x1b[34m",
+    Low: "\x1b[90m",
+    Medium: "\x1b[33m",
+    High: "\x1b[31m",
+    Critical: "\x1b[31m",
+    Reset: "\x1b[0m",
+  },
 };

@@ -188,13 +188,6 @@ const contributingDeveloperEnvironmentVariables: Array<string> = [
 
 const GeneratedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
-const InfoColor = "\x1b[34m";
-const LowColor = "\x1b[90m";
-const MediumColor = "\x1b[33m";
-const HighColor = "\x1b[31m";
-const CriticalColor = "\x1b[31m";
-const ResetColor = "\x1b[0m";
-
 class AnalysisService {
   public analysisApiClient: SOOSAnalysisApiClient;
   public attributionApiClient: SOOSAttributionApiClient;
@@ -377,30 +370,42 @@ class AnalysisService {
     return scanStatus.status;
   }
 
-  private getColorBySeverity(severity: string | undefined, colorize: boolean): string {
+  private getColorBySeverity(
+    severity: string | undefined,
+    count: number,
+    colorize: boolean,
+  ): string {
     if (!severity) {
       return "";
     }
 
+    if (count === 0) {
+      return colorize ? SOOS_CONSTANTS.TerminalColors.Success : "";
+    }
+
     switch (severity.toLocaleLowerCase()) {
-      default:
-      case "unknown":
-        return "";
       case "info":
-        return colorize ? InfoColor : "";
+        return colorize ? SOOS_CONSTANTS.TerminalColors.Info : "";
       case "low":
-        return colorize ? LowColor : "";
+        return colorize ? SOOS_CONSTANTS.TerminalColors.Low : "";
       case "medium":
-        return colorize ? MediumColor : "";
+        return colorize ? SOOS_CONSTANTS.TerminalColors.Medium : "";
       case "high":
-        return colorize ? HighColor : "";
+        return colorize ? SOOS_CONSTANTS.TerminalColors.High : "";
       case "critical":
-        return colorize ? CriticalColor : "";
+        return colorize ? SOOS_CONSTANTS.TerminalColors.Critical : "";
+      case "unknown":
+      default:
+        return "";
     }
   }
 
+  private getSuccessColor(colorize: boolean): string {
+    return colorize ? SOOS_CONSTANTS.TerminalColors.Success : "";
+  }
+
   private getResetColor(colorize: boolean): string {
-    return colorize ? ResetColor : "";
+    return colorize ? SOOS_CONSTANTS.TerminalColors.Reset : "";
   }
 
   getFinalScanStatusMessage(
@@ -413,7 +418,7 @@ class AnalysisService {
     const output: Array<string> = [];
 
     output.push(
-      `Scan ${scanStatus.isSuccess ? `${this.getColorBySeverity("none", colorize)}passed${this.getResetColor(colorize)}` : `${this.getColorBySeverity("high", colorize)}failed${this.getResetColor(colorize)}`}${
+      `Scan ${scanStatus.isSuccess ? `${this.getSuccessColor(colorize)}passed${this.getResetColor(colorize)}` : `${this.getColorBySeverity("high", 1, colorize)}failed${this.getResetColor(colorize)}`}${
         scanStatus.isSuccess ? " with:" : " because of:"
       }`,
     );
@@ -431,7 +436,7 @@ class AnalysisService {
         ).padEnd(
           maxLengthOfIssueText,
           padChar,
-        )}${this.getColorBySeverity(scanStatus.issues?.Vulnerability?.maxSeverity, colorize)}${vulnerabilityCount}${this.getResetColor(colorize)}`,
+        )}${this.getColorBySeverity(scanStatus.issues?.Vulnerability?.maxSeverity, vulnerabilityCount, colorize)}${vulnerabilityCount}${this.getResetColor(colorize)}`,
       );
     }
 
@@ -440,7 +445,7 @@ class AnalysisService {
       `${StringUtilities.pluralizeWord(violationCount, "Violation:", "Violations:").padEnd(
         maxLengthOfIssueText,
         padChar,
-      )}${this.getColorBySeverity(scanStatus.issues?.Violation?.maxSeverity, colorize)}${violationCount}${this.getResetColor(colorize)}`,
+      )}${this.getColorBySeverity(scanStatus.issues?.Violation?.maxSeverity, violationCount, colorize)}${violationCount}${this.getResetColor(colorize)}`,
     );
 
     if (scanType === ScanType.DAST) {
@@ -453,7 +458,7 @@ class AnalysisService {
         ).padEnd(
           maxLengthOfIssueText,
           padChar,
-        )}${this.getColorBySeverity(scanStatus.issues?.Dast?.maxSeverity, colorize)}${dastCount}${this.getResetColor(colorize)}`,
+        )}${this.getColorBySeverity(scanStatus.issues?.Dast?.maxSeverity, dastCount, colorize)}${dastCount}${this.getResetColor(colorize)}`,
       );
     }
 
@@ -463,7 +468,7 @@ class AnalysisService {
         `${StringUtilities.pluralizeWord(sastCount, "Code Issue:", "Code Issues:").padEnd(
           maxLengthOfIssueText,
           padChar,
-        )}${this.getColorBySeverity(scanStatus.issues?.Sast?.maxSeverity, colorize)}${sastCount}${this.getResetColor(colorize)}`,
+        )}${this.getColorBySeverity(scanStatus.issues?.Sast?.maxSeverity, sastCount, colorize)}${sastCount}${this.getResetColor(colorize)}`,
       );
     }
 
@@ -477,7 +482,7 @@ class AnalysisService {
         ).padEnd(
           maxLengthOfIssueText,
           padChar,
-        )}${this.getColorBySeverity(scanStatus.issues?.UnknownPackage?.maxSeverity, colorize)}${unknownPackageCount}${this.getResetColor(colorize)}`,
+        )}${this.getColorBySeverity(scanStatus.issues?.UnknownPackage?.maxSeverity, unknownPackageCount, colorize)}${unknownPackageCount}${this.getResetColor(colorize)}`,
       );
 
       const maliciousPackageCount = scanStatus.issues?.MaliciousPackage?.count ?? 0;
@@ -489,7 +494,7 @@ class AnalysisService {
         ).padEnd(
           maxLengthOfIssueText,
           padChar,
-        )}${this.getColorBySeverity(scanStatus.issues?.MaliciousPackage?.maxSeverity, colorize)}${maliciousPackageCount}${this.getResetColor(colorize)}`,
+        )}${this.getColorBySeverity(scanStatus.issues?.MaliciousPackage?.maxSeverity, maliciousPackageCount, colorize)}${maliciousPackageCount}${this.getResetColor(colorize)}`,
       );
     }
 
