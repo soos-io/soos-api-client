@@ -25,7 +25,14 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { StringUtilities, formatBytes, generateFileHash, isNil, sleep } from "../utilities";
+import {
+  StringUtilities,
+  convertStringToBase64,
+  formatBytes,
+  generateFileHash,
+  isNil,
+  sleep,
+} from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
@@ -1063,6 +1070,7 @@ class AnalysisService {
   async getAnalysisFilesAsFormData(
     analysisFilePaths: string[],
     workingDirectory: string,
+    encodeAsBase64: boolean = false,
   ): Promise<FormData> {
     const analysisFiles = analysisFilePaths.map((filePath) => {
       return {
@@ -1070,17 +1078,27 @@ class AnalysisService {
         path: filePath,
       };
     });
-    const formData = analysisFiles.reduce((formDataAcc: FormData, analysisFile, index) => {
+
+    const formData = new FormData();
+
+    for (let index = 0; index < analysisFiles.length; index++) {
+      const analysisFile = analysisFiles[index];
       const fileParts = analysisFile.path.replace(workingDirectory, "").split(Path.sep);
       const parentFolder =
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
       const suffix = index > 0 ? index : "";
-      const fileReadStream = FileSystem.createReadStream(analysisFile.path);
-      formDataAcc.append(`file${suffix}`, fileReadStream);
-      formDataAcc.append(`parentFolder${suffix}`, parentFolder);
 
-      return formDataAcc;
-    }, new FormData());
+      const fileContent = await FileSystem.promises.readFile(analysisFile.path, {
+        encoding: "utf-8",
+      });
+      formData.append(
+        `file${suffix}`,
+        encodeAsBase64 ? convertStringToBase64(fileContent) : fileContent,
+        analysisFile.name,
+      );
+
+      formData.append(`parentFolder${suffix}`, parentFolder);
+    }
 
     return formData;
   }
