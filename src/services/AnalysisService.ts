@@ -25,7 +25,14 @@ import {
   SeverityEnum,
 } from "../enums";
 import { soosLogger } from "../logging";
-import { StringUtilities, formatBytes, generateFileHash, isNil, sleep } from "../utilities";
+import {
+  StringUtilities,
+  convertStringToBase64,
+  formatBytes,
+  generateFileHash,
+  isNil,
+  sleep,
+} from "../utilities";
 import * as FileSystem from "fs";
 import * as Path from "path";
 import FormData from "form-data";
@@ -1076,18 +1083,20 @@ class AnalysisService {
 
     for (let index = 0; index < analysisFiles.length; index++) {
       const analysisFile = analysisFiles[index];
-
-      const suffix = index > 0 ? index : "";
-
-      const fileBuffer = await FileSystem.promises.readFile(analysisFile.path);
-      const fileContent = encodeAsBase64
-        ? fileBuffer.toString("base64")
-        : fileBuffer.toString("utf-8");
-      formData.append(`file${suffix}`, fileContent);
-
       const fileParts = analysisFile.path.replace(workingDirectory, "").split(Path.sep);
       const parentFolder =
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
+      const suffix = index > 0 ? index : "";
+
+      const fileContent = await FileSystem.promises.readFile(analysisFile.path, {
+        encoding: "utf-8",
+      });
+      formData.append(
+        `file${suffix}`,
+        encodeAsBase64 ? convertStringToBase64(fileContent) : fileContent,
+        analysisFile.name,
+      );
+
       formData.append(`parentFolder${suffix}`, parentFolder);
     }
 
