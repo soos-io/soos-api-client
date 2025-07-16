@@ -1063,6 +1063,7 @@ class AnalysisService {
   async getAnalysisFilesAsFormData(
     analysisFilePaths: string[],
     workingDirectory: string,
+    encodeAsBase64: boolean = false,
   ): Promise<FormData> {
     const analysisFiles = analysisFilePaths.map((filePath) => {
       return {
@@ -1070,17 +1071,25 @@ class AnalysisService {
         path: filePath,
       };
     });
-    const formData = analysisFiles.reduce((formDataAcc: FormData, analysisFile, index) => {
+
+    const formData = new FormData();
+
+    for (let index = 0; index < analysisFiles.length; index++) {
+      const analysisFile = analysisFiles[index];
+
+      const suffix = index > 0 ? index : "";
+
+      const fileBuffer = await FileSystem.promises.readFile(analysisFile.path);
+      const fileContent = encodeAsBase64
+        ? fileBuffer.toString("base64")
+        : fileBuffer.toString("utf-8");
+      formData.append(`file${suffix}`, fileContent);
+
       const fileParts = analysisFile.path.replace(workingDirectory, "").split(Path.sep);
       const parentFolder =
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
-      const suffix = index > 0 ? index : "";
-      const fileReadStream = FileSystem.createReadStream(analysisFile.path);
-      formDataAcc.append(`file${suffix}`, fileReadStream);
-      formDataAcc.append(`parentFolder${suffix}`, parentFolder);
-
-      return formDataAcc;
-    }, new FormData());
+      formData.append(`parentFolder${suffix}`, parentFolder);
+    }
 
     return formData;
   }
