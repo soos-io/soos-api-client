@@ -225,7 +225,7 @@ const checkNodeVersion = (): string => {
       `Node.js ${SOOS_CONSTANTS.RequiredLtsNodeMajorVersion} LTS is recommended. You are using ${nodeVersion}`,
     );
   } else {
-    soosLogger.info(`Running with Node ${nodeVersion}`);
+    soosLogger.info(`Running with Node.js ${nodeVersion}`);
   }
   return nodeVersion;
 };
