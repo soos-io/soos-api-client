@@ -14,6 +14,7 @@ import {
   generateFileHash,
   obfuscateCommandLine,
   reassembleCommandLine,
+  checkNodeVersion,
 } from "./utilities";
 
 describe("isNil", () => {
@@ -398,5 +399,12 @@ describe("generateFileDigest", () => {
     ).toBe(
       "FEk/h76zlaEGtK2MPOgA4jfXGOG4DAMc6CI2OtgcL3F3Cp37Ds2VIlXnJXIQZSyURAS+4bVpvrx9r0d2FZCdQQ==",
     );
+  });
+});
+
+describe("checkNodeVersion", () => {
+  test("checkNodeVersion", () => {
+    const nodeVersion = checkNodeVersion();
+    expect(nodeVersion.split(".")[0]).toBe("22");
   });
 });

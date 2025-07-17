@@ -27,6 +27,7 @@ import {
 import { soosLogger } from "../logging";
 import {
   StringUtilities,
+  checkNodeVersion,
   convertStringToBase64,
   formatBytes,
   generateFileHash,
@@ -279,6 +280,8 @@ class AnalysisService {
     commandLine,
     scanMode,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
+    const nodeVersion = checkNodeVersion();
+
     soosLogger.info("Checking SOOS App status...");
     const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
     this.logStatusMessage(applicationStatus.statusMessage);
@@ -316,6 +319,7 @@ class AnalysisService {
       operatingEnvironment: operatingEnvironment,
       integrationName: integrationName,
       appVersion: appVersion,
+      nodeVersion: nodeVersion,
       scriptVersion: scriptVersion,
       contributingDeveloperAudit: contributingDeveloperAudit,
       scanType: scanType,
