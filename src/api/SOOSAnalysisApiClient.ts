@@ -41,6 +41,7 @@ interface ICreateScanRequest {
   integrationName: IntegrationName;
   scriptVersion: string | null;
   appVersion: string | null;
+  nodeVersion: string | null;
   contributingDeveloperAudit?: ICreateScanRequestContributingDeveloperAudit[];
   toolName?: string | null;
   toolVersion?: string | null;
@@ -197,6 +198,7 @@ class SOOSAnalysisApiClient {
     integrationName,
     scanType,
     appVersion,
+    nodeVersion,
     scriptVersion,
     contributingDeveloperAudit,
     toolName,
@@ -218,6 +220,7 @@ class SOOSAnalysisApiClient {
         integrationName: integrationName,
         scriptVersion: scriptVersion,
         appVersion: appVersion,
+        nodeVersion: nodeVersion,
         contributingDeveloperAudit: contributingDeveloperAudit,
         toolName: toolName,
         toolVersion: toolVersion,

@@ -4,6 +4,7 @@ import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus, ScanType } fr
 import fs from "fs";
 import crypto from "node:crypto";
 import { BinaryToTextEncoding } from "crypto";
+import { SOOS_CONSTANTS } from "./constants";
 
 const generatedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
@@ -217,6 +218,18 @@ const getAnalysisExitCodeWithMessage = (
   };
 };
 
+const checkNodeVersion = (): string => {
+  const nodeVersion = process.versions.node;
+  if (!nodeVersion.startsWith(SOOS_CONSTANTS.RequiredLtsNodeMajorVersion)) {
+    soosLogger.warn(
+      `Node ${SOOS_CONSTANTS.RequiredLtsNodeMajorVersion} LTS is recommended. You are using ${nodeVersion}`,
+    );
+  } else {
+    soosLogger.info(`Running with Node ${nodeVersion}`);
+  }
+  return nodeVersion;
+};
+
 const DateUtilities = {
   getDate: (daysAgo: number = 0): Date => {
     const date = new Date();
@@ -280,4 +293,5 @@ export {
   DateUtilities,
   StringUtilities,
   isScanDone,
+  checkNodeVersion,
 };
