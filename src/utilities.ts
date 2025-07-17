@@ -222,7 +222,7 @@ const checkNodeVersion = (): string => {
   const nodeVersion = process.versions.node;
   if (!nodeVersion.startsWith(SOOS_CONSTANTS.RequiredLtsNodeMajorVersion)) {
     soosLogger.warn(
-      `Node ${SOOS_CONSTANTS.RequiredLtsNodeMajorVersion} LTS is recommended. You are using ${nodeVersion}`,
+      `Node.js ${SOOS_CONSTANTS.RequiredLtsNodeMajorVersion} LTS is recommended. You are using ${nodeVersion}`,
     );
   } else {
     soosLogger.info(`Running with Node ${nodeVersion}`);
