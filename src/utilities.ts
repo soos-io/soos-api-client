@@ -218,9 +218,9 @@ const getAnalysisExitCodeWithMessage = (
   };
 };
 
-const checkNodeVersion = (): string => {
+const checkNodeVersion = (shouldWarnOnVersion: boolean = true): string => {
   const nodeVersion = process.versions.node;
-  if (!nodeVersion.startsWith(SOOS_CONSTANTS.RequiredLtsNodeMajorVersion)) {
+  if (shouldWarnOnVersion && !nodeVersion.startsWith(SOOS_CONSTANTS.RequiredLtsNodeMajorVersion)) {
     soosLogger.warn(
       `Node.js ${SOOS_CONSTANTS.RequiredLtsNodeMajorVersion} LTS is required. You are using ${nodeVersion}`,
     );
