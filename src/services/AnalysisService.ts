@@ -119,7 +119,6 @@ interface ISetupScanParams {
   toolVersion?: string | null;
   commandLine?: string | null;
   scanMode?: string | null;
-  shouldWarnOnNodeVersion: boolean;
 }
 
 interface IUpdateScanStatusParams {
@@ -280,9 +279,8 @@ class AnalysisService {
     toolVersion,
     commandLine,
     scanMode,
-    shouldWarnOnNodeVersion = true,
   }: ISetupScanParams): Promise<ICreateScanResponse> {
-    const nodeVersion = checkNodeVersion(shouldWarnOnNodeVersion);
+    const nodeVersion = checkNodeVersion();
 
     soosLogger.info("Checking SOOS App status...");
     const applicationStatus = await this.userApiClient.getApplicationStatus(clientId);
