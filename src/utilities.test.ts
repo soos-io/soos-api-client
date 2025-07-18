@@ -407,9 +407,4 @@ describe("checkNodeVersion", () => {
     const nodeVersion = checkNodeVersion();
     expect(nodeVersion.split(".")[0]).toBe("22");
   });
-
-  test("checkNodeVersion - no warning", () => {
-    const nodeVersion = checkNodeVersion(false);
-    expect(nodeVersion.split(".")[0]).toBe("22");
-  });
 });
