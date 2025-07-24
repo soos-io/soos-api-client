@@ -1106,6 +1106,127 @@ class AnalysisService {
 
     return formData;
   }
+
+  async addManifestFilesToScan({
+    clientId,
+    projectHash,
+    branchHash,
+    analysisId,
+    scanType,
+    scanStatusUrl,
+    manifestFiles,
+  }: {
+    clientId: string;
+    projectHash: string;
+    branchHash: string;
+    analysisId: string;
+    scanType: ScanType;
+    scanStatusUrl: string;
+    manifestFiles: Array<IManifestFile>;
+  }): Promise<void> {
+    const filesToUpload = manifestFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
+    const hasMoreThanMaximumManifests =
+      manifestFiles.length > SOOS_CONSTANTS.FileUploads.MaxManifests;
+    if (hasMoreThanMaximumManifests) {
+      const filesToSkip = manifestFiles.slice(SOOS_CONSTANTS.FileUploads.MaxManifests);
+      const filesDetectedString = StringUtilities.pluralizeTemplate(
+        manifestFiles.length,
+        "file was",
+        "files were",
+      );
+      const filesSkippedString = StringUtilities.pluralizeTemplate(filesToSkip.length, "file");
+      soosLogger.info(
+        `The maximum number of manifest per scan is ${SOOS_CONSTANTS.FileUploads.MaxManifests}. ${filesDetectedString} detected, and ${filesSkippedString} will be not be uploaded. \n`,
+        `The following manifests will not be included in the scan: \n`,
+        filesToSkip.map((file) => `  "${file.name}": "${file.path}"`).join("\n"),
+      );
+    }
+
+    const manifestsByPackageManager = filesToUpload.reduce<Record<string, Array<IManifestFile>>>(
+      (accumulator, file) => {
+        const packageManagerFiles =
+          (accumulator[file.packageManager] as Array<IManifestFile> | undefined) ?? [];
+        return {
+          ...accumulator,
+          [file.packageManager]: packageManagerFiles.concat(file),
+        };
+      },
+      {},
+    );
+
+    let allUploadsFailed = true;
+    const errorMessages = [];
+    for (const [packageManager, files] of Object.entries(manifestsByPackageManager)) {
+      try {
+        const manifestUploadResponse = await this.uploadManifestFiles({
+          clientId: clientId,
+          projectHash,
+          branchHash,
+          analysisId,
+          manifestFiles: files.map((f) => f.path),
+          hasMoreThanMaximumManifests,
+        });
+
+        soosLogger.info(
+          `${packageManager} Manifest Files: \n`,
+          `  ${manifestUploadResponse.message} \n`,
+          manifestUploadResponse.manifests
+            ?.map((m) => `  ${m.name}: ${m.statusMessage}`)
+            .join("\n"),
+        );
+
+        allUploadsFailed = false;
+      } catch (e: unknown) {
+        // NOTE: we continue on to the other package managers
+        const errorMessage = e instanceof Error ? e.message : (e as string);
+        errorMessages.push(errorMessage);
+        soosLogger.warn(errorMessage);
+      }
+    }
+
+    if (allUploadsFailed) {
+      await this.updateScanStatus({
+        clientId,
+        projectHash,
+        branchHash,
+        scanType,
+        analysisId: analysisId,
+        status: ScanStatus.Incomplete,
+        message: `Unable to send any manifests. (${errorMessages.join("; ")})`,
+        scanStatusUrl,
+      });
+      throw new Error("Unable to send any manifests.");
+    }
+  }
+
+  private async uploadManifestFiles({
+    clientId,
+    projectHash,
+    branchHash,
+    analysisId,
+    manifestFiles,
+    hasMoreThanMaximumManifests,
+  }: {
+    clientId: string;
+    projectHash: string;
+    branchHash: string;
+    analysisId: string;
+    manifestFiles: Array<string>;
+    hasMoreThanMaximumManifests: boolean;
+  }): Promise<IUploadManifestFilesResponse> {
+    const formData = await this.getAnalysisFilesAsFormData(manifestFiles, process.cwd());
+
+    const response = await this.analysisApiClient.uploadManifestFiles({
+      clientId,
+      projectHash,
+      branchHash,
+      analysisId,
+      manifestFiles: formData,
+      hasMoreThanMaximumManifests,
+    });
+
+    return response;
+  }
 }
 
 export { GeneratedScanTypes, IManifestFile };
