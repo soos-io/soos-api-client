@@ -10,7 +10,6 @@ import SOOSAnalysisApiClient, {
   ICreateScanRequestContributingDeveloperAudit,
   ICreateScanResponse,
   IScanStatusResponse,
-  IUploadManifestFilesResponse,
 } from "../api/SOOSAnalysisApiClient";
 import SOOSProjectsApiClient from "../api/SOOSProjectsApiClient";
 import SOOSUserApiClient, { IApplicationStatusMessage } from "../api/SOOSUserApiClient";
