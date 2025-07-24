@@ -146,30 +146,30 @@ abstract class ArgumentParserBase {
       // we are actually using a commander argument
       const argument = createArgument(name, description);
 
-      if (options?.defaultValue) {
+      if (options.defaultValue) {
         argument.default(options.defaultValue);
       }
 
-      if (options?.internal) {
+      if (options.internal) {
         throw new Error("internal is not applicable");
       }
 
-      if (options?.required) {
+      if (options.required) {
         argument.argRequired();
-        if (!options?.argParser) {
+        if (!options.argParser) {
           argument.argParser((value) => this.ensureNoEmptyArgument(name, value));
         }
       }
 
-      if (options?.argParser) {
+      if (options.argParser) {
         argument.argParser(options.argParser);
       }
 
-      if (options?.choices) {
+      if (options.choices) {
         argument.choices(options.choices);
       }
 
-      if (options?.isFlag) {
+      if (options.isFlag) {
         throw new Error("isFlag is not applicable");
       }
 
@@ -190,13 +190,13 @@ abstract class ArgumentParserBase {
 
     if (options?.required) {
       option.makeOptionMandatory(true);
-      if (!options?.argParser) {
+      if (!options.argParser) {
         option.argParser((value) => this.ensureNoEmptyArgument(name, value));
       }
     }
 
     if (options?.argParser) {
-      if (options?.isFlag) {
+      if (options.isFlag) {
         throw new Error("argParser is not applicable");
       }
 
@@ -204,7 +204,7 @@ abstract class ArgumentParserBase {
     }
 
     if (options?.choices) {
-      if (options?.isFlag) {
+      if (options.isFlag) {
         throw new Error("choices is not applicable");
       }
 
@@ -240,32 +240,27 @@ abstract class ArgumentParserBase {
     )
       .map(([, value]) => value)
       .join(", ")}`;
-    const argParser = options?.allowMultipleValues
+    const argParser = options.allowMultipleValues
       ? (value: string): T[] => {
-          return (
-            value
-              .split(",")
-              .map((v) => v.trim())
-              .filter((v) => v !== "")
-              .map((v) =>
-                ensureEnumValue<T, TEnumObject>(enumObject, v, name, options?.excludeDefault),
-              )
-              .filter((v) => v !== undefined) ??
-            options.defaultValue ??
-            []
-          );
+          return value
+            .split(",")
+            .map((v) => v.trim())
+            .filter((v) => v !== "")
+            .map((v) =>
+              ensureEnumValue<T, TEnumObject>(enumObject, v, name, options.excludeDefault),
+            )
+            .filter((v) => v !== undefined);
         }
       : (value: string): T => {
           return (
-            ensureEnumValue(enumObject, value, name, options?.excludeDefault) ??
-            options.defaultValue
+            ensureEnumValue(enumObject, value, name, options.excludeDefault) ?? options.defaultValue
           );
         };
     this.addArgument(name, descriptionWithOptions, {
-      defaultValue: options?.defaultValue,
+      defaultValue: options.defaultValue,
       argParser,
-      internal: options?.internal,
-      required: options?.required,
+      internal: options.internal,
+      required: options.required,
     });
   }
 

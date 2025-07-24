@@ -292,20 +292,21 @@ class AnalysisService {
       soosLogger.info(`Branch Name: ${branchName}`);
     }
 
-    if (contributingDeveloperAudit === undefined || contributingDeveloperAudit.length === 0) {
-      contributingDeveloperAudit = contributingDeveloperEnvironmentVariables
-        .map((ev) => {
-          const environmentVariableValue = process.env[ev];
-          return environmentVariableValue && environmentVariableValue.length > 0
-            ? {
-                source: ContributingDeveloperSource.EnvironmentVariable,
-                sourceName: ev,
-                contributingDeveloperId: environmentVariableValue,
-              }
-            : null;
-        })
-        .filter((a) => a !== null);
-    }
+    const createScanAudit =
+      contributingDeveloperAudit === undefined || contributingDeveloperAudit.length === 0
+        ? contributingDeveloperEnvironmentVariables
+            .map((ev) => {
+              const environmentVariableValue = process.env[ev];
+              return environmentVariableValue && environmentVariableValue.length > 0
+                ? {
+                    source: ContributingDeveloperSource.EnvironmentVariable,
+                    sourceName: ev,
+                    contributingDeveloperId: environmentVariableValue,
+                  }
+                : null;
+            })
+            .filter((a) => a !== null)
+        : contributingDeveloperAudit;
 
     const result = await this.analysisApiClient.createScan({
       clientId: clientId,
@@ -321,7 +322,7 @@ class AnalysisService {
       appVersion: appVersion,
       nodeVersion: nodeVersion,
       scriptVersion: scriptVersion,
-      contributingDeveloperAudit: contributingDeveloperAudit,
+      contributingDeveloperAudit: createScanAudit,
       scanType: scanType,
       toolName: toolName,
       toolVersion: toolVersion,
@@ -760,15 +761,14 @@ class AnalysisService {
       : filteredPackageManagers.flatMap((fpm) => {
           return {
             packageManager: fpm.packageManager,
-            manifests:
-              fpm.manifests?.map((sm) => {
-                return {
-                  isLockFile: sm.isLockFile,
-                  includeWithLockFiles: sm.includeWithLockFiles,
-                  supportsLockFiles: sm.SupportsLockFiles,
-                  pattern: sm.pattern,
-                };
-              }) ?? [],
+            manifests: fpm.manifests.map((sm) => {
+              return {
+                isLockFile: sm.isLockFile,
+                includeWithLockFiles: sm.includeWithLockFiles,
+                supportsLockFiles: sm.SupportsLockFiles,
+                pattern: sm.pattern,
+              };
+            }),
           };
         });
 
@@ -796,13 +796,12 @@ class AnalysisService {
             ? []
             : {
                 packageManager: fpm.packageManager,
-                fileFormats:
-                  hashableFiles.map((hf) => {
-                    return {
-                      hashAlgorithms: hf.hashAlgorithms,
-                      patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                    };
-                  }) ?? [],
+                fileFormats: hashableFiles.map((hf) => {
+                  return {
+                    hashAlgorithms: hf.hashAlgorithms,
+                    patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                  };
+                }),
               };
         });
 
@@ -812,15 +811,14 @@ class AnalysisService {
       );
     }
 
-    const archiveFileHashManifests =
-      !runFileHashing || !archiveHashFormats.some((ahf) => ahf.fileFormats)
-        ? []
-        : this.searchForHashableFiles({
-            hashableFileFormats: archiveHashFormats.filter((ahf) => ahf.fileFormats),
-            sourceCodePath,
-            filesToExclude,
-            directoriesToExclude,
-          });
+    const archiveFileHashManifests = !runFileHashing
+      ? []
+      : this.searchForHashableFiles({
+          hashableFileFormats: archiveHashFormats,
+          sourceCodePath,
+          filesToExclude,
+          directoriesToExclude,
+        });
 
     const contentHashFormats = !runFileHashing
       ? []
@@ -830,13 +828,12 @@ class AnalysisService {
             ? []
             : {
                 packageManager: fpm.packageManager,
-                fileFormats:
-                  hashableFiles.map((hf) => {
-                    return {
-                      hashAlgorithms: hf.hashAlgorithms,
-                      patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                    };
-                  }) ?? [],
+                fileFormats: hashableFiles.map((hf) => {
+                  return {
+                    hashAlgorithms: hf.hashAlgorithms,
+                    patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                  };
+                }),
               };
         });
 
@@ -844,22 +841,21 @@ class AnalysisService {
       soosLogger.debug(`Running file hash matching for ${contentHashFormats.length} file formats.`);
     }
 
-    const contentFileHashManifests =
-      !runFileHashing || !contentHashFormats.some((chf) => chf.fileFormats)
-        ? []
-        : this.searchForHashableFiles({
-            hashableFileFormats: contentHashFormats.filter((chf) => chf.fileFormats),
-            sourceCodePath,
-            filesToExclude,
-            directoriesToExclude,
-          });
+    const contentFileHashManifests = !runFileHashing
+      ? []
+      : this.searchForHashableFiles({
+          hashableFileFormats: contentHashFormats,
+          sourceCodePath,
+          filesToExclude,
+          directoriesToExclude,
+        });
 
     // TODO: PA-14211 we could probably just add this to the form files directly
     const hashManifests = archiveFileHashManifests
       .concat(contentFileHashManifests)
       .filter((hm) => hm.fileHashes.length > 0);
 
-    if (runFileHashing && hashManifests) {
+    if (runFileHashing && hashManifests.length > 0) {
       for (const soosHashesManifest of hashManifests) {
         if (soosHashesManifest.fileHashes.length > 0) {
           const hashManifestFileName = `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`;
@@ -926,7 +922,7 @@ class AnalysisService {
             const pattern = `**/${manifestGlobPattern}`;
             const files = Glob.sync(pattern, {
               ignore: [
-                ...(filesToExclude || []),
+                ...filesToExclude,
                 ...directoriesToExclude,
                 SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
               ],
@@ -1008,7 +1004,7 @@ class AnalysisService {
             const pattern = `**/${manifestGlobPattern}`;
             const files = Glob.sync(pattern, {
               ignore: [
-                ...(filesToExclude || []),
+                ...filesToExclude,
                 ...directoriesToExclude,
                 SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
               ],
@@ -1087,6 +1083,10 @@ class AnalysisService {
 
     for (let index = 0; index < analysisFiles.length; index++) {
       const analysisFile = analysisFiles[index];
+      if (!analysisFile) {
+        continue;
+      }
+
       const fileParts = analysisFile.path.replace(workingDirectory, "").split(Path.sep);
       const parentFolder =
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
