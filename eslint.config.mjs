@@ -13,7 +13,7 @@ export default [
       globals: globals.node,
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["eslint.config.mjs"],
+          allowDefaultProject: ["eslint.config.mjs", "jest.config.ts"],
           defaultProject: "tsconfig.json",
         },
         tsconfigRootDir: import.meta.dirname,

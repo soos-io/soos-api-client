@@ -7,7 +7,7 @@
       "ESNext"
     ],
     "outDir": "./dist", /* Redirect output structure to the directory. */
-    "rootDir": ".", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
+    "rootDir": "./src", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     "removeComments": true, /* Do not emit comments to output. */
     "importHelpers": true, /* Import emit helpers from 'tslib'. */
     "strict": true, /* Enable all strict type-checking options. */
@@ -26,10 +26,6 @@
     ], /* List of folders to include type definitions from. */
   },
   "include": [
-    "src",
-    "jest.config.ts"
-  ],
-  "exclude": [
-    "testassets"
+    "src"
   ]
 }
