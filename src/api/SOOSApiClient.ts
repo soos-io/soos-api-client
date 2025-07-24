@@ -59,6 +59,16 @@ class SOOSApiClient {
         if (axios.isAxiosError(error)) {
           const { config, response } = error;
           if (config && response) {
+            // Check for a WAF edge block
+            if (
+              response.status === 403 &&
+              response.headers["content-type"]?.includes("text/html")
+            ) {
+              throw new Error(
+                `Your request may have been blocked. Contact support@soos.io if you continue to receive this error. (Forbidden - ${apiClientName} - ${config.method} ${config.url})`,
+              );
+            }
+
             // API ICodedMessageModel
             if (
               response.status !== 401 &&
