@@ -1127,7 +1127,7 @@ class AnalysisService {
     fileMatchType: FileMatchTypeEnum;
     manifestFiles: IManifestFile[];
     hashManifests: ISoosHashesManifest[];
-  }): Promise<number> {
+  }): Promise<{ exitCode: number; errorMessage?: string }> {
     let noFilesMessage = null;
     if (fileMatchType === FileMatchTypeEnum.Manifest && manifestFiles.length === 0) {
       noFilesMessage =
@@ -1156,7 +1156,7 @@ class AnalysisService {
       });
       soosLogger.error(noFilesMessage);
       soosLogger.always(`${noFilesMessage} - exit 1`);
-      return 1;
+      return { exitCode: 1, errorMessage: noFilesMessage };
     }
 
     const filesToUpload = manifestFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
@@ -1233,10 +1233,10 @@ class AnalysisService {
         "All manifest uploads were unsuccessful. For more help, please visit https://kb.soos.io/error-no-valid-manifests-found";
       soosLogger.error(noFilesMessage);
       soosLogger.always(`${noFilesMessage} - exit 1`);
-      return 1;
+      return { exitCode: 1, errorMessage: noFilesMessage };
     }
 
-    return 0;
+    return { exitCode: 0 };
   }
 
   private async uploadManifestFiles({
