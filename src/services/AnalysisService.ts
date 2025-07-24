@@ -1155,6 +1155,7 @@ class AnalysisService {
     );
 
     let allUploadsFailed = true;
+    const errorMessages = [];
     for (const [packageManager, files] of Object.entries(manifestsByPackageManager)) {
       try {
         const manifestUploadResponse = await this.uploadManifestFiles({
@@ -1177,7 +1178,9 @@ class AnalysisService {
         allUploadsFailed = false;
       } catch (e: unknown) {
         // NOTE: we continue on to the other package managers
-        soosLogger.warn(e instanceof Error ? e.message : (e as string));
+        const errorMessage = e instanceof Error ? e.message : (e as string);
+        errorMessages.push(errorMessage);
+        soosLogger.warn(errorMessage);
       }
     }
 
@@ -1189,10 +1192,10 @@ class AnalysisService {
         scanType,
         analysisId: analysisId,
         status: ScanStatus.Incomplete,
-        message: `Error uploading manifests.`,
+        message: `Unable to send any manifests. (${errorMessages.join("; ")})`,
         scanStatusUrl,
       });
-      throw new Error("Error uploading manifests.");
+      throw new Error("Unable to send any manifests.");
     }
   }
 
