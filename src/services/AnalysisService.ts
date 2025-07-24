@@ -725,8 +725,8 @@ class AnalysisService {
     packageManagers: string[];
     fileMatchType: FileMatchTypeEnum;
   }): Promise<{
-    manifestFiles: IManifestFile[] | null;
-    hashManifests: ISoosHashesManifest[] | null;
+    manifestFiles: IManifestFile[];
+    hashManifests: ISoosHashesManifest[];
   }> {
     const supportedScanFileFormats = await this.analysisApiClient.getSupportedScanFileFormats({
       clientId: clientId,
@@ -1107,14 +1107,16 @@ class AnalysisService {
     return formData;
   }
 
-  async addManifestFilesToScan({
+  async addManifestsAndHashableFilesToScan({
     clientId,
     projectHash,
     branchHash,
     analysisId,
     scanType,
     scanStatusUrl,
+    fileMatchType,
     manifestFiles,
+    hashManifests,
   }: {
     clientId: string;
     projectHash: string;
@@ -1122,8 +1124,41 @@ class AnalysisService {
     analysisId: string;
     scanType: ScanType;
     scanStatusUrl: string;
-    manifestFiles: Array<IManifestFile>;
-  }): Promise<void> {
+    fileMatchType: FileMatchTypeEnum;
+    manifestFiles: IManifestFile[];
+    hashManifests: ISoosHashesManifest[];
+  }): Promise<number> {
+    let noFilesMessage = null;
+    if (fileMatchType === FileMatchTypeEnum.Manifest && manifestFiles.length === 0) {
+      noFilesMessage =
+        "No valid files found, cannot continue. For more help, please visit https://kb.soos.io/error-no-valid-manifests-found";
+    } else if (fileMatchType === FileMatchTypeEnum.FileHash && hashManifests.length === 0) {
+      noFilesMessage =
+        "No valid files to hash were found, cannot continue. For more help, please visit https://kb.soos.io/error-no-valid-files-to-hash-found";
+    } else if (
+      fileMatchType === FileMatchTypeEnum.ManifestAndFileHash &&
+      hashManifests.length === 0 &&
+      manifestFiles.length === 0
+    ) {
+      noFilesMessage =
+        "No valid files found, cannot continue. For more help, please visit https://kb.soos.io/error-no-valid-manifests-found and https://kb.soos.io/error-no-valid-files-to-hash-found";
+    }
+    if (noFilesMessage) {
+      await this.updateScanStatus({
+        analysisId,
+        clientId,
+        projectHash,
+        branchHash,
+        scanType,
+        status: ScanStatus.NoFiles,
+        message: noFilesMessage,
+        scanStatusUrl,
+      });
+      soosLogger.error(noFilesMessage);
+      soosLogger.always(`${noFilesMessage} - exit 1`);
+      return 1;
+    }
+
     const filesToUpload = manifestFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
     const hasMoreThanMaximumManifests =
       manifestFiles.length > SOOS_CONSTANTS.FileUploads.MaxManifests;
@@ -1155,10 +1190,12 @@ class AnalysisService {
     );
 
     let allUploadsFailed = true;
+    const errorMessages = [];
     for (const [packageManager, files] of Object.entries(manifestsByPackageManager)) {
       try {
+        // TODO: PA-14211 can we add the soos_hashes.json directly
         const manifestUploadResponse = await this.uploadManifestFiles({
-          clientId: clientId,
+          clientId,
           projectHash,
           branchHash,
           analysisId,
@@ -1176,24 +1213,30 @@ class AnalysisService {
 
         allUploadsFailed = false;
       } catch (e: unknown) {
-        // NOTE: we continue on to the other package managers
-        soosLogger.warn(e instanceof Error ? e.message : (e as string));
+        const errorMessage = e instanceof Error ? e.message : (e as string);
+        errorMessages.push(errorMessage);
+        soosLogger.warn(errorMessage);
       }
     }
-
     if (allUploadsFailed) {
       await this.updateScanStatus({
+        analysisId,
         clientId,
         projectHash,
         branchHash,
         scanType,
-        analysisId: analysisId,
-        status: ScanStatus.Incomplete,
-        message: `Error uploading manifests.`,
+        status: ScanStatus.NoFiles,
+        message: `All manifest uploads were unsuccessful. (${errorMessages.join("; ")})`,
         scanStatusUrl,
       });
-      throw new Error("Error uploading manifests.");
+      noFilesMessage =
+        "All manifest uploads were unsuccessful. For more help, please visit https://kb.soos.io/error-no-valid-manifests-found";
+      soosLogger.error(noFilesMessage);
+      soosLogger.always(`${noFilesMessage} - exit 1`);
+      return 1;
     }
+
+    return 0;
   }
 
   private async uploadManifestFiles({
