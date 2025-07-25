@@ -791,18 +791,15 @@ class AnalysisService {
     const archiveHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          const hashableFiles = fpm.hashableFiles ?? [];
-          return !hashableFiles.some((hf) => hf.archiveFileExtensions)
-            ? []
-            : {
-                packageManager: fpm.packageManager,
-                fileFormats: hashableFiles.map((hf) => {
-                  return {
-                    hashAlgorithms: hf.hashAlgorithms,
-                    patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                  };
-                }),
+          return {
+            packageManager: fpm.packageManager,
+            fileFormats: (fpm.hashableFiles ?? []).map((hf) => {
+              return {
+                hashAlgorithms: hf.hashAlgorithms,
+                patterns: hf.archiveFileExtensions ?? [],
               };
+            }),
+          };
         });
 
     if (runFileHashing) {
@@ -823,18 +820,15 @@ class AnalysisService {
     const contentHashFormats = !runFileHashing
       ? []
       : filteredPackageManagers.flatMap((fpm) => {
-          const hashableFiles = fpm.hashableFiles ?? [];
-          return !hashableFiles.some((hf) => hf.archiveContentFileExtensions)
-            ? []
-            : {
-                packageManager: fpm.packageManager,
-                fileFormats: hashableFiles.map((hf) => {
-                  return {
-                    hashAlgorithms: hf.hashAlgorithms,
-                    patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                  };
-                }),
+          return {
+            packageManager: fpm.packageManager,
+            fileFormats: (fpm.hashableFiles ?? []).map((hf) => {
+              return {
+                hashAlgorithms: hf.hashAlgorithms,
+                patterns: hf.archiveContentFileExtensions ?? [],
               };
+            }),
+          };
         });
 
     if (runFileHashing) {
