@@ -656,16 +656,16 @@ class AnalysisService {
     scanType: ScanType,
     path: string,
     pattern: string,
-    filesToExclude: string[] | null = null,
-    directoriesToExclude: string[] | null = null,
+    filesToExclude: string[],
+    directoriesToExclude: string[],
     maxFiles: number = 0,
   ): Promise<{ filePaths: string[]; hasMoreThanMaximumFiles: boolean }> {
     process.chdir(path);
     soosLogger.info(`Searching for ${scanType} files from ${path}...`);
     const files = Glob.sync(pattern, {
       ignore: [
-        ...(filesToExclude || []),
-        ...(directoriesToExclude || []),
+        ...filesToExclude,
+        ...directoriesToExclude,
         SOOS_CONSTANTS.Files.SoosDirectoryExclusionGlobPattern,
       ],
       nocase: true,
