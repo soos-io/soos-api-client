@@ -11,6 +11,8 @@
     "removeComments": true, /* Do not emit comments to output. */
     "importHelpers": true, /* Import emit helpers from 'tslib'. */
     "strict": true, /* Enable all strict type-checking options. */
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true, /* Report errors on unused locals. */
     "noUnusedParameters": true, /* Report errors on unused parameters. */
     "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
@@ -24,9 +26,6 @@
     ], /* List of folders to include type definitions from. */
   },
   "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
+    "src"
   ]
 }

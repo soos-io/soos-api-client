@@ -292,20 +292,21 @@ class AnalysisService {
       soosLogger.info(`Branch Name: ${branchName}`);
     }
 
-    if (contributingDeveloperAudit === undefined || contributingDeveloperAudit.length === 0) {
-      contributingDeveloperAudit = contributingDeveloperEnvironmentVariables
-        .map((ev) => {
-          const environmentVariableValue = process.env[ev];
-          return environmentVariableValue && environmentVariableValue.length > 0
-            ? {
-                source: ContributingDeveloperSource.EnvironmentVariable,
-                sourceName: ev,
-                contributingDeveloperId: environmentVariableValue,
-              }
-            : null;
-        })
-        .filter((a) => a !== null);
-    }
+    const createScanAudit =
+      contributingDeveloperAudit === undefined || contributingDeveloperAudit.length === 0
+        ? contributingDeveloperEnvironmentVariables
+            .map((ev) => {
+              const environmentVariableValue = process.env[ev];
+              return environmentVariableValue && environmentVariableValue.length > 0
+                ? {
+                    source: ContributingDeveloperSource.EnvironmentVariable,
+                    sourceName: ev,
+                    contributingDeveloperId: environmentVariableValue,
+                  }
+                : null;
+            })
+            .filter((a) => a !== null)
+        : contributingDeveloperAudit;
 
     const result = await this.analysisApiClient.createScan({
       clientId: clientId,
@@ -321,7 +322,7 @@ class AnalysisService {
       appVersion: appVersion,
       nodeVersion: nodeVersion,
       scriptVersion: scriptVersion,
-      contributingDeveloperAudit: contributingDeveloperAudit,
+      contributingDeveloperAudit: createScanAudit,
       scanType: scanType,
       toolName: toolName,
       toolVersion: toolVersion,
@@ -655,16 +656,16 @@ class AnalysisService {
     scanType: ScanType,
     path: string,
     pattern: string,
-    filesToExclude: string[] | null = null,
-    directoriesToExclude: string[] | null = null,
+    filesToExclude: string[],
+    directoriesToExclude: string[],
     maxFiles: number = 0,
   ): Promise<{ filePaths: string[]; hasMoreThanMaximumFiles: boolean }> {
     process.chdir(path);
     soosLogger.info(`Searching for ${scanType} files from ${path}...`);
     const files = Glob.sync(pattern, {
       ignore: [
-        ...(filesToExclude || []),
-        ...(directoriesToExclude || []),
+        ...filesToExclude,
+        ...directoriesToExclude,
         SOOS_CONSTANTS.Files.SoosDirectoryExclusionGlobPattern,
       ],
       nocase: true,
@@ -725,8 +726,8 @@ class AnalysisService {
     packageManagers: string[];
     fileMatchType: FileMatchTypeEnum;
   }): Promise<{
-    manifestFiles: IManifestFile[] | null;
-    hashManifests: ISoosHashesManifest[] | null;
+    manifestFiles: IManifestFile[];
+    hashManifests: ISoosHashesManifest[];
   }> {
     const supportedScanFileFormats = await this.analysisApiClient.getSupportedScanFileFormats({
       clientId: clientId,
@@ -760,15 +761,14 @@ class AnalysisService {
       : filteredPackageManagers.flatMap((fpm) => {
           return {
             packageManager: fpm.packageManager,
-            manifests:
-              fpm.manifests?.map((sm) => {
-                return {
-                  isLockFile: sm.isLockFile,
-                  includeWithLockFiles: sm.includeWithLockFiles,
-                  supportsLockFiles: sm.SupportsLockFiles,
-                  pattern: sm.pattern,
-                };
-              }) ?? [],
+            manifests: fpm.manifests.map((sm) => {
+              return {
+                isLockFile: sm.isLockFile,
+                includeWithLockFiles: sm.includeWithLockFiles,
+                supportsLockFiles: sm.SupportsLockFiles,
+                pattern: sm.pattern,
+              };
+            }),
           };
         });
 
@@ -796,13 +796,12 @@ class AnalysisService {
             ? []
             : {
                 packageManager: fpm.packageManager,
-                fileFormats:
-                  hashableFiles.map((hf) => {
-                    return {
-                      hashAlgorithms: hf.hashAlgorithms,
-                      patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                    };
-                  }) ?? [],
+                fileFormats: hashableFiles.map((hf) => {
+                  return {
+                    hashAlgorithms: hf.hashAlgorithms,
+                    patterns: hf.archiveFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                  };
+                }),
               };
         });
 
@@ -812,15 +811,14 @@ class AnalysisService {
       );
     }
 
-    const archiveFileHashManifests =
-      !runFileHashing || !archiveHashFormats.some((ahf) => ahf.fileFormats)
-        ? []
-        : this.searchForHashableFiles({
-            hashableFileFormats: archiveHashFormats.filter((ahf) => ahf.fileFormats),
-            sourceCodePath,
-            filesToExclude,
-            directoriesToExclude,
-          });
+    const archiveFileHashManifests = !runFileHashing
+      ? []
+      : this.searchForHashableFiles({
+          hashableFileFormats: archiveHashFormats,
+          sourceCodePath,
+          filesToExclude,
+          directoriesToExclude,
+        });
 
     const contentHashFormats = !runFileHashing
       ? []
@@ -830,13 +828,12 @@ class AnalysisService {
             ? []
             : {
                 packageManager: fpm.packageManager,
-                fileFormats:
-                  hashableFiles.map((hf) => {
-                    return {
-                      hashAlgorithms: hf.hashAlgorithms,
-                      patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
-                    };
-                  }) ?? [],
+                fileFormats: hashableFiles.map((hf) => {
+                  return {
+                    hashAlgorithms: hf.hashAlgorithms,
+                    patterns: hf.archiveContentFileExtensions?.filter((afe) => !isNil(afe)) ?? [],
+                  };
+                }),
               };
         });
 
@@ -844,22 +841,21 @@ class AnalysisService {
       soosLogger.debug(`Running file hash matching for ${contentHashFormats.length} file formats.`);
     }
 
-    const contentFileHashManifests =
-      !runFileHashing || !contentHashFormats.some((chf) => chf.fileFormats)
-        ? []
-        : this.searchForHashableFiles({
-            hashableFileFormats: contentHashFormats.filter((chf) => chf.fileFormats),
-            sourceCodePath,
-            filesToExclude,
-            directoriesToExclude,
-          });
+    const contentFileHashManifests = !runFileHashing
+      ? []
+      : this.searchForHashableFiles({
+          hashableFileFormats: contentHashFormats,
+          sourceCodePath,
+          filesToExclude,
+          directoriesToExclude,
+        });
 
     // TODO: PA-14211 we could probably just add this to the form files directly
     const hashManifests = archiveFileHashManifests
       .concat(contentFileHashManifests)
       .filter((hm) => hm.fileHashes.length > 0);
 
-    if (runFileHashing && hashManifests) {
+    if (runFileHashing && hashManifests.length > 0) {
       for (const soosHashesManifest of hashManifests) {
         if (soosHashesManifest.fileHashes.length > 0) {
           const hashManifestFileName = `${soosHashesManifest.packageManager}${SOOS_CONSTANTS.SCA.SoosFileHashesManifest}`;
@@ -926,7 +922,7 @@ class AnalysisService {
             const pattern = `**/${manifestGlobPattern}`;
             const files = Glob.sync(pattern, {
               ignore: [
-                ...(filesToExclude || []),
+                ...filesToExclude,
                 ...directoriesToExclude,
                 SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
               ],
@@ -1008,7 +1004,7 @@ class AnalysisService {
             const pattern = `**/${manifestGlobPattern}`;
             const files = Glob.sync(pattern, {
               ignore: [
-                ...(filesToExclude || []),
+                ...filesToExclude,
                 ...directoriesToExclude,
                 SOOS_CONSTANTS.SCA.SoosPackageDirToExclude,
               ],
@@ -1087,6 +1083,10 @@ class AnalysisService {
 
     for (let index = 0; index < analysisFiles.length; index++) {
       const analysisFile = analysisFiles[index];
+      if (!analysisFile) {
+        continue;
+      }
+
       const fileParts = analysisFile.path.replace(workingDirectory, "").split(Path.sep);
       const parentFolder =
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
@@ -1107,14 +1107,16 @@ class AnalysisService {
     return formData;
   }
 
-  async addManifestFilesToScan({
+  async addManifestsAndHashableFilesToScan({
     clientId,
     projectHash,
     branchHash,
     analysisId,
     scanType,
     scanStatusUrl,
+    fileMatchType,
     manifestFiles,
+    hashManifests,
   }: {
     clientId: string;
     projectHash: string;
@@ -1122,8 +1124,41 @@ class AnalysisService {
     analysisId: string;
     scanType: ScanType;
     scanStatusUrl: string;
-    manifestFiles: Array<IManifestFile>;
-  }): Promise<void> {
+    fileMatchType: FileMatchTypeEnum;
+    manifestFiles: IManifestFile[];
+    hashManifests: ISoosHashesManifest[];
+  }): Promise<{ exitCode: number; errorMessage?: string }> {
+    let noFilesMessage = null;
+    if (fileMatchType === FileMatchTypeEnum.Manifest && manifestFiles.length === 0) {
+      noFilesMessage =
+        "No valid files found, cannot continue. For more help, please visit https://kb.soos.io/error-no-valid-manifests-found";
+    } else if (fileMatchType === FileMatchTypeEnum.FileHash && hashManifests.length === 0) {
+      noFilesMessage =
+        "No valid files to hash were found, cannot continue. For more help, please visit https://kb.soos.io/error-no-valid-files-to-hash-found";
+    } else if (
+      fileMatchType === FileMatchTypeEnum.ManifestAndFileHash &&
+      hashManifests.length === 0 &&
+      manifestFiles.length === 0
+    ) {
+      noFilesMessage =
+        "No valid files found, cannot continue. For more help, please visit https://kb.soos.io/error-no-valid-manifests-found and https://kb.soos.io/error-no-valid-files-to-hash-found";
+    }
+    if (noFilesMessage) {
+      await this.updateScanStatus({
+        analysisId,
+        clientId,
+        projectHash,
+        branchHash,
+        scanType,
+        status: ScanStatus.NoFiles,
+        message: noFilesMessage,
+        scanStatusUrl,
+      });
+      soosLogger.error(noFilesMessage);
+      soosLogger.always(`${noFilesMessage} - exit 1`);
+      return { exitCode: 1, errorMessage: noFilesMessage };
+    }
+
     const filesToUpload = manifestFiles.slice(0, SOOS_CONSTANTS.FileUploads.MaxManifests);
     const hasMoreThanMaximumManifests =
       manifestFiles.length > SOOS_CONSTANTS.FileUploads.MaxManifests;
@@ -1155,10 +1190,12 @@ class AnalysisService {
     );
 
     let allUploadsFailed = true;
+    const errorMessages = [];
     for (const [packageManager, files] of Object.entries(manifestsByPackageManager)) {
       try {
+        // TODO: PA-14211 can we add the soos_hashes.json directly
         const manifestUploadResponse = await this.uploadManifestFiles({
-          clientId: clientId,
+          clientId,
           projectHash,
           branchHash,
           analysisId,
@@ -1176,24 +1213,30 @@ class AnalysisService {
 
         allUploadsFailed = false;
       } catch (e: unknown) {
-        // NOTE: we continue on to the other package managers
-        soosLogger.warn(e instanceof Error ? e.message : (e as string));
+        const errorMessage = e instanceof Error ? e.message : (e as string);
+        errorMessages.push(errorMessage);
+        soosLogger.warn(errorMessage);
       }
     }
-
     if (allUploadsFailed) {
       await this.updateScanStatus({
+        analysisId,
         clientId,
         projectHash,
         branchHash,
         scanType,
-        analysisId: analysisId,
-        status: ScanStatus.Incomplete,
-        message: `Error uploading manifests.`,
+        status: ScanStatus.NoFiles,
+        message: `All manifest uploads were unsuccessful. (${errorMessages.join("; ")})`,
         scanStatusUrl,
       });
-      throw new Error("Error uploading manifests.");
+      noFilesMessage =
+        "All manifest uploads were unsuccessful. For more help, please visit https://kb.soos.io/error-no-valid-manifests-found";
+      soosLogger.error(noFilesMessage);
+      soosLogger.always(`${noFilesMessage} - exit 1`);
+      return { exitCode: 1, errorMessage: noFilesMessage };
     }
+
+    return { exitCode: 0 };
   }
 
   private async uploadManifestFiles({

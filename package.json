@@ -1,6 +1,6 @@
 {
   "name": "@soos-io/api-client",
-  "version": "1.7.7",
+  "version": "1.8.0",
   "description": "This is the SOOS API Client for registered clients leveraging the various integrations to the SOOS platform. Register for a free trial today at https://app.soos.io/register",
   "main": "dist/index.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "setup:update": "npx npm-check -u",
     "setup:clean": "npx rimraf node_modules && npx rimraf package-lock.json",
     "build": "tsc",
-    "build:clean": "npx rimraf build",
+    "build:clean": "npx rimraf dist",
     "format": "prettier ./src --check",
     "format:fix": "prettier ./src --write",
     "lint": "eslint --max-warnings 0",
