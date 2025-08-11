@@ -1,10 +1,10 @@
 import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
-import fs from "fs";
 import crypto from "node:crypto";
 import { BinaryToTextEncoding } from "crypto";
 import { SOOS_CONSTANTS } from "./constants";
+import * as FileSystem from "fs";
 
 const generatedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
@@ -175,7 +175,7 @@ const generateFileHash = (
 ): string => {
   const bufferEncoding = encoding.toLowerCase() as unknown as BufferEncoding;
   const binaryToTextEncoding = digestEncoding.toLowerCase() as unknown as BinaryToTextEncoding;
-  const fileContent = fs.readFileSync(filePath, bufferEncoding);
+  const fileContent = FileSystem.readFileSync(filePath, bufferEncoding);
   return crypto
     .createHash(hashAlgorithm)
     .update(fileContent, bufferEncoding)
@@ -228,6 +228,18 @@ const checkNodeVersion = (): string => {
     soosLogger.info(`Running with Node.js ${nodeVersion}`);
   }
   return nodeVersion;
+};
+
+const FileUtilities = {
+  readFileAsync: async (path: string): Promise<string> => {
+    const buffer = await FileSystem.promises.readFile(path);
+    let encoding = "utf-8";
+    if (buffer.length > 2 && buffer[0] === 0xff && buffer[1] === 0xfe) encoding = "utf-16le";
+    else if (buffer.length > 2 && buffer[0] === 0xfe && buffer[1] === 0xff) encoding = "utf-16be";
+    const decoder = new TextDecoder(encoding);
+    const fileContent = decoder.decode(buffer);
+    return fileContent;
+  },
 };
 
 const DateUtilities = {
@@ -294,4 +306,5 @@ export {
   StringUtilities,
   isScanDone,
   checkNodeVersion,
+  FileUtilities,
 };

@@ -26,6 +26,7 @@ import {
 } from "../enums";
 import { soosLogger } from "../logging";
 import {
+  FileUtilities,
   StringUtilities,
   checkNodeVersion,
   convertStringToBase64,
@@ -1085,9 +1086,7 @@ class AnalysisService {
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
       const suffix = index > 0 ? index : "";
 
-      const fileContent = await FileSystem.promises.readFile(analysisFile.path, {
-        encoding: "utf-8",
-      });
+      const fileContent = await FileUtilities.readFileAsync(analysisFile.path);
       formData.append(`file${suffix}`, convertStringToBase64(fileContent), analysisFile.name);
 
       formData.append(`parentFolder${suffix}`, parentFolder);
