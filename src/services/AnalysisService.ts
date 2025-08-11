@@ -1064,7 +1064,6 @@ class AnalysisService {
   async getAnalysisFilesAsFormData(
     analysisFilePaths: string[],
     workingDirectory: string,
-    encodeAsBase64: boolean = false,
   ): Promise<FormData> {
     const analysisFiles = analysisFilePaths.map((filePath) => {
       return {
@@ -1089,11 +1088,7 @@ class AnalysisService {
       const fileContent = await FileSystem.promises.readFile(analysisFile.path, {
         encoding: "utf-8",
       });
-      formData.append(
-        `file${suffix}`,
-        encodeAsBase64 ? convertStringToBase64(fileContent) : fileContent,
-        analysisFile.name,
-      );
+      formData.append(`file${suffix}`, convertStringToBase64(fileContent), analysisFile.name);
 
       formData.append(`parentFolder${suffix}`, parentFolder);
     }
