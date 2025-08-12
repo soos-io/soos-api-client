@@ -183,9 +183,13 @@ const generateFileHash = (
 };
 
 const isScanDone = (scanStatus: ScanStatus): boolean =>
-  [ScanStatus.Finished, ScanStatus.FailedWithIssues, ScanStatus.Incomplete, ScanStatus.Error].some(
-    (s) => s === scanStatus,
-  );
+  [
+    ScanStatus.Error,
+    ScanStatus.Finished,
+    ScanStatus.FailedWithIssues,
+    ScanStatus.Incomplete,
+    ScanStatus.NoFiles,
+  ].some((s) => s === scanStatus);
 
 const getAnalysisExitCodeWithMessage = (
   scanStatus: ScanStatus,
