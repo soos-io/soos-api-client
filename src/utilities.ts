@@ -142,12 +142,6 @@ const reassembleCommandLine = (argv: string[]): string => {
     .join(" ");
 };
 
-const convertStringToBase64 = (content: string): string => {
-  const messageBytes = Buffer.from(content, "utf-8");
-  const base64Message = messageBytes.toString("base64");
-  return base64Message;
-};
-
 const getEnvVariable = (name: string): string | null => {
   return process.env[name] || null;
 };
@@ -235,14 +229,9 @@ const checkNodeVersion = (): string => {
 };
 
 const FileUtilities = {
-  readFileAsync: async (path: string): Promise<string> => {
+  readFileToBase64Async: async (path: string): Promise<string> => {
     const buffer = await FileSystem.promises.readFile(path);
-    let encoding = "utf-8";
-    if (buffer.length > 2 && buffer[0] === 0xff && buffer[1] === 0xfe) encoding = "utf-16le";
-    else if (buffer.length > 2 && buffer[0] === 0xfe && buffer[1] === 0xff) encoding = "utf-16be";
-    const decoder = new TextDecoder(encoding);
-    const fileContent = decoder.decode(buffer);
-    return fileContent;
+    return buffer.toString("base64");
   },
 };
 
@@ -288,6 +277,8 @@ const StringUtilities = {
   isEmptyString: (value: string): boolean => {
     return value.trim() === "";
   },
+  toBase64: (value: string, encoding: BufferEncoding = "utf-8"): string =>
+    Buffer.from(value, encoding).toString("base64"),
 };
 
 export {
@@ -300,7 +291,6 @@ export {
   obfuscateProperties,
   obfuscateCommandLine,
   reassembleCommandLine,
-  convertStringToBase64,
   getEnvVariable,
   formatBytes,
   generateFileHash,
