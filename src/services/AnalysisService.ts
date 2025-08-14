@@ -29,7 +29,6 @@ import {
   FileUtilities,
   StringUtilities,
   checkNodeVersion,
-  convertStringToBase64,
   formatBytes,
   generateFileHash,
   isNil,
@@ -1086,8 +1085,8 @@ class AnalysisService {
         fileParts.length >= 2 ? fileParts.slice(0, fileParts.length - 1).join(Path.sep) : "";
       const suffix = index > 0 ? index : "";
 
-      const fileContent = await FileUtilities.readFileAsync(analysisFile.path);
-      formData.append(`file${suffix}`, convertStringToBase64(fileContent), analysisFile.name);
+      const base64Content = await FileUtilities.readFileToBase64Async(analysisFile.path);
+      formData.append(`file${suffix}`, base64Content, analysisFile.name);
 
       formData.append(`parentFolder${suffix}`, parentFolder);
     }
