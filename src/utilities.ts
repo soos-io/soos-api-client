@@ -2,9 +2,9 @@ import axios, { AxiosError } from "axios";
 import { soosLogger } from "./logging/SOOSLogger";
 import { HashEncodingEnum, IntegrationName, OnFailure, ScanStatus, ScanType } from "./enums";
 import crypto from "node:crypto";
+import fs from "node:fs";
 import { BinaryToTextEncoding } from "crypto";
 import { SOOS_CONSTANTS } from "./constants";
-import * as FileSystem from "fs";
 
 const generatedScanTypes = [ScanType.CSA, ScanType.SBOM, ScanType.SCA];
 
@@ -169,7 +169,7 @@ const generateFileHash = (
 ): string => {
   const bufferEncoding = encoding.toLowerCase() as unknown as BufferEncoding;
   const binaryToTextEncoding = digestEncoding.toLowerCase() as unknown as BinaryToTextEncoding;
-  const fileContent = FileSystem.readFileSync(filePath, bufferEncoding);
+  const fileContent = fs.readFileSync(filePath, bufferEncoding);
   return crypto
     .createHash(hashAlgorithm)
     .update(fileContent, bufferEncoding)
@@ -230,7 +230,7 @@ const checkNodeVersion = (): string => {
 
 const FileUtilities = {
   readFileToBase64Async: async (path: string): Promise<string> => {
-    const buffer = await FileSystem.promises.readFile(path);
+    const buffer = await fs.promises.readFile(path);
     return buffer.toString("base64");
   },
 };
