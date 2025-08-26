@@ -1164,14 +1164,10 @@ class AnalysisService {
       );
     }
 
-    const manifestsByPackageManager = filesToUpload.reduce<Record<string, Array<IManifestFile>>>(
-      (accumulator, file) => {
-        const packageManagerFiles =
-          (accumulator[file.packageManager] as Array<IManifestFile> | undefined) ?? [];
-        return {
-          ...accumulator,
-          [file.packageManager]: packageManagerFiles.concat(file),
-        };
+    const manifestsByPackageManager = filesToUpload.reduce<Record<string, IManifestFile[]>>(
+      (acc, file) => {
+        (acc[file.packageManager] ??= []).push(file);
+        return acc;
       },
       {},
     );

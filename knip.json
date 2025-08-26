@@ -1,0 +1,9 @@
+{
+  "ignoreDependencies": [
+    "ts-node"
+  ],
+  "ignoreBinaries": [
+    "rimraf",
+    "npm-check"
+  ]
+}
