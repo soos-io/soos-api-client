@@ -1202,7 +1202,6 @@ class AnalysisService {
       } catch (e: unknown) {
         const errorMessage = e instanceof Error ? e.message : (e as string);
         errorMessages.push(errorMessage);
-        soosLogger.warn(errorMessage);
       }
     }
     if (allUploadsFailed) {
