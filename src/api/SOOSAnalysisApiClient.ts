@@ -248,7 +248,8 @@ class SOOSAnalysisApiClient {
     manifestFiles,
     hasMoreThanMaximumManifests,
   }: IUploadManifestFilesRequest): Promise<IUploadManifestFilesResponse> {
-    const response = await this.client.post<IUploadManifestFilesResponse>(
+    const client = this.createApiClient(true); // these requests are huge, don't log them
+    const response = await client.post<IUploadManifestFilesResponse>(
       `clients/${clientId}/projects/${projectHash}/analysis/${analysisId}/manifests`,
       manifestFiles,
       {
