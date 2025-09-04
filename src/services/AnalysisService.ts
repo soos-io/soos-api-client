@@ -765,7 +765,7 @@ class AnalysisService {
               return {
                 isLockFile: sm.isLockFile,
                 includeWithLockFiles: sm.includeWithLockFiles,
-                supportsLockFiles: sm.SupportsLockFiles,
+                supportsLockFiles: sm.supportsLockFiles,
                 pattern: sm.pattern,
               };
             }),
