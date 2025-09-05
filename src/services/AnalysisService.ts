@@ -1197,7 +1197,7 @@ class AnalysisService {
         allUploadsFailed = false;
       } catch (e: unknown) {
         const errorMessage = e instanceof Error ? e.message : (e as string);
-        errorMessages.push(errorMessage);
+        errorMessages.push(`${packageManager}: ${errorMessage}`);
       }
     }
     if (allUploadsFailed) {
