@@ -216,11 +216,24 @@ const getAnalysisExitCodeWithMessage = (
   };
 };
 
-const checkNodeVersion = (): string => {
-  const nodeVersion = process.versions.node;
-  if (!nodeVersion.startsWith(SOOS_CONSTANTS.RequiredLtsNodeMajorVersion)) {
+const checkNodeVersion = (currentNodeVersion: string | undefined = undefined): string => {
+  const nodeVersion = currentNodeVersion ?? process.versions.node;
+
+  const isUsingRequiredNodeVersion = nodeVersion.startsWith(
+    SOOS_CONSTANTS.Node.RequiredMajorVersion,
+  );
+  const isUsingSupportedNodeVersion = nodeVersion.startsWith(
+    SOOS_CONSTANTS.Node.SupportedMajorVersion,
+  );
+  const isUnsupportedNodeVersion = !isUsingRequiredNodeVersion && !isUsingSupportedNodeVersion;
+
+  if (isUnsupportedNodeVersion) {
     soosLogger.warn(
-      `Node.js ${SOOS_CONSTANTS.RequiredLtsNodeMajorVersion} LTS is required. You are using ${nodeVersion}`,
+      `Node.js ${SOOS_CONSTANTS.Node.RequiredMajorVersion} LTS is required. ${SOOS_CONSTANTS.Node.SupportedMajorVersion} LTS is recommended. You are using ${nodeVersion}.`,
+    );
+  } else if (isUsingRequiredNodeVersion) {
+    soosLogger.warn(
+      `Node.js ${SOOS_CONSTANTS.Node.SupportedMajorVersion} LTS is now recommended. Please update to ${SOOS_CONSTANTS.Node.SupportedMajorVersion} LTS.`,
     );
   } else {
     soosLogger.info(`Running with Node.js ${nodeVersion}`);
