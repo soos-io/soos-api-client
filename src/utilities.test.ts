@@ -403,8 +403,46 @@ describe("generateFileDigest", () => {
 });
 
 describe("checkNodeVersion", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let consoleSpy: jest.SpyInstance<void, [message?: any, ...optionalParams: any[]], any>;
+
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+  });
+
   test("checkNodeVersion", () => {
-    const nodeVersion = checkNodeVersion();
-    expect(nodeVersion.split(".")[0]).toBe("22");
+    const nodeVersion = checkNodeVersion(); // uses process, so this test might fail if you don't have 24 installed
+    const majorVersion = nodeVersion.split(".")[0];
+    expect(majorVersion).toBe("24");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[INFO] Running with Node.js 24"),
+    );
+  });
+
+  test("checkNodeVersion required", () => {
+    checkNodeVersion("22.1.0");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[WARN] Node.js 24 LTS is now recommended. Please update to 24 LTS."),
+    );
+  });
+
+  test("checkNodeVersion supported", () => {
+    checkNodeVersion("24.11.1");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[INFO] Running with Node.js 24"),
+    );
+  });
+
+  test("checkNodeVersion outdated", () => {
+    checkNodeVersion("19.1.10");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "[WARN] Node.js 22 LTS is required. 24 LTS is recommended. You are using 19.1.10",
+      ),
+    );
   });
 });
