@@ -1,4 +1,4 @@
-name: Npm Publish (Pre-release + Release)
+name: Publish to NPM (Pre-release + Release)
 
 on:
   # Manual trigger for pre-releases
