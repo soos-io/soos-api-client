@@ -1,7 +1,6 @@
 export const SOOS_CONSTANTS = {
   Node: {
-    RequiredMajorVersion: "22",
-    SupportedMajorVersion: "24",
+    RequiredMajorVersion: "24",
   },
   EnvironmentVariables: {
     ApiKey: "SOOS_API_KEY",
