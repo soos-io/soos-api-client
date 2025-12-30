@@ -423,13 +423,6 @@ describe("checkNodeVersion", () => {
     );
   });
 
-  test("checkNodeVersion required", () => {
-    checkNodeVersion("22.1.0");
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[WARN] Node.js 24 LTS is now recommended. Please update to 24 LTS."),
-    );
-  });
-
   test("checkNodeVersion supported", () => {
     checkNodeVersion("24.11.1");
     expect(consoleSpy).toHaveBeenCalledWith(
@@ -440,9 +433,7 @@ describe("checkNodeVersion", () => {
   test("checkNodeVersion outdated", () => {
     checkNodeVersion("19.1.10");
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "[WARN] Node.js 22 LTS is required. 24 LTS is recommended. You are using 19.1.10",
-      ),
+      expect.stringContaining("[WARN] Node.js 24 LTS is required. You are using 19.1.10"),
     );
   });
 });
