@@ -1,4 +1,4 @@
-name: Check and SOOS Scans
+name: Check and SOOS SCA/SAST Scans
 
 on:
   push:

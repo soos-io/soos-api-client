@@ -1,4 +1,4 @@
-name: Run tests
+name: Run Tests
 
 on:
   push:
@@ -23,5 +23,5 @@ jobs:
     - name: Clean Install
       run: npm ci
 
-    - name: Run tests
+    - name: Run test
       run: npm run test
